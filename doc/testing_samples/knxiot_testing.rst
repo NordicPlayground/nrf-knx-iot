@@ -1,0 +1,199 @@
+..  _knxiot_testing:
+
+KNX IoT testing
+###############
+
+With the sample applications - **Light Switch Actuator** and **Light Switch Sensor**, you will be apble to test simple KNX IoT system consisted of two Thread based devices.
+
+Starting Thread network
+***********************
+
+Devices enable Thread interface during startup automatically - they are configured to create and join Thread network with parameters as below.
+
++------------------+-------------------------------------+
+| Parameter        | Value                               |
++==================+=====================================+
+| PAN ID           | 0xabcd                              |
++------------------+-------------------------------------+
+| Channel          | 11                                  |
++------------------+-------------------------------------+
+| Network name     | KNX                                 |
++------------------+-------------------------------------+
+| Extended PAN ID  | dead00beef00cafe                    |
++------------------+-------------------------------------+
+| Network key      | 00112233445566778899aabbccddeeff    |
++------------------+-------------------------------------+
+
+To verify Thread devices status, do the following:
+
+#. Check Active Data using :file:`ot dataset active` command
+
+   .. code-block:: console
+
+      uart:~$ ot dataset active
+      Active Timestamp: 1
+      Channel: 15
+      Channel Mask: 0x07fff800
+      Ext PAN ID: 3b78ce629cbc8e23
+      Mesh Local Prefix: fdd7:9fa0:468:ba1b::/64
+      Network Key: 00112233445566778899aabbccddeeff
+      Network Name: OpenThread-7cf7
+      PAN ID: 0x7cf7
+      PSKc: b2e04e90cef89d25981a7dd8f3c16db5
+      Security Policy: 672 onrc
+      Done
+
+#. Check devices roles - one of them must be a leader, onother one either child or router
+
+   .. code-block:: console
+
+      uart:~$ ot state
+      router
+      Done
+
+   .. code-block:: console
+
+      uart:~$ ot state
+      leader
+      Done
+
+Connecting Light Switch Sensor to Light Switch Actuator
+*******************************************************
+
+Both Light Switch Actuator and Light  Switch Sensor are built with 4 Functional Blocks with a single Datapoint. 
+Every Datapoint controls a single `Nordic nRF52840 DK`_ kit LED (actuator) or is controlled by a single `Nordic nRF52840 DK`_ button (sensor). 
+For communication between KNX IoT Point API devices send s-mode messages over CoAP protocol. 
+Recipient of the message checks its Group Object Table in order to verify that it is capable of processing it. 
+
+Tables below presents actuator and sensor devices Datapoints configuration.
+
+ * Light Switch Actuator Datapoints
+ 
++--------+-------+-----+-----+
+| LED    | Path  | GET | SET |
++========+=======+=====+=====+
+| LED1   | /p/1  | Yes | Yes |
++--------+-------+-----+-----+
+| LED2   | /p/2  | Yes | Yes |
++--------+-------+-----+-----+
+| LED3   | /p/3  | Yes | Yes |
++--------+-------+-----+-----+
+| LED4   | /p/4  | Yes | Yes |
++--------+-------+-----+-----+
+
+ * Light Switch Sensor Datapoints
+ 
++----------+-------+-----+-----+
+| Button   | Path  | GET | SET |
++==========+=======+=====+=====+
+| BUTTON1  | /p/1  | Yes | No  |
++----------+-------+-----+-----+
+| BUTTON2  | /p/2  | Yes | No  |
++----------+-------+-----+-----+
+| BUTTON3  | /p/3  | Yes | No  |
++----------+-------+-----+-----+
+| BUTTON4  | /p/4  | Yes | No  |
++----------+-------+-----+-----+
+	  
+Example 1 - One button mapped to four LEDs
+******************************************
+
+Having Thread network configured and operational you can start KNX IoT device configuration and testing.
+One device must be configured as Actuator and one as Sensor.
+
+One button of KNX IoT Actuator `Nordic nRF52840 DK`_ device will control four LEDs built in to KNX IoT Sensor `Nordic nRF52840 DK`_ device.
+
+#. Configure Actuator device by adding entries to Actuator's Group Object Table - command :file:`knx got`
+
+   .. code-block:: console
+
+      uart:~$ knx got 1 /p/1 22 [1]
+      uart:~$ knx got 2 /p/2 22 [1]
+      uart:~$ knx got 3 /p/3 22 [1]
+      uart:~$ knx got 4 /p/4 22 [1]
+
+#. Configure Sensor device by adding entries to Sensor's Group Object Table - command :file:`knx got`
+
+
+   .. code-block:: console
+
+      uart:~$ knx got 1 /p/1 22 [1]
+
+#. Devices are configured. Now you can check it...
+
+   .. note::
+   
+      UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA 
+   
+
+Example 2 - One button mapped to one LED
+****************************************
+
+Having Thread network configured and operational you can start KNX IoT device configuration and testing.
+One device must be configured as Actuator and one as Sensor.
+
+We need to perform configuration/mapping of buttons built in to KNX IoT sensor LEDs built in to the KNX IoT Actuator - one button to one LED.
+It is achieved by dedicated on KNX group to every input-output pair.
+
+#. Configure Actuator device by adding entries to Actuator's Group Object Table - command :file:`knx got`
+
+   .. code-block:: console
+
+      uart:~$ knx got 1 /p/1 22 [1]
+      uart:~$ knx got 2 /p/2 22 [2]
+      uart:~$ knx got 3 /p/3 22 [3]
+      uart:~$ knx got 4 /p/4 22 [4]
+
+#. Configure Sensor device by adding entries to Sensor's Group Object Table - command :file:`knx got`
+
+
+   .. code-block:: console
+
+      uart:~$ knx got 1 /p/1 22 [1]
+      uart:~$ knx got 2 /p/2 22 [2]
+      uart:~$ knx got 3 /p/3 22 [3]
+      uart:~$ knx got 4 /p/4 22 [4]
+	  
+
+#. Devices are configured. Now you can check it...
+
+   .. note::
+   
+      UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA 
+
+Example 3 - Mixed configuration 
+****************************************
+
+Having Thread network configured and operational you can start KNX IoT device configuration and testing.
+One device must be configured as Actuator and one as Sensor.
+
+We need to perform configuration/mapping of buttons built in to KNX IoT sensor LEDs built in to the KNX IoT Actuator - one button to one LED.
+It is achieved by dedicated on KNX group to every input-output pair.
+
+#. Configure Actuator device by adding entries to Actuator's Group Object Table - command :file:`knx got`
+
+   .. code-block:: console
+
+      uart:~$ knx got 1 /p/1 22 [1]
+      uart:~$ knx got 2 /p/2 22 [2]
+      uart:~$ knx got 3 /p/3 22 [3]
+      uart:~$ knx got 4 /p/4 22 [4]
+
+#. Configure Sensor device by adding entries to Sensor's Group Object Table - command :file:`knx got`
+
+
+   .. code-block:: console
+
+      uart:~$ knx got 1 /p/1 22 [1]
+      uart:~$ knx got 2 /p/2 22 [1,2]
+      uart:~$ knx got 3 /p/3 22 [1,2,3]
+      uart:~$ knx got 4 /p/4 22 [1,2,3,4]
+	  
+
+#. Devices are configured. Now you can check it...
+
+   .. note::
+   
+      UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA 
+
+.. _Nordic nRF52840 DK: https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK
