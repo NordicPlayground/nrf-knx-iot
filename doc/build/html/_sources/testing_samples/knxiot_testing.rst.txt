@@ -26,7 +26,7 @@ Devices enable Thread interface during startup automatically - they are configur
 
 To verify Thread devices status, do the following:
 
-#. Check Active Data using :file:`ot dataset active` command
+#. Check Active Data using :file:`ot dataset active` command.
 
    .. code-block:: console
 
@@ -43,20 +43,33 @@ To verify Thread devices status, do the following:
       Security Policy: 672 onrc
       Done
 
-#. Check devices roles - one of them must be a leader, onother one either child or router
+#. Check devices roles using :file:`ot state` command.
 
-   .. code-block:: console
+  * one of device must be a Thread leader:
 
-      uart:~$ ot state
-      router
-      Done
+     .. code-block:: console
+  
+        uart:~$ ot state
+        leader
+        Done
+    
+  * another device either Thread child:
+	
+     .. code-block:: console
 
-   .. code-block:: console
+        uart:~$ ot state
+        child
+        Done
+      
+    or Thread leader:
+	  
+     .. code-block:: console
 
-      uart:~$ ot state
-      leader
-      Done
+        uart:~$ ot state
+        leader
+        Done	
 
+	  
 Connecting Light Switch Sensor to Light Switch Actuator
 *******************************************************
 
@@ -69,39 +82,41 @@ Tables below presents actuator and sensor devices Datapoints configuration.
 
 * Light Switch Actuator Datapoints
  
-+--------+-------+-----+-----+
-| LED    | Path  | GET | SET |
-+========+=======+=====+=====+
-| LED1   | /p/1  | Yes | Yes |
-+--------+-------+-----+-----+
-| LED2   | /p/2  | Yes | Yes |
-+--------+-------+-----+-----+
-| LED3   | /p/3  | Yes | Yes |
-+--------+-------+-----+-----+
-| LED4   | /p/4  | Yes | Yes |
-+--------+-------+-----+-----+
+  +--------+-------+-----+-----+
+  | LED    | Path  | GET | SET |
+  +========+=======+=====+=====+
+  | LED1   | /p/1  | Yes | Yes |
+  +--------+-------+-----+-----+
+  | LED2   | /p/2  | Yes | Yes |
+  +--------+-------+-----+-----+
+  | LED3   | /p/3  | Yes | Yes |
+  +--------+-------+-----+-----+
+  | LED4   | /p/4  | Yes | Yes |
+  +--------+-------+-----+-----+
 
 * Light Switch Sensor Datapoints
  
-+----------+-------+-----+-----+
-| Button   | Path  | GET | SET |
-+==========+=======+=====+=====+
-| BUTTON1  | /p/1  | Yes | No  |
-+----------+-------+-----+-----+
-| BUTTON2  | /p/2  | Yes | No  |
-+----------+-------+-----+-----+
-| BUTTON3  | /p/3  | Yes | No  |
-+----------+-------+-----+-----+
-| BUTTON4  | /p/4  | Yes | No  |
-+----------+-------+-----+-----+
+  +----------+-------+-----+-----+
+  | Button   | Path  | GET | SET |
+  +==========+=======+=====+=====+
+  | BUTTON1  | /p/1  | Yes | No  |
+  +----------+-------+-----+-----+
+  | BUTTON2  | /p/2  | Yes | No  |
+  +----------+-------+-----+-----+
+  | BUTTON3  | /p/3  | Yes | No  |
+  +----------+-------+-----+-----+
+  | BUTTON4  | /p/4  | Yes | No  |
+  +----------+-------+-----+-----+
 
-* LEDs and buttons location
+LEDs and buttons location
+*************************
 
-   .. figure:: /images/dk_leds_and_buttons.svg
-      :alt: Location of DKs LEDs (green rectangle) and buttons (grey rectangle)
-      
-      Location of DKs LEDs (green rectangle) and buttons (grey rectangle)
-	  
+All examples run on `Nordic nRF52840 DK`_ board. Picture below presents location of the LEDs (yellow rectangle) and buttons (green rectangle) used in examples.
+
+   .. figure:: /images/dk_leds_and_buttons.png
+      :alt: Location of DKs LEDs (yellow rectangle) and buttons (green rectangle)
+
+
 Example 1 - One button mapped to four LEDs
 ******************************************
 
@@ -110,7 +125,7 @@ One device must be configured as Actuator and one as Sensor.
 
 One button of KNX IoT Actuator `Nordic nRF52840 DK`_ device will control four LEDs built in to KNX IoT Sensor `Nordic nRF52840 DK`_ device.
 
-#. Configure Actuator device by adding entries to Actuator's Group Object Table - command :file:`knx got`
+#. Configure Actuator device by adding entries to Actuator's Group Object Table - command :file:`knx got`.
 
    .. code-block:: console
 
@@ -119,27 +134,22 @@ One button of KNX IoT Actuator `Nordic nRF52840 DK`_ device will control four LE
       uart:~$ knx got 3 /p/3 22 [1]
       uart:~$ knx got 4 /p/4 22 [1]
 
-#. Configure Sensor device by adding entries to Sensor's Group Object Table - command :file:`knx got`
-
+#. Configure Sensor device by adding entries to Sensor's Group Object Table - command :file:`knx got`.
 
    .. code-block:: console
 
       uart:~$ knx got 1 /p/1 22 [1]
 
-#. Devices are configured. Now you can check it...
+#. Devices are configured. Use sensor's BUTTON1 to disable or enable all of the assigned actuator's LEDs. Usage of the other buttons has no effect. 
+   The interconnections between buttons and LEDs are presented in the following table.
 
-   Use sensor's BUTTON1 to disable or enable all of the actuator's LEDs. Usage of the other buttons has no effect. The interconnections between buttons and LEDs are presented in the following table:
+   +----------------+------------------------+
+   | Control button | Controlled LEDs        |
+   | (Sensor)       | (Actuator)             |
+   +================+========================+
+   | BUTTON1        | LED1, LED2, LED3, LED4 |
+   +----------------+------------------------+
 
-   +----------+--------------------------+
-   | Button   | LEDs                     |
-   +==========+==========================+
-   | BUTTON1  | LED1, LED2, LED3, LED4   |
-   +----------+--------------------------+
-
-   .. note::
-   
-      UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA 
-   
 
 Example 2 - One button mapped to one LED
 ****************************************
@@ -150,7 +160,7 @@ One device must be configured as Actuator and one as Sensor.
 We need to perform configuration/mapping of buttons built in to KNX IoT Sensor `Nordic nRF52840 DK`_ to control LEDs built in to the KNX IoT Actuator `Nordic nRF52840 DK`_ - one button to one LED.
 It is achieved by dedicated on KNX group to every input-output pair.
 
-#. Configure Actuator device by adding entries to Actuator's Group Object Table - command :file:`knx got`
+#. Configure Actuator device by adding entries to Actuator's Group Object Table - command :file:`knx got`.
 
    .. code-block:: console
 
@@ -159,7 +169,7 @@ It is achieved by dedicated on KNX group to every input-output pair.
       uart:~$ knx got 3 /p/3 22 [3]
       uart:~$ knx got 4 /p/4 22 [4]
 
-#. Configure Sensor device by adding entries to Sensor's Group Object Table - command :file:`knx got`
+#. Configure Sensor device by adding entries to Sensor's Group Object Table - command :file:`knx got`.
 
 
    .. code-block:: console
@@ -168,30 +178,25 @@ It is achieved by dedicated on KNX group to every input-output pair.
       uart:~$ knx got 2 /p/2 22 [2]
       uart:~$ knx got 3 /p/3 22 [3]
       uart:~$ knx got 4 /p/4 22 [4]
-	  
 
-#. Devices are configured. Now you can check it...
+#. Devices are configured. Use one of the sensor's buttons to control one of the assigned actuator's LEDs. 
+   The interconnections between buttons and LEDs are presented in the following table.
 
-   Use one of the sensor's buttons to control one of the actuator's LEDs. The interconnections between buttons and LEDs are presented in the following table:
-
-   +----------+--------+
-   | Button   | LEDs   |
-   +==========+========+
-   | BUTTON1  | LED1   |
-   +----------+--------+
-   | BUTTON2  | LED2   |
-   +----------+--------+
-   | BUTTON3  | LED3   |
-   +----------+--------+
-   | BUTTON4  | LED4   |
-   +----------+--------+
-
-   .. note::
-   
-      UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA 
+   +----------------+----------------+
+   | Control button | Controlled LED |
+   | (Sensor)       | (Actuator)     |
+   +================+================+
+   | BUTTON1        | LED1           |
+   +----------------+----------------+
+   | BUTTON2        | LED2           |
+   +----------------+----------------+
+   | BUTTON3        | LED3           |
+   +----------------+----------------+
+   | BUTTON4        | LED4           |
+   +----------------+----------------+
 
 Example 3 - Mixed configuration 
-****************************************
+*******************************
 
 Having Thread network configured and operational you can start KNX IoT device configuration and testing.
 One device must be configured as Actuator and one as Sensor.
@@ -199,7 +204,7 @@ One device must be configured as Actuator and one as Sensor.
 We need to perform configuration/mapping of buttons built in to KNX IoT sensor to control LEDs built in to the KNX IoT Actuator - one button to one LED.
 It is achieved by setting KNX Actuator `Nordic nRF52840 DK`_ to receive events from multple groups.
 
-#. Configure Actuator device by adding entries to Actuator's Group Object Table - command :file:`knx got`
+#. Configure Actuator device by adding entries to Actuator's Group Object Table - command :file:`knx got`.
 
    .. code-block:: console
 
@@ -208,7 +213,7 @@ It is achieved by setting KNX Actuator `Nordic nRF52840 DK`_ to receive events f
       uart:~$ knx got 3 /p/3 22 [3,4]
       uart:~$ knx got 4 /p/4 22 [4]
 
-#. Configure Sensor device by adding entries to Sensor's Group Object Table - command :file:`knx got`
+#. Configure Sensor device by adding entries to Sensor's Group Object Table - command :file:`knx got`.
 
    .. code-block:: console
 
@@ -217,24 +222,20 @@ It is achieved by setting KNX Actuator `Nordic nRF52840 DK`_ to receive events f
       uart:~$ knx got 3 /p/3 22 [3]
       uart:~$ knx got 4 /p/4 22 [4]
 	  
-#. Devices are configured. Now you can check it...
+#. Devices are configured. Use one of the sensor's buttons to control one or many of the assigned actuator's LEDs. 
+   The interconnections between buttons and LEDs are presented in the following table:
 
-   Use one of the sensor's buttons to control one or many of the actuator's LEDs. The interconnections between buttons and LEDs are presented in the following table:
-
-   +----------+--------------------------+
-   | Button   | LEDs                     |
-   +==========+==========================+
-   | BUTTON1  | LED1                     |
-   +----------+--------------------------+
-   | BUTTON2  | LED1, LED2               |
-   +----------+--------------------------+
-   | BUTTON3  | LED1, LED2, LED3         |
-   +----------+--------------------------+
-   | BUTTON4  | LED1, LED2, LED3, LED4   |
-   +----------+--------------------------+
-
-   .. note::
-   
-      UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA UWAGA 
+   +----------------+------------------------+
+   | Control button | Controlled LEDs        |
+   | (Sensor)       | (Actuator)             |
+   +================+========================+
+   | BUTTON1        | LED1                   |
+   +----------------+------------------------+
+   | BUTTON2        | LED1, LED2             |
+   +----------------+------------------------+
+   | BUTTON3        | LED1, LED2, LED3       |
+   +----------------+------------------------+
+   | BUTTON4        | LED1, LED2, LED3, LED4 |
+   +----------------+------------------------+
 
 .. _Nordic nRF52840 DK: https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK
