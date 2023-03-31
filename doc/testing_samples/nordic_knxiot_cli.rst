@@ -15,37 +15,31 @@ KNX IoT CLI
 +---------------------+-------------------------------------------+
 | Command             | Description                               |
 +=====================+===========================================+
-| knx dev sn          | Read device serial number                 |
+| ``knx dev sn``      | Read device serial number                 |
 +---------------------+-------------------------------------------+
-| knx dev hwv         | Read device hardware version              |
+| ``knx dev hwv``     | Read device hardware version              |
 +---------------------+-------------------------------------------+
-| knx dev hwvt        | Read device hardware type                 |
+| ``knx dev hwvt``    | Read device hardware type                 |
 +---------------------+-------------------------------------------+
-| knx dev model       | Read device mode                          |
+| ``knx dev model``   | Read device mode                          |
 +---------------------+-------------------------------------------+
-| knx dev sa          | Read/write device subnet address          |
+| ``knx dev sa``      | Read/write device subnet address          |
 +---------------------+-------------------------------------------+
-| knx dev da          | Read/write device address                 |
+| ``knx dev da``      | Read/write device address                 |
 +---------------------+-------------------------------------------+
-| knx dev hname       | Read/write device hostname                |
+| ``knx dev hname``   | Read/write device hostname                |
 +---------------------+-------------------------------------------+
-| knx dev fid         | Read/write device fabric identifier       |
+| ``knx dev fid``     | Read/write device fabric identifier       |
 +---------------------+-------------------------------------------+
-| knx dev iid         | Read/write device installation identifier |
+| ``knx dev iid``     | Read/write device installation identifier |
 +---------------------+-------------------------------------------+
-| knx dev ia          | Read/write device individual address      |
+| ``knx dev ia``      | Read/write device individual address      |
 +---------------------+-------------------------------------------+
-| knx dev port        | Read/write device port                    |
+| ``knx dev port``    | Read/write device port                    |
 +---------------------+-------------------------------------------+
-| knx dev pm          | Read/write  device programming mode       |
+| ``knx dev pm``      | Read/write  device programming mode       |
 +---------------------+-------------------------------------------+
-| knx got             | Print/configure Group Objet Table         |
-+---------------------+-------------------------------------------+
-| knx grt             | Print/configure Group Recipient Table     |
-+---------------------+-------------------------------------------+
-| knx gpt             | Print/configure Group Publisher Table     |
-+---------------------+-------------------------------------------+
-| knx lsm             | Read/write Load State Machine state       |
+| ``knx got``         | Print/configure Group Objet Table         |
 +---------------------+-------------------------------------------+
 
 
@@ -90,16 +84,16 @@ For CLI purposes `Configuration flags`_ are represented by assigned bits.
 Printing Group Object Table entries
 ===================================
 
-In order to read Group Object Table content, you can use :file:`knx got` command.
+In order to read Group Object Table content, you can use ``knx got show`` command.
 
   .. code-block:: console
   
-     uart:~$ knx got
+     uart:~$ knx got show
      [ 0]: 124 /p/ls/room 252 [1]
      [ 1]: 256 /p/ls/kitchen 252 [2,3]
      [ 2]: 512 /p/ls/garage 252 [4,5,6]
 
-:file:`knx got` command output showw three entries in Group Object Table. Entries are desribed in details in table below.
+``knx got show`` command output showw three entries in Group Object Table. Entries are desribed in details in table below.
   
 +---------+--------------+---------------+---------------------+-----------------------------------------------------------------------------+
 | Entry   | Identifier   | Path          | Flags               | Group addresses                                                             |
@@ -177,9 +171,19 @@ The following entry example allows the Light Sensor to send notifications to gro
 Altering Group Object Table entry
 =================================
 
-In order to add new entry or edit the existing one :file:`knx got <id> <path> [<ga>] <flags>` can be used. 
+In order to add, change, or remove an entry the following commands can be used:
 
-When entry identifier matches any other in the table its content is updated. Otherwise, new entry is added to the table. The command's parameters usage is described in the following table.
++--------------------+-------------------------------------------------+
+| Action             | Description                                     |
++====================+=================================================+
+| Adding a new entry | ``knx got add <id> <path> [<ga>] <flags>``      |
++--------------------+-------------------------------------------------+
+| Changing an entry  | ``knx got edit <id> <path> [<ga>] <flags>``     |
++--------------------+-------------------------------------------------+
+| Removing an entry  | ``knx got remove <id>``                         |
++--------------------+-------------------------------------------------+
+
+The command's parameters usage is described in the following table:
 
 +-------------+-------------------------------------------+----------------------------------+
 | Parameter   | Description                               | Data type                        | 
@@ -193,12 +197,20 @@ When entry identifier matches any other in the table its content is updated. Oth
 | <flags>     | Configuration flags described above       | integer                          | 
 +-------------+-------------------------------------------+----------------------------------+
 
-Example below:
+Examples below:
 
-  .. code-block:: console
+.. code-block:: console
   
-     uart:~$ knx got 11 /p/light/gamingroom 252
+   uart:~$ knx got add 11 /p/light/gamingroom 252 [1]
 
- .. _ETS tool: https://www.knx.org/knx-en/for-professionals/software/ets-professional/
- .. _here: https://support.knx.org/hc/en-us/articles/115003188089
- .. _Configuration flags: https://support.knx.org/hc/en-us/articles/115003188089
+.. code-block:: console
+  
+   uart:~$ knx got edit 11 /p/light/gamingroom 252 [1,2,3]
+
+.. code-block:: console
+  
+   uart:~$ knx got remove 11
+
+.. _ETS tool: https://www.knx.org/knx-en/for-professionals/software/ets-professional/
+.. _here: https://support.knx.org/hc/en-us/articles/115003188089
+.. _Configuration flags: https://support.knx.org/hc/en-us/articles/115003188089

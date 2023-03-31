@@ -73,7 +73,11 @@ To verify Thread devices status, do the following:
 Connecting Light Switch Sensor to Light Switch Actuator
 *******************************************************
 
-Both Light Switch Actuator and Light  Switch Sensor are built with 4 Functional Blocks with a single Datapoint. 
+KNX IoT Point API devices just as the classic KNX devices consist of one or many Functional Blocks. The Functional Block contain one or more Datapoints which are its
+inputs, outputs, and parameters. The most important feature of Datapoint's description is its type. The type specifies how the Datapoint is encoded,
+its supported range, units, etc. All Datapoints of given Functional Block and featured types are described in KNX Specification.
+
+Both Light Switch Actuator and Light  Switch Sensor are built with 4 Functional Blocks with a single Datapoint - "Switch On Off" (type name: DPT_Switch, id: 1.001). 
 Every Datapoint controls a single `Nordic nRF52840 DK`_ kit LED (actuator) or is controlled by a single `Nordic nRF52840 DK`_ button (sensor). 
 For communication between KNX IoT Point API devices send s-mode messages over CoAP protocol. 
 Recipient of the message checks its Group Object Table in order to verify that it is capable of processing it. 
