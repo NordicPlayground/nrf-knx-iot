@@ -231,11 +231,38 @@ with a single <strong>Switch On/Off</strong> input Datapoint (Datapointype ID: 1
 <p>See <a class="reference external" href="https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/getting_started/testing.html#gs-testing">Testing and debugging an application</a> for information on testing and debugging in the nRF Connect SDK.</p>
 <p>After successfully building the sample and flashing manufacturing data, the sample is ready to use.
 To refresh the logs, restart the program by pressing the <span class="guilabel">RESET</span> button on your development kit.
-You should see the following output:</p>
+You should see output similar to the following:</p>
 <blockquote>
-<div><div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>PLACEHOLDER PLACEHOLDER PLACEHOLDER PLACEHOLDER PLACEHOLDER PLACEHOLDER PLACEHOLDER PLACEHOLDER PLACEHOLDER</p>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">*** Booting Zephyr OS build v3.2.99-ncs1 ***</span>
+<span class="go">Loading Group Object Table from Persistent storage</span>
+<span class="go">Loading Group Recipient Table from Persistent storage</span>
+<span class="go">Loading Group Publisher Table from Persistent storage</span>
+<span class="go">Loading AT Table from Persistent storage</span>
+<span class="go">Serial Number: LSAB0</span>
+<span class="go">Loading Device Config from Persistent storage</span>
+<span class="go">  idd (storage) 0</span>
+<span class="go">  sa (storage) 0</span>
+<span class="go">  da (storage) 0</span>
+<span class="go">oc_knx_load_state: Loading Device Config from Persistent storage</span>
+<span class="go">Register Resource with local path &quot;/p/1&quot;</span>
+<span class="go">Light Switching actuator 417 (LSAB) : SwitchOnOff</span>
+<span class="go">Data point 417.61 (DPT_Switch)</span>
+<span class="go">Register Resource with local path &quot;/p/2&quot;</span>
+<span class="go">Light Switching actuator 417 (LSAB) : SwitchOnOff</span>
+<span class="go">Data point 417.61 (DPT_Switch)</span>
+<span class="go">Register Resource with local path &quot;/p/3&quot;</span>
+<span class="go">Light Switching actuator 417 (LSAB) : SwitchOnOff</span>
+<span class="go">Data point 417.61 (DPT_Switch)</span>
+<span class="go">Register Resource with local path &quot;/p/4&quot;</span>
+<span class="go">Light Switching actuator 417 (LSAB) : SwitchOnOff</span>
+<span class="go">Data point 417.61 (DPT_Switch)</span>
+<span class="go">factory_presets_cb: NOP</span>
+<span class="go">oc_register_group_multicasts: port 0</span>
+<span class="go">oc_init_datapoints_at_initialization</span>
+<span class="go">OSCORE - Disabled</span>
+<span class="go">Server &quot;Actuator (LSAB) 417&quot; running, waiting for incoming connections.</span>
+<span class="gp">uart:~$</span>
+</pre></div>
 </div>
 </div></blockquote>
 <div class="section" id="openthread-configuration">

@@ -10,6 +10,8 @@ Development Kit
 
 Two nRF52840 DKs are required to run the KNX IoT demo application. For information on how to start working with the devices, refer to `Getting started with nRF52 Series`_ page.
 
+.. _sniffer_configuration:
+
 nRF Sniffer for 802.15.4
 ************************
 

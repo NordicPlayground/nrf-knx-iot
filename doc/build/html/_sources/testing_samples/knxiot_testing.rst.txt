@@ -5,6 +5,8 @@ KNX IoT testing
 
 With the sample applications - **Light Switch Actuator** and **Light Switch Sensor**, you will be apble to test simple KNX IoT system consisted of two Thread based devices.
 
+.. _starting_thread_network:
+
 Starting Thread network
 ***********************
 
@@ -241,5 +243,20 @@ It is achieved by setting KNX Actuator `Nordic nRF52840 DK`_ to receive events f
    +----------------+------------------------+
    | BUTTON4        | LED1, LED2, LED3, LED4 |
    +----------------+------------------------+
+
+Sniffing KNX IoT Point API communication
+****************************************
+
+In order to inspect the packets exchanged between KNX devices 802.15.4 sniffer can be used. After setting up the Wireshark as described 
+in :ref:`sniffer configuration <sniffer_configuration>` with regard to default configuration specified in :ref:`Starting Thread Network <starting_thread_network>` section we can capture
+CoAP messages sent through default port (5683).
+
+.. figure:: /images/example_capture.png
+
+   Figure: Capture of CoAP messages
+
+.. figure:: /images/example_coap_packet.png
+   
+   Figure: Content of CoAP message
 
 .. _Nordic nRF52840 DK: https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK

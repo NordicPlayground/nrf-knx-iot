@@ -197,7 +197,7 @@ The command's parameters usage is described in the following table:
 | <flags>     | Configuration flags described above       | integer                          | 
 +-------------+-------------------------------------------+----------------------------------+
 
-Example below:
+Examples below:
 
 .. code-block:: console
   

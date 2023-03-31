@@ -111,6 +111,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#example-1-one-button-mapped-to-four-leds">Example 1 - One button mapped to four LEDs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#example-2-one-button-mapped-to-one-led">Example 2 - One button mapped to one LED</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#example-3-mixed-configuration">Example 3 - Mixed configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sniffing-knx-iot-point-api-communication">Sniffing KNX IoT Point API communication</a></li>
 </ul>
 </li>
 </ul>
@@ -191,7 +192,7 @@
 <span id="knxiot-testing"></span><h1>KNX IoT testing<a class="headerlink" href="#knx-iot-testing" title="Permalink to this headline">¶</a></h1>
 <p>With the sample applications - <strong>Light Switch Actuator</strong> and <strong>Light Switch Sensor</strong>, you will be apble to test simple KNX IoT system consisted of two Thread based devices.</p>
 <div class="section" id="starting-thread-network">
-<h2>Starting Thread network<a class="headerlink" href="#starting-thread-network" title="Permalink to this headline">¶</a></h2>
+<span id="id1"></span><h2>Starting Thread network<a class="headerlink" href="#starting-thread-network" title="Permalink to this headline">¶</a></h2>
 <p>Devices enable Thread interface during startup automatically - they are configured to create and join Thread network with parameters as below.</p>
 <table class="docutils align-default">
 <colgroup>
@@ -523,6 +524,20 @@ The interconnections between buttons and LEDs are presented in the following tab
 </table>
 </li>
 </ol>
+</div>
+<div class="section" id="sniffing-knx-iot-point-api-communication">
+<h2>Sniffing KNX IoT Point API communication<a class="headerlink" href="#sniffing-knx-iot-point-api-communication" title="Permalink to this headline">¶</a></h2>
+<p>In order to inspect the packets exchanged between KNX devices 802.15.4 sniffer can be used. After setting up the Wireshark as described
+in <a class="reference internal" href="../setting_up_knxiot_environment/setting_up_hardware.html#sniffer-configuration"><span class="std std-ref">sniffer configuration</span></a> with regard to default configuration specified in <a class="reference internal" href="#starting-thread-network"><span class="std std-ref">Starting Thread Network</span></a> section we can capture
+CoAP messages sent through default port (5683).</p>
+<div class="figure align-default" id="id2">
+<img alt="../_images/example_capture.png" src="../_images/example_capture.png" />
+<p class="caption"><span class="caption-text">Figure: Capture of CoAP messages</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</div>
+<div class="figure align-default" id="id3">
+<img alt="../_images/example_coap_packet.png" src="../_images/example_coap_packet.png" />
+<p class="caption"><span class="caption-text">Figure: Content of CoAP message</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</div>
 </div>
 </div>
 
