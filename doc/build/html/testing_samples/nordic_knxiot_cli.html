@@ -316,14 +316,12 @@ In the future, KNX IoT devices will be configured using <a class="reference exte
 <div class="section" id="printing-group-object-table-entries">
 <h3>Printing Group Object Table entries<a class="headerlink" href="#printing-group-object-table-entries" title="Permalink to this headline">¶</a></h3>
 <p>In order to read Group Object Table content, you can use <code class="docutils literal notranslate"><span class="pre">knx</span> <span class="pre">got</span> <span class="pre">show</span></code> command.</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">uart:~$ </span>knx got show
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">uart:~$ </span>knx got show
 <span class="go">[ 0]: 124 /p/ls/room 252 [1]</span>
 <span class="go">[ 1]: 256 /p/ls/kitchen 252 [2,3]</span>
 <span class="go">[ 2]: 512 /p/ls/garage 252 [4,5,6]</span>
 </pre></div>
 </div>
-</div></blockquote>
 <p><code class="docutils literal notranslate"><span class="pre">knx</span> <span class="pre">got</span> <span class="pre">show</span></code> command output showw three entries in Group Object Table. Entries are desribed in details in table below.</p>
 <table class="docutils align-default">
 <colgroup>
@@ -546,7 +544,7 @@ In the future, KNX IoT devices will be configured using <a class="reference exte
 <td><p>Entry paths</p></td>
 <td><p>string</p></td>
 </tr>
-<tr class="row-even"><td><p>[&lt;ga]</p></td>
+<tr class="row-even"><td><p>&lt;ga&gt;</p></td>
 <td><p>Comma separated list of Group Addresses</p></td>
 <td><p>comma separated integer list</p></td>
 </tr>

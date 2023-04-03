@@ -28,7 +28,7 @@ Devices enable Thread interface during startup automatically - they are configur
 
 To verify Thread devices status, do the following:
 
-#. Check Active Data using :file:`ot dataset active` command.
+#. Check Active Data using ``ot dataset active`` command.
 
    .. code-block:: console
 
@@ -45,41 +45,41 @@ To verify Thread devices status, do the following:
       Security Policy: 672 onrc
       Done
 
-#. Check devices roles using :file:`ot state` command.
+#. Check devices roles using ``ot state`` command.
 
   * one of device must be a Thread leader:
 
-     .. code-block:: console
-  
-        uart:~$ ot state
-        leader
-        Done
+    .. code-block:: console
+ 
+       uart:~$ ot state
+       leader
+       Done
     
   * another device either Thread child:
 	
-     .. code-block:: console
+    .. code-block:: console
 
-        uart:~$ ot state
-        child
-        Done
+       uart:~$ ot state
+       child
+       Done
       
     or Thread leader:
 	  
-     .. code-block:: console
+    .. code-block:: console
 
-        uart:~$ ot state
-        leader
-        Done	
+       uart:~$ ot state
+       leader
+       Done	
 
 	  
 Connecting Light Switch Sensor to Light Switch Actuator
 *******************************************************
 
-KNX IoT Point API devices just as the classic KNX devices consist of one or many Functional Blocks. The Functional Block contain one or more Datapoints which are its
+KNX IoT devices, just as the classic KNX devices, consist of one or many Functional Blocks. The Functional Block contains one or more Datapoints which are its
 inputs, outputs, and parameters. The most important feature of Datapoint's description is its type. The type specifies how the Datapoint is encoded,
-its supported range, units, etc. All Datapoints of given Functional Block and featured types are described in KNX Specification.
+its supported range, units, etc. All Datapoints of given Functional Block and featured types are described in `KNX Specification`_.
 
-Both Light Switch Actuator and Light  Switch Sensor are built with 4 Functional Blocks with a single Datapoint - "Switch On Off" (type name: DPT_Switch, id: 1.001). 
+Both Light Switch Actuator and Sensor are built with 4 Functional Blocks with a single Datapoint - "Switch On Off" (type name: DPT_Switch, id: 1.001). 
 Every Datapoint controls a single `Nordic nRF52840 DK`_ kit LED (actuator) or is controlled by a single `Nordic nRF52840 DK`_ button (sensor). 
 For communication between KNX IoT Point API devices send s-mode messages over CoAP protocol. 
 Recipient of the message checks its Group Object Table in order to verify that it is capable of processing it. 
@@ -131,7 +131,7 @@ One device must be configured as Actuator and one as Sensor.
 
 One button of KNX IoT Actuator `Nordic nRF52840 DK`_ device will control four LEDs built in to KNX IoT Sensor `Nordic nRF52840 DK`_ device.
 
-#. Configure Actuator device by adding entries to Actuator's Group Object Table - command :file:`knx got`.
+#. Configure Actuator device by adding entries to Actuator's Group Object Table - command ``knx got``.
 
    .. code-block:: console
 
@@ -140,7 +140,7 @@ One button of KNX IoT Actuator `Nordic nRF52840 DK`_ device will control four LE
       uart:~$ knx got 3 /p/3 22 [1]
       uart:~$ knx got 4 /p/4 22 [1]
 
-#. Configure Sensor device by adding entries to Sensor's Group Object Table - command :file:`knx got`.
+#. Configure Sensor device by adding entries to Sensor's Group Object Table - command ``knx got``.
 
    .. code-block:: console
 
@@ -166,7 +166,7 @@ One device must be configured as Actuator and one as Sensor.
 We need to perform configuration/mapping of buttons built in to KNX IoT Sensor `Nordic nRF52840 DK`_ to control LEDs built in to the KNX IoT Actuator `Nordic nRF52840 DK`_ - one button to one LED.
 It is achieved by dedicated on KNX group to every input-output pair.
 
-#. Configure Actuator device by adding entries to Actuator's Group Object Table - command :file:`knx got`.
+#. Configure Actuator device by adding entries to Actuator's Group Object Table - command ``knx got``.
 
    .. code-block:: console
 
@@ -175,7 +175,7 @@ It is achieved by dedicated on KNX group to every input-output pair.
       uart:~$ knx got 3 /p/3 22 [3]
       uart:~$ knx got 4 /p/4 22 [4]
 
-#. Configure Sensor device by adding entries to Sensor's Group Object Table - command :file:`knx got`.
+#. Configure Sensor device by adding entries to Sensor's Group Object Table - command ``knx got``.
 
 
    .. code-block:: console
@@ -210,7 +210,7 @@ One device must be configured as Actuator and one as Sensor.
 We need to perform configuration/mapping of buttons built in to KNX IoT sensor to control LEDs built in to the KNX IoT Actuator - one button to one LED.
 It is achieved by setting KNX Actuator `Nordic nRF52840 DK`_ to receive events from multple groups.
 
-#. Configure Actuator device by adding entries to Actuator's Group Object Table - command :file:`knx got`.
+#. Configure Actuator device by adding entries to Actuator's Group Object Table - command ``knx got``.
 
    .. code-block:: console
 
@@ -219,7 +219,7 @@ It is achieved by setting KNX Actuator `Nordic nRF52840 DK`_ to receive events f
       uart:~$ knx got 3 /p/3 22 [3,4]
       uart:~$ knx got 4 /p/4 22 [4]
 
-#. Configure Sensor device by adding entries to Sensor's Group Object Table - command :file:`knx got`.
+#. Configure Sensor device by adding entries to Sensor's Group Object Table - command ``knx got``.
 
    .. code-block:: console
 
@@ -260,3 +260,4 @@ CoAP messages sent through default port (5683).
    Figure: Content of CoAP message
 
 .. _Nordic nRF52840 DK: https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK
+.. _KNX Specification: https://www.knx.org/wAssets/docs/downloads/Certification/Interworking-Datapoint-types/03_07_02-Datapoint-Types-v02.02.01-AS.pdf

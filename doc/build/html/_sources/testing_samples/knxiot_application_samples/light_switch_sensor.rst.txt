@@ -34,37 +34,37 @@ After successfully building the sample and flashing manufacturing data, the samp
 To refresh the logs, restart the program by pressing the :guilabel:`RESET` button on your development kit.
 You should see output similar to the following:
 
-  .. code-block:: console
+.. code-block:: console
 
-    *** Booting Zephyr OS build v3.2.99-ncs1 ***
-    Loading Group Object Table from Persistent storage
-    Loading Group Recipient Table from Persistent storage
-    Loading Group Publisher Table from Persistent storage
-    Loading AT Table from Persistent storage
-    Serial Number: LSSB0
-    Loading Device Config from Persistent storage
-      idd (storage) 0
-      sa (storage) 0
-      da (storage) 0
-    oc_knx_load_state: Loading Device Config from Persistent storage
-    Register Resource with local path "/p/1"
-    Light Switching Sensor 421.61 (LSSB) : SwitchOnOff 
-    Data point 417.61 (DPT_Switch) 
-    Register Resource with local path "/p/2"
-    Light Switching Sensor 421.61 (LSSB) : SwitchOnOff 
-    Data point 417.61 (DPT_Switch) 
-    Register Resource with local path "/p/3"
-    Light Switching Sensor 421.61 (LSSB) : SwitchOnOff 
-    Data point 417.61 (DPT_Switch) 
-    Register Resource with local path "/p/4"
-    Light Switching Sensor 421.61 (LSSB) : SwitchOnOff 
-    Data point 417.61 (DPT_Switch) 
-    factory_presets_cb: NOP
-    oc_register_group_multicasts: port 0 
-    oc_init_datapoints_at_initialization
-    OSCORE - Disabled
-    Server "Sensor (LSSB) 417.61" running, waiting for incoming connections.
-    uart:~$
+   *** Booting Zephyr OS build v3.2.99-ncs1 ***
+   Loading Group Object Table from Persistent storage
+   Loading Group Recipient Table from Persistent storage
+   Loading Group Publisher Table from Persistent storage
+   Loading AT Table from Persistent storage
+   Serial Number: LSSB0
+   Loading Device Config from Persistent storage
+     idd (storage) 0
+     sa (storage) 0
+     da (storage) 0
+   oc_knx_load_state: Loading Device Config from Persistent storage
+   Register Resource with local path "/p/1"
+   Light Switching Sensor 421.61 (LSSB) : SwitchOnOff 
+   Data point 417.61 (DPT_Switch) 
+   Register Resource with local path "/p/2"
+   Light Switching Sensor 421.61 (LSSB) : SwitchOnOff 
+   Data point 417.61 (DPT_Switch) 
+   Register Resource with local path "/p/3"
+   Light Switching Sensor 421.61 (LSSB) : SwitchOnOff 
+   Data point 417.61 (DPT_Switch) 
+   Register Resource with local path "/p/4"
+   Light Switching Sensor 421.61 (LSSB) : SwitchOnOff 
+   Data point 417.61 (DPT_Switch) 
+   factory_presets_cb: NOP
+   oc_register_group_multicasts: port 0 
+   oc_init_datapoints_at_initialization
+   OSCORE - Disabled
+   Server "Sensor (LSSB) 417.61" running, waiting for incoming connections.
+   uart:~$
 
 OpenThread configuration
 ========================

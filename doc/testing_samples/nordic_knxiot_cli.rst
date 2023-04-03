@@ -86,12 +86,12 @@ Printing Group Object Table entries
 
 In order to read Group Object Table content, you can use ``knx got show`` command.
 
-  .. code-block:: console
+.. code-block:: console
   
-     uart:~$ knx got show
-     [ 0]: 124 /p/ls/room 252 [1]
-     [ 1]: 256 /p/ls/kitchen 252 [2,3]
-     [ 2]: 512 /p/ls/garage 252 [4,5,6]
+   uart:~$ knx got show
+   [ 0]: 124 /p/ls/room 252 [1]
+   [ 1]: 256 /p/ls/kitchen 252 [2,3]
+   [ 2]: 512 /p/ls/garage 252 [4,5,6]
 
 ``knx got show`` command output showw three entries in Group Object Table. Entries are desribed in details in table below.
   
@@ -192,7 +192,7 @@ The command's parameters usage is described in the following table:
 +-------------+-------------------------------------------+----------------------------------+
 | <path>      | Entry paths                               | string                           | 
 +-------------+-------------------------------------------+----------------------------------+
-| [<ga]       | Comma separated list of Group Addresses   | comma separated integer list     | 
+| <ga>        | Comma separated list of Group Addresses   | comma separated integer list     | 
 +-------------+-------------------------------------------+----------------------------------+
 | <flags>     | Configuration flags described above       | integer                          | 
 +-------------+-------------------------------------------+----------------------------------+

@@ -6,7 +6,7 @@ Samples overview
 .. note::
     Both samples must be used in paralell to test KNX IoT functionality.
 
-In the KNX IoT repository, all samples are placed in the :file:`samples` directory.
+In the KNX IoT repository, all samples are placed in the ``samples`` directory.
 The following table outlines the differences in their configurations:
 
 +-------------------------------+----------------------------+---------------------------------------------------------------------------------------------+

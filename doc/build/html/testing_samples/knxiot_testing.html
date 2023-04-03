@@ -224,7 +224,7 @@
 </table>
 <p>To verify Thread devices status, do the following:</p>
 <ol class="arabic">
-<li><p>Check Active Data using <code class="file docutils literal notranslate"><span class="pre">ot</span> <span class="pre">dataset</span> <span class="pre">active</span></code> command.</p>
+<li><p>Check Active Data using <code class="docutils literal notranslate"><span class="pre">ot</span> <span class="pre">dataset</span> <span class="pre">active</span></code> command.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">uart:~$ </span>ot dataset active
 <span class="go">Active Timestamp: 1</span>
 <span class="go">Channel: 15</span>
@@ -240,45 +240,39 @@
 </pre></div>
 </div>
 </li>
-<li><p>Check devices roles using <code class="file docutils literal notranslate"><span class="pre">ot</span> <span class="pre">state</span></code> command.</p></li>
+<li><p>Check devices roles using <code class="docutils literal notranslate"><span class="pre">ot</span> <span class="pre">state</span></code> command.</p></li>
 </ol>
 <blockquote>
 <div><ul>
 <li><p>one of device must be a Thread leader:</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">uart:~$ </span>ot state
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">uart:~$ </span>ot state
 <span class="go">leader</span>
 <span class="go">Done</span>
 </pre></div>
 </div>
-</div></blockquote>
 </li>
 <li><p>another device either Thread child:</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">uart:~$ </span>ot state
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">uart:~$ </span>ot state
 <span class="go">child</span>
 <span class="go">Done</span>
 </pre></div>
 </div>
-</div></blockquote>
 <p>or Thread leader:</p>
-<blockquote>
-<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">uart:~$ </span>ot state
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">uart:~$ </span>ot state
 <span class="go">leader</span>
 <span class="go">Done</span>
 </pre></div>
 </div>
-</div></blockquote>
 </li>
 </ul>
 </div></blockquote>
 </div>
 <div class="section" id="connecting-light-switch-sensor-to-light-switch-actuator">
 <h2>Connecting Light Switch Sensor to Light Switch Actuator<a class="headerlink" href="#connecting-light-switch-sensor-to-light-switch-actuator" title="Permalink to this headline">¶</a></h2>
-<p>KNX IoT Point API devices just as the classic KNX devices consist of one or many Functional Blocks. The Functional Block contain one or more Datapoints which are its
+<p>KNX IoT devices, just as the classic KNX devices, consist of one or many Functional Blocks. The Functional Block contains one or more Datapoints which are its
 inputs, outputs, and parameters. The most important feature of Datapoint’s description is its type. The type specifies how the Datapoint is encoded,
-its supported range, units, etc. All Datapoints of given Functional Block and featured types are described in KNX Specification.</p>
-<p>Both Light Switch Actuator and Light  Switch Sensor are built with 4 Functional Blocks with a single Datapoint - “Switch On Off” (type name: DPT_Switch, id: 1.001).
+its supported range, units, etc. All Datapoints of given Functional Block and featured types are described in <a class="reference external" href="https://www.knx.org/wAssets/docs/downloads/Certification/Interworking-Datapoint-types/03_07_02-Datapoint-Types-v02.02.01-AS.pdf">KNX Specification</a>.</p>
+<p>Both Light Switch Actuator and Sensor are built with 4 Functional Blocks with a single Datapoint - “Switch On Off” (type name: DPT_Switch, id: 1.001).
 Every Datapoint controls a single <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK">Nordic nRF52840 DK</a> kit LED (actuator) or is controlled by a single <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK">Nordic nRF52840 DK</a> button (sensor).
 For communication between KNX IoT Point API devices send s-mode messages over CoAP protocol.
 Recipient of the message checks its Group Object Table in order to verify that it is capable of processing it.</p>
@@ -379,7 +373,7 @@ Recipient of the message checks its Group Object Table in order to verify that i
 One device must be configured as Actuator and one as Sensor.</p>
 <p>One button of KNX IoT Actuator <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK">Nordic nRF52840 DK</a> device will control four LEDs built in to KNX IoT Sensor <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK">Nordic nRF52840 DK</a> device.</p>
 <ol class="arabic">
-<li><p>Configure Actuator device by adding entries to Actuator’s Group Object Table - command <code class="file docutils literal notranslate"><span class="pre">knx</span> <span class="pre">got</span></code>.</p>
+<li><p>Configure Actuator device by adding entries to Actuator’s Group Object Table - command <code class="docutils literal notranslate"><span class="pre">knx</span> <span class="pre">got</span></code>.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">uart:~$ </span>knx got <span class="m">1</span> /p/1 <span class="m">22</span> <span class="o">[</span><span class="m">1</span><span class="o">]</span>
 <span class="gp">uart:~$ </span>knx got <span class="m">2</span> /p/2 <span class="m">22</span> <span class="o">[</span><span class="m">1</span><span class="o">]</span>
 <span class="gp">uart:~$ </span>knx got <span class="m">3</span> /p/3 <span class="m">22</span> <span class="o">[</span><span class="m">1</span><span class="o">]</span>
@@ -387,7 +381,7 @@ One device must be configured as Actuator and one as Sensor.</p>
 </pre></div>
 </div>
 </li>
-<li><p>Configure Sensor device by adding entries to Sensor’s Group Object Table - command <code class="file docutils literal notranslate"><span class="pre">knx</span> <span class="pre">got</span></code>.</p>
+<li><p>Configure Sensor device by adding entries to Sensor’s Group Object Table - command <code class="docutils literal notranslate"><span class="pre">knx</span> <span class="pre">got</span></code>.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">uart:~$ </span>knx got <span class="m">1</span> /p/1 <span class="m">22</span> <span class="o">[</span><span class="m">1</span><span class="o">]</span>
 </pre></div>
 </div>
@@ -422,7 +416,7 @@ One device must be configured as Actuator and one as Sensor.</p>
 <p>We need to perform configuration/mapping of buttons built in to KNX IoT Sensor <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK">Nordic nRF52840 DK</a> to control LEDs built in to the KNX IoT Actuator <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK">Nordic nRF52840 DK</a> - one button to one LED.
 It is achieved by dedicated on KNX group to every input-output pair.</p>
 <ol class="arabic">
-<li><p>Configure Actuator device by adding entries to Actuator’s Group Object Table - command <code class="file docutils literal notranslate"><span class="pre">knx</span> <span class="pre">got</span></code>.</p>
+<li><p>Configure Actuator device by adding entries to Actuator’s Group Object Table - command <code class="docutils literal notranslate"><span class="pre">knx</span> <span class="pre">got</span></code>.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">uart:~$ </span>knx got <span class="m">1</span> /p/1 <span class="m">22</span> <span class="o">[</span><span class="m">1</span><span class="o">]</span>
 <span class="gp">uart:~$ </span>knx got <span class="m">2</span> /p/2 <span class="m">22</span> <span class="o">[</span><span class="m">2</span><span class="o">]</span>
 <span class="gp">uart:~$ </span>knx got <span class="m">3</span> /p/3 <span class="m">22</span> <span class="o">[</span><span class="m">3</span><span class="o">]</span>
@@ -430,7 +424,7 @@ It is achieved by dedicated on KNX group to every input-output pair.</p>
 </pre></div>
 </div>
 </li>
-<li><p>Configure Sensor device by adding entries to Sensor’s Group Object Table - command <code class="file docutils literal notranslate"><span class="pre">knx</span> <span class="pre">got</span></code>.</p>
+<li><p>Configure Sensor device by adding entries to Sensor’s Group Object Table - command <code class="docutils literal notranslate"><span class="pre">knx</span> <span class="pre">got</span></code>.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">uart:~$ </span>knx got <span class="m">1</span> /p/1 <span class="m">22</span> <span class="o">[</span><span class="m">1</span><span class="o">]</span>
 <span class="gp">uart:~$ </span>knx got <span class="m">2</span> /p/2 <span class="m">22</span> <span class="o">[</span><span class="m">2</span><span class="o">]</span>
 <span class="gp">uart:~$ </span>knx got <span class="m">3</span> /p/3 <span class="m">22</span> <span class="o">[</span><span class="m">3</span><span class="o">]</span>
@@ -477,7 +471,7 @@ One device must be configured as Actuator and one as Sensor.</p>
 <p>We need to perform configuration/mapping of buttons built in to KNX IoT sensor to control LEDs built in to the KNX IoT Actuator - one button to one LED.
 It is achieved by setting KNX Actuator <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK">Nordic nRF52840 DK</a> to receive events from multple groups.</p>
 <ol class="arabic">
-<li><p>Configure Actuator device by adding entries to Actuator’s Group Object Table - command <code class="file docutils literal notranslate"><span class="pre">knx</span> <span class="pre">got</span></code>.</p>
+<li><p>Configure Actuator device by adding entries to Actuator’s Group Object Table - command <code class="docutils literal notranslate"><span class="pre">knx</span> <span class="pre">got</span></code>.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">uart:~$ </span>knx got <span class="m">1</span> /p/1 <span class="m">22</span> <span class="o">[</span><span class="m">1</span>,2,3,4<span class="o">]</span>
 <span class="gp">uart:~$ </span>knx got <span class="m">2</span> /p/2 <span class="m">22</span> <span class="o">[</span><span class="m">2</span>,3,4<span class="o">]</span>
 <span class="gp">uart:~$ </span>knx got <span class="m">3</span> /p/3 <span class="m">22</span> <span class="o">[</span><span class="m">3</span>,4<span class="o">]</span>
@@ -485,7 +479,7 @@ It is achieved by setting KNX Actuator <a class="reference external" href="https
 </pre></div>
 </div>
 </li>
-<li><p>Configure Sensor device by adding entries to Sensor’s Group Object Table - command <code class="file docutils literal notranslate"><span class="pre">knx</span> <span class="pre">got</span></code>.</p>
+<li><p>Configure Sensor device by adding entries to Sensor’s Group Object Table - command <code class="docutils literal notranslate"><span class="pre">knx</span> <span class="pre">got</span></code>.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">uart:~$ </span>knx got <span class="m">1</span> /p/1 <span class="m">22</span> <span class="o">[</span><span class="m">1</span><span class="o">]</span>
 <span class="gp">uart:~$ </span>knx got <span class="m">2</span> /p/2 <span class="m">22</span> <span class="o">[</span><span class="m">2</span><span class="o">]</span>
 <span class="gp">uart:~$ </span>knx got <span class="m">3</span> /p/3 <span class="m">22</span> <span class="o">[</span><span class="m">3</span><span class="o">]</span>
