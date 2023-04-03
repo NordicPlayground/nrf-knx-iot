@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SDK setup &mdash; KNX IoT  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/nordic.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/tabs.js"></script>
+    <script src="../_static/js/theme.js"></script>
+  <script type="text/javascript" src="../_static/js/ncs.js"></script>
+
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Samples" href="../testing_samples/samples.html" />
+    <link rel="prev" title="Hardware setup" href="setting_up_hardware.html" />
+  <link rel="shortcut icon" href="../_static/images/favicon.ico"/>
+
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            KNX IoT
+          </a>
+<div id="searchbox" role="search">
+  <div class="searchformwrapper">
+    <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+  </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Subpages:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../about_knxiot.html">About KNX IoT Point API</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="setting_up_knxiot_environment.html">Environment setup</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="requirements.html">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setting_up_hardware.html">Hardware setup</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">SDK setup</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../testing_samples/samples.html">Samples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../knxiot_release_notes.html">Release notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../knxiot_known_issues.html">Known issues</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../additional_resources.html">Additional resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">KNX IoT</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="setting_up_knxiot_environment.html">Environment setup</a></li>
+      <li class="breadcrumb-item active">SDK setup</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/setting_up_knxiot_environment/setting_up_sdk.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="sdk-setup">
+<span id="setting-up-sdk"></span><h1>SDK setup<a class="headerlink" href="#sdk-setup" title="Permalink to this heading"></a></h1>
+<p>The KNX IoT Point API solution from Nordic Semiconductor is based on the <a class="reference external" href="https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/index.html">nRF Connect SDK v2.3.0</a>.</p>
+<p>Use the Nordic’s <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK">nRF52840 DK</a> to create a KNX IoT Point API prototype for <a class="reference internal" href="../testing_samples/knxiot_application_samples/light_switch_actuator.html#light-switch-actuator"><span class="std std-ref">Light Switch Actuator</span></a> and <a class="reference internal" href="../testing_samples/knxiot_application_samples/light_switch_sensor.html#light-switch-sensor"><span class="std std-ref">Light Switch Sensor</span></a> samples.</p>
+<ol class="arabic">
+<li><p>Set up your development environment by following one of the installation methods below:</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-0-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-0-0-0" name="0-0" role="tab" tabindex="0">Automatic installation (Toolchain Manager)</button><button aria-controls="panel-0-0-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-1" name="0-1" role="tab" tabindex="-1">Manual installation</button></div><div aria-labelledby="tab-0-0-0" class="sphinx-tabs-panel" id="panel-0-0-0" name="0-0" role="tabpanel" tabindex="0"><p>Follow the steps in <a class="reference external" href="https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/gs_assistant.html#installing-automatically">Installing automatically</a> to perform automatic installation using the Toolchain Manager.</p>
+</div><div aria-labelledby="tab-0-0-1" class="sphinx-tabs-panel" hidden="true" id="panel-0-0-1" name="0-1" role="tabpanel" tabindex="0"><p>Follow the steps in <a class="reference external" href="https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/gs_installing.html#install-the-required-tools">Installing manually</a> to perform a manual installation.</p>
+</div></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For additional information on setting up the device as well as Nordic’s development environment and tools, see the <a class="reference external" href="https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/getting_started.html">nRF Connect SDK Getting started guide</a>.</p>
+</div>
+</li>
+<li><p>Clone the KNX IoT Point API repository.</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/NordicPlayground/nrf-knx-iot.git
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Download dependencies.</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git<span class="w"> </span>submodule<span class="w"> </span>init
+<span class="gp">$ </span>git<span class="w"> </span>submodule<span class="w"> </span>update
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Download the nRF Command Line from the <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Tools/nRF-Command-Line-Tools/Download#infotabs">nRF Command Line Tools</a> page.</p></li>
+<li><p>Optionally, to configure Wireshark for Thread packets sniffing, go to the <a class="reference external" href="https://infocenter.nordicsemi.com/index.jsp?topic=%2Fug_sniffer_802154%2FUG%2Fsniffer_802154%2Fconfiguring_sniffer_802154.html">Configuring Wireshark for Thread</a> page.</p></li>
+</ol>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../testing_samples/samples.html" class="btn btn-neutral float-right" title="Samples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="setting_up_hardware.html" class="btn btn-neutral" title="Hardware setup" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+
+<table>
+<tr>
+<td>
+    <p>
+        &copy; Copyright 2023, Nordic Semiconductor.
+
+    </p>
+</td>
+<td id="nordiclogo">
+  <a href="https://www.nordicsemi.com/"><img src="../_static/images/nordic.svg" border="0"/></a>
+</td>
+</tr>
+</table>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1496,7 +1496,11 @@ oc_load_group_object_table_entry(int entry)
 
   ret = oc_storage_read(filename, buf, GOT_ENTRY_MAX_SIZE);
   if (ret > 0) {
-    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
+  const size_t rep_size = 8; // TODO: find how many should we set
+  char rep_counts[rep_size];
+  uint8_t rep_mem[rep_size * sizeof(oc_rep_t)];
+  struct oc_memb rep_objects = { sizeof(oc_rep_t), rep_size, rep_counts, rep_mem, 0 };
+
     oc_rep_set_pool(&rep_objects);
     int err = oc_parse_rep(buf, ret, &rep);
     head = rep;
