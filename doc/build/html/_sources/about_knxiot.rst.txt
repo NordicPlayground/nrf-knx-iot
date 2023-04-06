@@ -23,11 +23,15 @@ Products that implement KNX IoT Point API stack (KNX IoT Point API devices) use 
 KNX IoT Point API devices are using the same concept of interoperability as present in classic KNX  TP (Twisted Pair) and RF (Radio Frequency) based devices - the same semantic data are shared on the tranport layer as in all other KNX devices. But the lower layers of the protocol stack are not KNX-specific - Thread protocol is used instead.
 That means middleware is required for sharing the data between KNX classic and KNX IoT parts of the system.
 
-Middleware functionality could be implemented as separate device - KNX IoT Router, that will be responsible for transmitting data from KNX IoT Point API devices via Thread Border Router to classic part of the KNX system and from KNX classic devices to KNX IoT Point API devices.
-This functionality could be also integrated with devices that is providing TBR (Thread Border Router) functionalities.
+ .. note::
+    Middleware functionality could be implemented as separate device - KNX IoT Router, that will be responsible for transmitting data from KNX IoT Point API devices via Thread Border Router to classic part of the KNX system and from KNX classic devices to KNX IoT Point API devices.
+ 
+    Also this feature can be implemented as additional service on Thread Border Router device (if only there is such use case/need and enough HW resources).
 
-   .. figure:: /images/knx_iot_sys_example.png
-      :alt: Example of KNX installation consisting of KNX TP and IoT devices.
+Drawing below present example of KNX installation that combines KNX TP and KNX IoT devices as single system.
+
+ .. figure:: /images/knx_iot_sys_example.png
+    :alt: Example of KNX installation consisting of KNX TP and IoT devices.
 
 
 
