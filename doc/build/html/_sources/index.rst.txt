@@ -7,14 +7,13 @@ KNX IoT extends the capabilities of the KNX standard with the power and flexibil
 
 With KNX IoT, devices can communicate over IP networks, allowing for greater flexibility in how devices are connected and controlled.
 
-KNX-IoT consists of three core components:
+KNX IoT can be divided in 3 parts:
 
-  * KNX IoT 3rd Party API that enables data interoperability
-  * Semantic information model to describe KNX installations and support devices interoperability
-  * KNX IoT Point API that enables IPv6 and Thread based connectivity
+  * Standarized KNX IoT 3rd Party API that enables data interoperatbility by introducing an abstracion layer between KNX-specific knowledge nad 3rd party applications that could utilize data produced by KNX installations
+  * Semantic layer that is added to the KNX Information model. KNX installations description created during system design with ETS is available via 3rd Party - supports devices and KNX systems interoperability
+  * KNX IoT Point API that enabled IPv6 and Thread based connectivity to the KNX devices
 
-
-This documentation provides instructions on how to correctly setup KNX Point API stack from the perspective of the `nRF Connect SDK`_. You can browse the contend by referring to the following pages:
+This documentation provides instructions on how to correctly setup KNX Point API stack from the perspective of the Nordic SoCs and the `nRF Connect SDK`_. You can browse the content by referring to the following pages:
 
 .. toctree::
    :maxdepth: 1
