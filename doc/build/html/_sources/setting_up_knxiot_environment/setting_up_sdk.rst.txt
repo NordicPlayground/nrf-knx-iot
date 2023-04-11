@@ -1,62 +1,45 @@
 .. _setting_up_sdk:
 
-Setting up SDK
-##############
+SDK setup
+#########
 
+The KNX IoT Point API solution from Nordic Semiconductor is based on the `nRF Connect SDK v2.3.0`_.
 
+Use the Nordic's `nRF52840 DK`_ to create a KNX IoT Point API prototype for Light Switch Actuator and Light Switch Sensor samples.
 
-The KNX IoT Point API solution from Nordic Semiconductor is based on the `nRF Connect SDK v2.3.0`_. 
+1. Set up your development environment by following one of the installation methods below:
 
-In order to create a KNX IoT Point API prototype, you need to use the following devices:
+   .. tabs::
 
- * `Nordic nRF52840 DK`_ - for Light Switch Actuator and Light Switch Sensor samples.
+      .. tab:: Automatic installation (Toolchain Manager)
 
-You can set up your development environment by following one of the installation methods below:
+         Follow the steps in `Installing automatically`_ to perform automatic installation using the Toolchain Manager.
 
-.. tabs::
+      .. tab:: Manual installation
 
-   .. tab:: Automatic installation (Toolchain Manager)
+         Follow the steps in `Installing manually`_ to perform a manual installation.
 
-      Follow the steps in `Installing automatically`_ to perform automatic installation using the Toolchain Manager.
+   .. note::
+      For additional information on setting up the device as well as Nordic’s development environment and tools, see the `nRF Connect SDK Getting started guide`_.
 
-   .. tab:: Manual installation
+#. Clone the KNX IoT Point API private repository.
 
-      Follow the steps in `Installing manually`_ to perform a manual installation.
+     .. code-block:: console
 
-For additional information on setting up the device and Nordic’s development environment and tools, see the `nRF Connect SDK Getting started guide`_.
+       $ git clone https://github.com/konradderda/nordic_knx.git
 
+#. Download dependencies.
 
+     .. code-block:: console
 
-Downloading KNX IoT Point API repository
-****************************************
+        $ git submodule init
+        $ git submodule update
 
-1. Clone the KNX IoT Point API repository 
+#. Download the nRF Command Line from the `nRF Command Line Tools`_ page.
 
-  .. note::
-   currently it's a private repository, we need to change it to a public one later on):
-  
-  .. code-block:: console
-     
-	 $ git clone https://github.com/konradderda/nordic_knx.git
+#. Optionally, to configure Wireshark for Thread packets sniffing, go to the `Configuring Wireshark for Thread`_ page.
 
-2. Download dependencies
-
-  .. code-block:: console
-
-     $ git submodule init
-     $ git submodule update
-
-Downloading nRF Command Line Tools
-**********************************
-
-To download the nRF Command Line, go to the `nRF Command Line Tools`_ page.
-
-Configuring Wireshark for Thread
-********************************
-
-To configure Wireshark for Thread packets sniffing, go to the `Configuring Wireshark for Thread`_ page.
-
-.. _Nordic nRF52840 DK: https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK
+.. _nRF52840 DK: https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK
 .. _nRF Connect SDK Getting started guide: https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/getting_started.html
 .. _nRF Connect SDK v2.3.0: https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/index.html
 .. _nRF Command Line Tools: https://www.nordicsemi.com/Software-and-Tools/Development-Tools/nRF-Command-Line-Tools/Download#infotabs

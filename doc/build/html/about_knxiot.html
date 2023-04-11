@@ -45,7 +45,7 @@
 
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Setting up the KNX IoT environment" href="setting_up_knxiot_environment/setting_up_knxiot_environment.html" />
+    <link rel="next" title="KNX IoT environment setup" href="setting_up_knxiot_environment/setting_up_knxiot_environment.html" />
     <link rel="prev" title="Welcome to nRF Connect SDK – KNX IoT Point API" href="index.html" />
   <link rel="shortcut icon" href="_static/images/favicon.ico"/>
 
@@ -102,7 +102,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#knx-point-api-devices">KNX Point API devices</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="setting_up_knxiot_environment/setting_up_knxiot_environment.html">Setting up the KNX IoT environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setting_up_knxiot_environment/setting_up_knxiot_environment.html">KNX IoT environment setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="testing_samples/samples.html">Samples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="knxiot_release_notes.html">Release notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="knxiot_known_issues.html">Known issues</a></li>
@@ -176,38 +176,52 @@
             
   <div class="section" id="about-knx-iot-point-api">
 <span id="about-knxiot"></span><h1>About KNX IoT Point API<a class="headerlink" href="#about-knx-iot-point-api" title="Permalink to this headline">¶</a></h1>
-<p>KNX IoT Point API is described as a part of new specification (chapter 3.10.5) in the KNX system specification group.</p>
+<p>The KNX IoT Point API is described as a part of a new specification (chapter 3/10/5) in the KNX system specification.</p>
 <p>The specification covers:</p>
 <blockquote>
+<div><ul>
+<li><p>The IPv6-based transport layer that is suitable, for example, for Thread-based networks.</p></li>
+<li><p>A new communication/message protocol using the CoAP protocol and the CBOR format.</p></li>
+<li><p>Usage of the following data already used by other KNX transport layers:</p>
+<blockquote>
 <div><ul class="simple">
-<li><p>IPv6 based transport layer, eg. suitable for Thread-based networks</p></li>
-<li><p>A new communication/message protocol using CoAP and CBOR</p></li>
-<li><p>Usage of the same functional blocks and messages as the other KNX transport layers</p></li>
-<li><p>Usage of the same s-mode message semantics as the other KNX transport layers</p></li>
-<li><p>Usage of the same configuration data to configure which device is talking to which device</p></li>
+<li><p>Functional blocks and messages.</p></li>
+<li><p>S-mode message semantics.</p></li>
+<li><p>Configuration data to configure which device is talking to which device.</p></li>
 </ul>
 </div></blockquote>
-<p><a class="reference external" href="https://www.knx.org/knx-en/for-manufacturers/get-started/knx-iot-stack/">KNX IoT Point API stack</a> is an open-source and reference implementation of KNX IoT standard.
-This implementation has been integrated with nRF Connect SDK and can be used to build KNX-IoT device based on Thread networking including all the benefits it has to offer.</p>
+</li>
+</ul>
+</div></blockquote>
+<p><a class="reference external" href="https://www.knx.org/knx-en/for-manufacturers/get-started/knx-iot-stack/">KNX IoT Point API stack</a> is an open-source and reference implementation of the KNX IoT standard.
+This implementation has been integrated with the nRF Connect SDK, hence it can be used to build a KNX-IoT device based on Thread networking including all the benefits it has to offer.</p>
 <div class="section" id="knx-point-api-devices">
 <h2>KNX Point API devices<a class="headerlink" href="#knx-point-api-devices" title="Permalink to this headline">¶</a></h2>
-<p>Products that implement KNX IoT Point API stack (KNX IoT Point API devices) use an IPv6-based physical layer such as Thread for communication with the rest of the KNX installation. They can be easily used with exiting KNX products as a part of the single system (eg. combined with products that utilized Twisted Pair, KNXnet/IP as transportation layer).</p>
-<p>KNX IoT Point API devices are using the same concept of interoperability as present in classic KNX  TP (Twisted Pair) and RF (Radio Frequency) based devices - the same semantic data are shared on the tranport layer as in all other KNX devices. But the lower layers of the protocol stack are not KNX-specific - Thread protocol is used instead.
-That means middleware is required for sharing the data between KNX classic and KNX IoT parts of the system.</p>
+<p>Products that implement KNX IoT Point API stack use an IPv6-based physical layer, such as Thread, for communication with the rest of the KNX installation.
+KNX IoT Point API devices and other already existing KNX products (using other transmission methods like TP, PL, RF) can be easily interconnected within the same system.</p>
+<p>KNX IoT Point API devices are based on the same interoperability concept as classic KNX TP (Twisted Pair), KNX PL (Power Line) and KNX RF (Radio Frequency) methods.
+The same semantic data are shared through the transport layer.
+Lower layers of the protocol stack are not KNX-specific - the Thread protocol is used instead.
+It means that a middleware is required for sharing the data between KNX classic and KNX IoT parts of the system.</p>
 <blockquote>
 <div><div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Middleware functionality could be implemented as separate device - KNX IoT Router, that will be responsible for transmitting data from KNX IoT Point API devices via Thread Border Router to classic part of the KNX system and from KNX classic devices to KNX IoT Point API devices.</p>
-<p>Also this feature can be implemented as additional service on Thread Border Router device (if only there is such use case/need and enough HW resources).</p>
+<p>The middleware functionality could be implemented as a separate device called KNX IoT router.
+It is connected to the same IP network as the KNX IP router.</p>
+<p>The KNX IoT router is responsible for transmitting data in both directions:</p>
+<ul class="simple">
+<li><p>From KNX IoT Point API devices through the Thread Border router to the classic part of the KNX system through the KNX IP router.</p></li>
+<li><p>From KNX classic devices through the KNX IP, KNX IoT and Thread Border routers to KNX IoT Point API devices.</p></li>
+</ul>
+<p>Moreover, if it is needed and there are enough hardware resources, this feature can be implemented as an additional service on Thread Border router device.</p>
 </div>
 </div></blockquote>
-<p>Drawing below present example of KNX installation that combines KNX TP and KNX IoT devices as single system.</p>
+<p>The diagram below presents a sample of the KNX installation that combines KNX classic and KNX IoT devices within a single system.</p>
 <blockquote>
 <div><div class="figure align-default">
-<img alt="Example of KNX installation consisting of KNX TP and IoT devices." src="_images/knx_iot_sys_example.png" />
-</div>
+<img alt="Sample KNX installation consisting of KNX classic and IoT devices." src="_images/knx_iot_sys_sample.svg" /></div>
 </div></blockquote>
-<p>To get more details on the KNX IoT and KNX IoT Point API, see the sources of the <a class="reference internal" href="additional_resources.html#additional-resources"><span class="std std-ref">Additional resources</span></a> page.</p>
+<p>To get more details on the KNX IoT and KNX IoT Point API, see the sources listed on the <a class="reference internal" href="additional_resources.html#additional-resources"><span class="std std-ref">Additional resources</span></a> page.</p>
 </div>
 </div>
 
@@ -219,7 +233,7 @@ That means middleware is required for sharing the data between KNX classic and K
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="setting_up_knxiot_environment/setting_up_knxiot_environment.html" class="btn btn-neutral float-right" title="Setting up the KNX IoT environment" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="setting_up_knxiot_environment/setting_up_knxiot_environment.html" class="btn btn-neutral float-right" title="KNX IoT environment setup" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="index.html" class="btn btn-neutral" title="Welcome to nRF Connect SDK – KNX IoT Point API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

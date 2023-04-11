@@ -9,12 +9,12 @@ Samples overview
 In the KNX IoT repository, all samples are placed in the ``samples`` directory.
 The following table outlines the differences in their configurations:
 
-+-------------------------------+----------------------------+---------------------------------------------------------------------------------------------+
-| Sample                        | Hardware required          | Description                                                                                 |
-+===============================+============================+=============================================================================================+
-| :ref:`light_switch_actuator`  | `nRF52840dk_nrf52840`_     | Nordic KNX IoT Light Switch Actuator example                                                |
-+-------------------------------+----------------------------+---------------------------------------------------------------------------------------------+
-| :ref:`light_switch_sensor`    | `nRF52840dk_nrf52840`_     | Nordic KNX IoT Light Switch Sensor example                                                  |
-+-------------------------------+----------------------------+---------------------------------------------------------------------------------------------+
++------------------------------+------------------------+---------------------------------------------+
+| Sample                       | Hardware required      | Description                                 |
++==============================+========================+=============================================+
+| :ref:`light_switch_actuator` | `nRF52840dk_nrf52840`_ | Nordic KNX IoT Light Switch Actuator sample |
++------------------------------+------------------------+---------------------------------------------+
+| :ref:`light_switch_sensor`   | `nRF52840dk_nrf52840`_ | Nordic KNX IoT Light Switch Sensor sample   |
++------------------------------+------------------------+---------------------------------------------+
 
 .. _nRF52840dk_nrf52840: https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/zephyr/boards/arm/nrf52840dk_nrf52840/doc/index.html

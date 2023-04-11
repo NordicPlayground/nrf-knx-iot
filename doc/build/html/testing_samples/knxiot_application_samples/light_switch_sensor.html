@@ -99,7 +99,7 @@
               <p class="caption" role="heading"><span class="caption-text">Subpages:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../about_knxiot.html">About KNX IoT Point API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../setting_up_knxiot_environment/setting_up_knxiot_environment.html">Setting up the KNX IoT environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../setting_up_knxiot_environment/setting_up_knxiot_environment.html">KNX IoT environment setup</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../samples.html">Samples</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../samples_overview.html">Samples overview</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="../samples_list.html">List of KNX IoT application samples</a><ul class="current">
@@ -192,9 +192,9 @@
             
   <div class="section" id="light-switch-sensor">
 <span id="id1"></span><h1>Light Switch Sensor<a class="headerlink" href="#light-switch-sensor" title="Permalink to this headline">¶</a></h1>
-<p>This sample demonstrates KNX IoT Point API device with four <strong>Light Switch Sensor Basic</strong> Functional Blocks where each is built
-with a single <strong>Switch On/Off</strong> input Datapoint (Datapointype ID: 1.001, Name: DPT_Switch).</p>
-<p>For details check <a class="reference external" href="https://www.knx.org/wAssets/docs/downloads/Certification/Interworking-Datapoint-types/03_07_02-Datapoint-Types-v02.02.01-AS.pdf">KNX Interworking Datapoint Types</a> specification.</p>
+<p>This sample demonstrates KNX IoT Point API device with four Light Switch Sensor basic Functional Blocks.
+Each of them is built with a single Switch On/Off input Datapoint (Datapointype ID: 1.001, Name: DPT_Switch).</p>
+<p>Check the <a class="reference external" href="https://www.knx.org/wAssets/docs/downloads/Certification/Interworking-Datapoint-types/03_07_02-Datapoint-Types-v02.02.01-AS.pdf">KNX Interworking Datapoint Types</a> specification for details.</p>
 <div class="section" id="requirements">
 <h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
 <p>The sample supports the following development kits:</p>
@@ -223,8 +223,8 @@ with a single <strong>Switch On/Off</strong> input Datapoint (Datapointype ID: 1
 </div>
 <div class="section" id="building-and-running">
 <h2>Building and running<a class="headerlink" href="#building-and-running" title="Permalink to this headline">¶</a></h2>
-<p>This sample can be found under <code class="file docutils literal notranslate"><span class="pre">samples/light_switch_sensor</span></code>.</p>
-<p>To build the sample, follow the steps in the <a class="reference external" href="https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/getting_started/programming.html#gs-programming">Building and programming an application</a> documentation.</p>
+<p>This sample can be found in the <code class="file docutils literal notranslate"><span class="pre">samples/light_switch_sensor</span></code> file.</p>
+<p>To build the sample, follow the steps in the <a class="reference external" href="https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/getting_started/programming.html#gs-programming">Building and programming an application</a> page.</p>
 </div>
 <div class="section" id="testing">
 <h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h2>
@@ -265,7 +265,8 @@ You should see output similar to the following:</p>
 </div>
 <div class="section" id="openthread-configuration">
 <h3>OpenThread configuration<a class="headerlink" href="#openthread-configuration" title="Permalink to this headline">¶</a></h3>
-<p>Application starts automatically Thread interface and either join or create a new network. Mesh network uses the following configuration:</p>
+<p>The application starts the Thread interface automatically, and either joins or creates a new network.
+A mesh network uses the following configuration:</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 33%" />

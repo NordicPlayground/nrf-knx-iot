@@ -3,10 +3,10 @@
 Light Switch Actuator
 #####################
 
-This sample demonstrates KNX IoT Point API device with four **Light Switch Actuator Basic** Functional Blocks where each is built 
-with a single **Switch On/Off** input Datapoint (Datapointype ID: 1.001, Name: DPT_Switch).
+This sample demonstrates KNX IoT Point API device with four Light Switch Actuator basic Functional Blocks.
+Each of them is built with a single Switch On/Off input Datapoint (Datapointype ID: 1.001, Name: DPT_Switch).
 
-For details check `KNX Interworking Datapoint Types`_ specification.
+Check the `KNX Interworking Datapoint Types`_ specification for details.
 
 Requirements
 ************
@@ -21,9 +21,9 @@ The sample supports the following development kits:
 
 Building and running
 ********************
-This sample can be found under :file:`samples/light_switch_actuator`.
+This sample can be found in the :file:`samples/light_switch_actuator` file.
 
-To build the sample, follow the steps in the `Building and programming an application`_ documentation.
+To build the sample, follow the steps in the `Building and programming an application`_ page.
 
 Testing
 *******
@@ -69,7 +69,8 @@ You should see output similar to the following:
 OpenThread configuration
 ========================
 
-Application starts automatically Thread interface and either join or create a new network. Mesh network uses the following configuration:
+The application starts the Thread interface automatically, and either joins or creates a new network.
+A mesh network uses the following configuration:
 
 +------------------+-------------------------------------+
 | Parameter        | Value                               |

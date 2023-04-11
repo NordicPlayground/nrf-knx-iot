@@ -3,13 +3,12 @@
 KNX IoT Point API stack configuration
 #####################################
 
-
 Each KNX IoT device must be configured to make it working as a part of KNX network.
-In the future, KNX IoT devices will be configured using `ETS tool`_. 
 
-For demo purposes Nordic Semiconductor, as a part of SDK, provides dedicated KNX IoT CLI to be used to configure KNX IoT device.
+For demo purposes, Nordic Semiconductor provides the dedicated KNX IoT CLI to be used to configure KNX IoT device.
+In the future, KNX IoT devices will be configured using the `ETS tool`_.
 
-KNX IoT CLI 
+KNX IoT CLI
 ***********
 
 +---------------------+-------------------------------------------+
@@ -37,25 +36,25 @@ KNX IoT CLI
 +---------------------+-------------------------------------------+
 | ``knx dev port``    | Read/write device port                    |
 +---------------------+-------------------------------------------+
-| ``knx dev pm``      | Read/write  device programming mode       |
+| ``knx dev pm``      | Read/write device programming mode        |
 +---------------------+-------------------------------------------+
-| ``knx got``         | Print/configure Group Objet Table         |
+| ``knx got``         | Print/configure Group Object Table        |
 +---------------------+-------------------------------------------+
-
 
 Group Object Table configuration
 ********************************
 
-Group Object Table is used to control interconnections (data sharing) between KNX Datapoints. Every entry in the table consists of the properties described below.
+Group Object Table is used to control interconnections (data sharing) between KNX Datapoint types.
+Every entry in the table consists of the properties described below:
 
 +---------------------+--------------------------------------------------------------------------------------+
 | Property            | Description                                                                          |
 +=====================+======================================================================================+
-| Indentifier         | Unique identifier of the entry, used for fetching and altering entry's content.      |
+| Identifier          | Unique identifier of the entry, used for fetching and altering entry's content.      |
 +---------------------+--------------------------------------------------------------------------------------+
-| Path                | Datapoint's path, e.g.: /p/rts/roomtemp .                                            |
+| Path                | Datapoint's path, for example, `/p/rts/roomtemp`.                                    |
 +---------------------+--------------------------------------------------------------------------------------+
-| Group addresses     | Addresses of groups the resource is part of                                          |
+| Group addresses     | Addresses of groups the resource is a part of.                                       |
 +---------------------+--------------------------------------------------------------------------------------+
 | Configuration flags | Bitmap used for controlling the communication. More information about flags `here`_. |
 +---------------------+--------------------------------------------------------------------------------------+
@@ -63,7 +62,7 @@ Group Object Table is used to control interconnections (data sharing) between KN
 Configuration flags
 ===================
 
-For CLI purposes `Configuration flags`_ are represented by assigned bits.
+For CLI purposes, `Configuration flags`_ are represented by assigned bits.
 
 +------------------------------+----------+
 | Configuration flag           | Bit no.  |
@@ -84,7 +83,7 @@ For CLI purposes `Configuration flags`_ are represented by assigned bits.
 Printing Group Object Table entries
 ===================================
 
-In order to read Group Object Table content, you can use ``knx got show`` command.
+In order to read the Group Object Table content, use the ``knx got show`` command.
 
 .. code-block:: console
   
@@ -93,41 +92,41 @@ In order to read Group Object Table content, you can use ``knx got show`` comman
    [ 1]: 256 /p/ls/kitchen 252 [2,3]
    [ 2]: 512 /p/ls/garage 252 [4,5,6]
 
-``knx got show`` command output showw three entries in Group Object Table. Entries are desribed in details in table below.
+The ``knx got show`` command output shows three entries in the Group Object Table.
+Entries are described in details in the table below:
   
 +---------+--------------+---------------+---------------------+-----------------------------------------------------------------------------+
 | Entry   | Identifier   | Path          | Flags               | Group addresses                                                             |
 +=========+==============+===============+=====================+=============================================================================+
-| 0       | 124          | /p/ls/room    | 252 - all flags set | Property is a member of group with address equal 1                          |
+| 0       | 124          | /p/ls/room    | 252 - all flags set | Property is a member of group with address equal 1.                         |
 +---------+--------------+---------------+---------------------+-----------------------------------------------------------------------------+
-| 1       | 256          | /p/ls/kitchen | 252 - all flags set | Property is a member of group with address equal 2 and 3 respectively       |
+| 1       | 256          | /p/ls/kitchen | 252 - all flags set | Property is a member of group with address equal 2 and 3 respectively.      |
 +---------+--------------+---------------+---------------------+-----------------------------------------------------------------------------+
-| 2       | 512          | /p/ls/garage  | 252 - all flags set | Property is a member of group with address equal 4, 5 and 6 respectively    |
+| 2       | 512          | /p/ls/garage  | 252 - all flags set | Property is a member of group with address equal 4, 5 and 6 respectively.   |
 +---------+--------------+---------------+---------------------+-----------------------------------------------------------------------------+
 
   .. note::
   
-     Identifiers are used to distinct entries within a device's table and are not used for the communication purposes
+     Identifiers are used to distinct entries within a device's table.
+     They are not used for the communication purposes.
 
 Group adresses meaning
 ======================
 
-When the property is a member group with a given address it can send and receive messages within this group. Multiple groups can be assigned to a single groups. It lets actuator react to events from multiple sources and sensors to publish events to multiple groups. When the group is configured the device joins corresponding multicast group with an IPv6 address based on the group's address.
+When a property is a member group with a given address, it can send and receive messages within this group.
+Multiple groups can be assigned to a single group.
+It lets actuator react to events from multiple sources and sensors to publish events to multiple groups.
+When a group is configured, a device joins the corresponding multicast group with an IPv6 address based on the group's address.
 
-Example Group Object Table Configuration
-========================================
+Sample Group Object Table configuration
+=======================================
 
-The following configuration is an example how to configure:
-
-1. Light Actuator which is a recipient for events from a single group
-2. Light Sensor that publish events to a single group
-3. Light Actuator which is a recipient for events from multiple groups
-4. Light Sensor that publish events to multiple groups
+The following tables show sample sets of configuration for the Light Actuator and Sensor.
 
 Light Actuator with a single input
-""""""""""""""""""""""""""""""""""""
+""""""""""""""""""""""""""""""""""
 
-The following entry example allows the Light Actuator to receive notifications from group with address equal to 1 for property with path :file:`/p/light/room`.
+The following entry sample allows the Light Actuator to receive notifications from a group with address equal to `1` for a property with the :file:`/p/light/room` path.
 
 +---------+--------------+---------------------+--------+------------------+
 | Entry   | Identifier   | Path                | Flags  | Group addresses  |
@@ -136,42 +135,42 @@ The following entry example allows the Light Actuator to receive notifications f
 +---------+--------------+---------------------+--------+------------------+
 
 Light Sensor with a single output
-""""""""""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""""""
 
-The following entry example allows the Light Sensor to send notifications to group with address equal to 24 for property with path :file:`/p/light/livingroom`. 
-
-+---------+--------------+---------------------+--------+------------------+
-| Entry   | Identifier   | Path                | Flags  | Group addresses  |
-+=========+==============+=====================+========+==================+
-| 0       | 2            | /p/light/livingroom | 0x7C   | 1                |
-+---------+--------------+---------------------+--------+------------------+
-
-Light Actuator with a multiple inputs
-"""""""""""""""""""""""""""""""""""""
-
-The following entry example allows the Light Actuator to receive notifications from groups with addresses equal to 16 an 17 for property with path :file:`/p/light/basement`. 
+The following entry sample allows the Light Sensor to send notifications to a group with an address equal to `24` for a property with the :file:`/p/light/livingroom` path.
 
 +---------+--------------+---------------------+--------+------------------+
 | Entry   | Identifier   | Path                | Flags  | Group addresses  |
 +=========+==============+=====================+========+==================+
-| 0       | 4            | /p/light/basement   | 0x7C   | 16,17            |
+| 0       | 2            | /p/light/livingroom | 0x7C   | 24               |
 +---------+--------------+---------------------+--------+------------------+
 
-Light Sensor with a multiple outputs
-""""""""""""""""""""""""""""""""""""
+Light Actuator with multiple inputs
+"""""""""""""""""""""""""""""""""""
+
+The following entry sample allows the Light Actuator to receive notifications from groups with addresses equal to `16` and `17` for a property with the :file:`/p/light/basement` path.
 
 +---------+--------------+---------------------+--------+------------------+
 | Entry   | Identifier   | Path                | Flags  | Group addresses  |
 +=========+==============+=====================+========+==================+
-| 0       | 8            | /p/light/kitchen    | 0x7C   | 32, 64           |
+| 0       | 4            | /p/light/basement   | 0x7C   | 16 and 17        |
 +---------+--------------+---------------------+--------+------------------+
 
-The following entry example allows the Light Sensor to send notifications to groups with addresses equal to 32 an 64 for property with path :file:`/p/light/kitchen`.
+Light Sensor with multiple outputs
+""""""""""""""""""""""""""""""""""
+
+The following entry sample allows the Light Sensor to send notifications to groups with addresses equal to `32` and `64` for property with the :file:`/p/light/kitchen` path.
+
++---------+--------------+---------------------+--------+------------------+
+| Entry   | Identifier   | Path                | Flags  | Group addresses  |
++=========+==============+=====================+========+==================+
+| 0       | 8            | /p/light/kitchen    | 0x7C   | 32 and 64        |
++---------+--------------+---------------------+--------+------------------+
 
 Altering Group Object Table entry
 =================================
 
-In order to add, change, or remove an entry the following commands can be used:
+In order to add, change, or remove an entry, the following commands can be used:
 
 +--------------------+-------------------------------------------------+
 | Action             | Description                                     |
@@ -186,18 +185,18 @@ In order to add, change, or remove an entry the following commands can be used:
 The command's parameters usage is described in the following table:
 
 +-------------+-------------------------------------------+----------------------------------+
-| Parameter   | Description                               | Data type                        | 
+| Parameter   | Description                               | Data type                        |
 +=============+===========================================+==================================+
-| <id>        | Identifier                                | integer                          | 
+| <id>        | Identifier                                | integer                          |
 +-------------+-------------------------------------------+----------------------------------+
-| <path>      | Entry paths                               | string                           | 
+| <path>      | Entry paths                               | string                           |
 +-------------+-------------------------------------------+----------------------------------+
-| <ga>        | Comma separated list of Group Addresses   | comma separated integer list     | 
+| <ga>        | Comma separated list of Group Addresses   | comma-separated integer list     |
 +-------------+-------------------------------------------+----------------------------------+
-| <flags>     | Configuration flags described above       | integer                          | 
+| <flags>     | Configuration flags described above       | integer                          |
 +-------------+-------------------------------------------+----------------------------------+
 
-Examples below:
+Samples below:
 
 .. code-block:: console
   

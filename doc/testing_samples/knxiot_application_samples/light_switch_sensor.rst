@@ -3,10 +3,10 @@
 Light Switch Sensor
 ###################
 
-This sample demonstrates KNX IoT Point API device with four **Light Switch Sensor Basic** Functional Blocks where each is built 
-with a single **Switch On/Off** input Datapoint (Datapointype ID: 1.001, Name: DPT_Switch).
+This sample demonstrates KNX IoT Point API device with four Light Switch Sensor basic Functional Blocks.
+Each of them is built with a single Switch On/Off input Datapoint (Datapointype ID: 1.001, Name: DPT_Switch).
 
-For details check `KNX Interworking Datapoint Types`_ specification.
+Check the `KNX Interworking Datapoint Types`_ specification for details.
 
 Requirements
 ************
@@ -21,9 +21,9 @@ The sample supports the following development kits:
 
 Building and running
 ********************
-This sample can be found under :file:`samples/light_switch_sensor`.
+This sample can be found in the :file:`samples/light_switch_sensor` file.
 
-To build the sample, follow the steps in the `Building and programming an application`_ documentation.
+To build the sample, follow the steps in the `Building and programming an application`_ page.
 
 Testing
 *******
@@ -69,7 +69,8 @@ You should see output similar to the following:
 OpenThread configuration
 ========================
 
-Application starts automatically Thread interface and either join or create a new network. Mesh network uses the following configuration:
+The application starts the Thread interface automatically, and either joins or creates a new network.
+A mesh network uses the following configuration:
 
 +------------------+-------------------------------------+
 | Parameter        | Value                               |
@@ -84,7 +85,6 @@ Application starts automatically Thread interface and either join or create a ne
 +------------------+-------------------------------------+
 | Network key      | 00112233445566778899aabbccddeeff    |
 +------------------+-------------------------------------+
-
 
 .. _Building and programming an application: https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/getting_started/programming.html#gs-programming
 .. _Testing and debugging an application: https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/getting_started/testing.html#gs-testing

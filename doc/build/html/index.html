@@ -98,7 +98,7 @@
               <p class="caption" role="heading"><span class="caption-text">Subpages:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="about_knxiot.html">About KNX IoT Point API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="setting_up_knxiot_environment/setting_up_knxiot_environment.html">Setting up the KNX IoT environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setting_up_knxiot_environment/setting_up_knxiot_environment.html">KNX IoT environment setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="testing_samples/samples.html">Samples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="knxiot_release_notes.html">Release notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="knxiot_known_issues.html">Known issues</a></li>
@@ -172,22 +172,34 @@
             
   <div class="section" id="welcome-to-nrf-connect-sdk-knx-iot-point-api">
 <span id="index"></span><h1>Welcome to nRF Connect SDK – KNX IoT Point API<a class="headerlink" href="#welcome-to-nrf-connect-sdk-knx-iot-point-api" title="Permalink to this headline">¶</a></h1>
-<p>KNX IoT extends the capabilities of the KNX standard with the power and flexibility of the Internet of Things (IoT). It allows KNX devices to be integrated with other IoT devices and cloud-based services, enabling the creation of advanced smart building systems.</p>
-<p>With KNX IoT, devices can communicate over IP networks, allowing for greater flexibility in how devices are connected and controlled.</p>
-<p>KNX IoT can be divided in 3 parts:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>Standarized KNX IoT 3rd Party API that enables data interoperatbility by introducing an abstracion layer between KNX-specific knowledge nad 3rd party applications that could utilize data produced by KNX installations</p></li>
-<li><p>Semantic layer that is added to the KNX Information model. KNX installations description created during system design with ETS is available via 3rd Party - supports devices and KNX systems interoperability</p></li>
-<li><p>KNX IoT Point API that enabled IPv6 and Thread based connectivity to the KNX devices</p></li>
+<p>KNX IoT extends the capabilities of the KNX standard with the power and flexibility of the Internet of Things (IoT).
+As a result, it allows KNX devices to be integrated with other IoT devices and cloud-based services, enabling the creation of advanced smart building automation systems.
+With KNX IoT, devices can communicate over IP networks, allowing for greater flexibility in how devices are connected and controlled.</p>
+<p>KNX IoT consists of 3 main elements responsible for data interoperability:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>KNX IoT 3rd Party API</dt><dd><p>A standardized API using an abstraction layer between KNX-specific knowledge and 3rd party applications that could utilize data produced by KNX installations.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Semantic Project Export</dt><dd><p>A semantic layer that is added to the KNX Information Model (KIM).
+KNX installations description created during the system design in ETS is available through the KNX IoT 3rd Party API.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>KNX IoT Point API</dt><dd><p>An API that enables connectivity through IPv6 and Thread between KNX devices.</p>
+</dd>
+</dl>
+</li>
 </ul>
-</div></blockquote>
-<p>This documentation provides instructions on how to correctly setup KNX Point API stack from the perspective of the Nordic SoCs and the <a class="reference external" href="https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/index.html">nRF Connect SDK</a>. You can browse the content by referring to the following pages:</p>
+<p>This documentation provides instructions on how to correctly setup KNX Point API stack for the <a class="reference external" href="https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/index.html">nRF Connect SDK</a>.</p>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Subpages:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="about_knxiot.html">About KNX IoT Point API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="setting_up_knxiot_environment/setting_up_knxiot_environment.html">Setting up the KNX IoT environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setting_up_knxiot_environment/setting_up_knxiot_environment.html">KNX IoT environment setup</a></li>
 <li class="toctree-l1"><a class="reference internal" href="testing_samples/samples.html">Samples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="knxiot_release_notes.html">Release notes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="knxiot_known_issues.html">Known issues</a></li>
