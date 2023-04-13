@@ -21,7 +21,23 @@ The sample supports the following development kits:
 
 Building and running
 ********************
-This sample can be found in the :file:`samples/light_switch_sensor` file.
+This sample can be found in the :file:`samples/light_switch_sensor` directory.
+
+.. note::
+      Zephyr SDK is installed in NCS directory, thus the following additional environment variables must be set:
+      
+      .. code-block:: bash
+      
+        export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
+        export ZEPHYR_SDK_INSTALL_DIR=<NCS_INSTALL_DIR>/toolchains/v2.3.0/opt/zephyr-sdk/
+
+      And run this command:
+
+      .. code-block:: bash
+      
+        source <NCS_INSTALL_DIR>/v2.3.0/zephyr/zephyr-env.sh
+      
+      where :guilabel:`<NCS_INSTALL_DIR>`` is NCS's directory path.
 
 To build the sample, follow the steps in the `Building and programming an application`_ page.
 
