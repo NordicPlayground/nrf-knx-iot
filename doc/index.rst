@@ -1,19 +1,23 @@
 .. _index:
 
 Welcome to nRF Connect SDK – KNX IoT Point API
-#################################################
+##############################################
 
-KNX IoT extends the capabilities of the KNX standard with the power and flexibility of the Internet of Things (IoT). It allows KNX devices to be integrated with other IoT devices and cloud-based services, enabling the creation of advanced smart building systems.
-
+KNX IoT extends the capabilities of the KNX standard with the power and flexibility of the Internet of Things (IoT).
+As a result, it allows KNX devices to be integrated with other IoT devices and cloud-based services, enabling the creation of advanced smart building automation systems.
 With KNX IoT, devices can communicate over IP networks, allowing for greater flexibility in how devices are connected and controlled.
 
-KNX IoT can be divided in 3 parts:
+KNX IoT consists of 3 main elements responsible for data interoperability:
 
-  * Standarized KNX IoT 3rd Party API that enables data interoperatbility by introducing an abstracion layer between KNX-specific knowledge nad 3rd party applications that could utilize data produced by KNX installations
-  * Semantic layer that is added to the KNX Information model. KNX installations description created during system design with ETS is available via 3rd Party - supports devices and KNX systems interoperability
-  * KNX IoT Point API that enabled IPv6 and Thread based connectivity to the KNX devices
+* KNX IoT 3rd Party API
+   A standardized API using an abstraction layer between KNX-specific knowledge and 3rd party applications that could utilize data produced by KNX installations.
+* Semantic Project Export
+   A semantic layer that is added to the KNX Information Model (KIM).
+   KNX installations description created during the system design in ETS is available through the KNX IoT 3rd Party API.
+* KNX IoT Point API
+   An API that enables connectivity through IPv6 and Thread between KNX devices.
 
-This documentation provides instructions on how to correctly setup KNX Point API stack from the perspective of the Nordic SoCs and the `nRF Connect SDK`_. You can browse the content by referring to the following pages:
+This documentation provides instructions on how to correctly setup KNX Point API stack for the `nRF Connect SDK`_.
 
 .. toctree::
    :maxdepth: 1

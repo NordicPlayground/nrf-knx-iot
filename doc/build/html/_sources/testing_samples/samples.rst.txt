@@ -3,7 +3,7 @@
 Samples
 #######
 
-The samples in this SDK showcase KNX IoT Point API use cases on he top of Nordic Semiconductor devices.
+The samples in this SDK showcase KNX IoT Point API use cases on the top of Nordic Semiconductor devices.
 
 .. toctree::
    :maxdepth: 1

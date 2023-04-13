@@ -99,7 +99,7 @@
               <p class="caption" role="heading"><span class="caption-text">Subpages:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../about_knxiot.html">About KNX IoT Point API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../setting_up_knxiot_environment/setting_up_knxiot_environment.html">Setting up the KNX IoT environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../setting_up_knxiot_environment/setting_up_knxiot_environment.html">KNX IoT environment setup</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="samples.html">Samples</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="samples_overview.html">Samples overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="samples_list.html">List of KNX IoT application samples</a></li>
@@ -108,8 +108,8 @@
 <li class="toctree-l3"><a class="reference internal" href="#starting-thread-network">Starting Thread network</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#connecting-light-switch-sensor-to-light-switch-actuator">Connecting Light Switch Sensor to Light Switch Actuator</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#leds-and-buttons-location">LEDs and buttons location</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#example-1-one-button-mapped-to-four-leds">Example 1 - One button mapped to four LEDs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#example-2-one-button-mapped-to-one-led">Example 2 - One button mapped to one LED</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#example-1-one-button-mapped-to-four-leds">Example 1 - one button mapped to four LEDs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#example-2-one-button-mapped-to-one-led">Example 2 - one button mapped to one LED</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#example-3-mixed-configuration">Example 3 - Mixed configuration</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#sniffing-knx-iot-point-api-communication">Sniffing KNX IoT Point API communication</a></li>
 </ul>
@@ -190,10 +190,11 @@
             
   <div class="section" id="knx-iot-testing">
 <span id="knxiot-testing"></span><h1>KNX IoT testing<a class="headerlink" href="#knx-iot-testing" title="Permalink to this headline">¶</a></h1>
-<p>With the sample applications - <strong>Light Switch Actuator</strong> and <strong>Light Switch Sensor</strong>, you will be apble to test simple KNX IoT system consisted of two Thread based devices.</p>
+<p>With the <a class="reference internal" href="knxiot_application_samples/light_switch_actuator.html#light-switch-actuator"><span class="std std-ref">Light Switch Actuator</span></a> and <a class="reference internal" href="knxiot_application_samples/light_switch_sensor.html#light-switch-sensor"><span class="std std-ref">Light Switch Sensor</span></a> installed, you will be able to test a simple KNX IoT system consisted of two Thread-based devices.</p>
 <div class="section" id="starting-thread-network">
 <span id="id1"></span><h2>Starting Thread network<a class="headerlink" href="#starting-thread-network" title="Permalink to this headline">¶</a></h2>
-<p>Devices enable Thread interface during startup automatically - they are configured to create and join Thread network with parameters as below.</p>
+<p>The devices enable the Thread interface during startup automatically.
+They are configured to create and join Thread network with the following parameters:</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 33%" />
@@ -224,7 +225,7 @@
 </table>
 <p>To verify Thread devices status, do the following:</p>
 <ol class="arabic">
-<li><p>Check Active Data using <code class="docutils literal notranslate"><span class="pre">ot</span> <span class="pre">dataset</span> <span class="pre">active</span></code> command.</p>
+<li><p>Check active data.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">uart:~$ </span>ot dataset active
 <span class="go">Active Timestamp: 1</span>
 <span class="go">Channel: 15</span>
@@ -240,24 +241,23 @@
 </pre></div>
 </div>
 </li>
-<li><p>Check devices roles using <code class="docutils literal notranslate"><span class="pre">ot</span> <span class="pre">state</span></code> command.</p></li>
+<li><p>Verify devices’ roles.</p></li>
 </ol>
 <blockquote>
 <div><ul>
-<li><p>one of device must be a Thread leader:</p>
+<li><p>Check if one of devices is set as a Thread leader.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">uart:~$ </span>ot state
 <span class="go">leader</span>
 <span class="go">Done</span>
 </pre></div>
 </div>
 </li>
-<li><p>another device either Thread child:</p>
+<li><p>Check if another device is either a Thread child or leader:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">uart:~$ </span>ot state
 <span class="go">child</span>
 <span class="go">Done</span>
 </pre></div>
 </div>
-<p>or Thread leader:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">uart:~$ </span>ot state
 <span class="go">leader</span>
 <span class="go">Done</span>
@@ -269,14 +269,16 @@
 </div>
 <div class="section" id="connecting-light-switch-sensor-to-light-switch-actuator">
 <h2>Connecting Light Switch Sensor to Light Switch Actuator<a class="headerlink" href="#connecting-light-switch-sensor-to-light-switch-actuator" title="Permalink to this headline">¶</a></h2>
-<p>KNX IoT devices, just as the classic KNX devices, consist of one or many Functional Blocks. The Functional Block contains one or more Datapoints which are its
-inputs, outputs, and parameters. The most important feature of Datapoint’s description is its type. The type specifies how the Datapoint is encoded,
-its supported range, units, etc. All Datapoints of given Functional Block and featured types are described in <a class="reference external" href="https://www.knx.org/wAssets/docs/downloads/Certification/Interworking-Datapoint-types/03_07_02-Datapoint-Types-v02.02.01-AS.pdf">KNX Specification</a>.</p>
-<p>Both Light Switch Actuator and Sensor are built with 4 Functional Blocks with a single Datapoint - “Switch On Off” (type name: DPT_Switch, id: 1.001).
-Every Datapoint controls a single <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK">Nordic nRF52840 DK</a> kit LED (actuator) or is controlled by a single <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK">Nordic nRF52840 DK</a> button (sensor).
-For communication between KNX IoT Point API devices send s-mode messages over CoAP protocol.
-Recipient of the message checks its Group Object Table in order to verify that it is capable of processing it.</p>
-<p>Tables below presents actuator and sensor devices Datapoints configuration.</p>
+<p>KNX IoT devices, just as the classic KNX devices, consist of one or many Functional Blocks.
+The Functional Block contains one or more Datapoints which are its inputs, outputs, and parameters.</p>
+<p>The most important feature of Datapoint’s description is its type.
+The type specifies how the Datapoint is encoded, its supported range, units, an so on.
+All Datapoints of given Functional Block and featured types are described in the <a class="reference external" href="https://www.knx.org/wAssets/docs/downloads/Certification/Interworking-Datapoint-types/03_07_02-Datapoint-Types-v02.02.01-AS.pdf">KNX Specification</a> page.</p>
+<p>Both Light Switch Actuator and Sensor are built with 4 Functional Blocks with a single Switch On/Off Datapoint (type name: DPT_Switch, id: 1.001).
+Every Datapoint controls a single <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK">Nordic nRF52840 DK</a> LED (actuator) or is controlled by a single <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK">Nordic nRF52840 DK</a> button (sensor).
+For communication between KNX IoT Point API, devices send s-mode messages over the CoAP protocol.
+A recipient of the message checks its Group Object Table to verify that it is capable of processing it.</p>
+<p>Tables below present configuration of Datapoints for Actuator and Sensor devices.</p>
 <ul>
 <li><p>Light Switch Actuator Datapoints</p>
 <table class="docutils align-default">
@@ -360,7 +362,8 @@ Recipient of the message checks its Group Object Table in order to verify that i
 </div>
 <div class="section" id="leds-and-buttons-location">
 <h2>LEDs and buttons location<a class="headerlink" href="#leds-and-buttons-location" title="Permalink to this headline">¶</a></h2>
-<p>All examples run on <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK">Nordic nRF52840 DK</a> board. Picture below presents location of the LEDs (yellow rectangle) and buttons (green rectangle) used in examples.</p>
+<p>All samples run on the <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK">Nordic nRF52840 DK</a> board.
+The picture below presents a location of LEDs (yellow rectangle) and buttons (green rectangle) used in examples.</p>
 <blockquote>
 <div><div class="figure align-default">
 <img alt="Location of DKs LEDs (yellow rectangle) and buttons (green rectangle)" src="../_images/dk_leds_and_buttons.png" />
@@ -368,12 +371,12 @@ Recipient of the message checks its Group Object Table in order to verify that i
 </div></blockquote>
 </div>
 <div class="section" id="example-1-one-button-mapped-to-four-leds">
-<h2>Example 1 - One button mapped to four LEDs<a class="headerlink" href="#example-1-one-button-mapped-to-four-leds" title="Permalink to this headline">¶</a></h2>
-<p>Having Thread network configured and operational you can start KNX IoT device configuration and testing.
-One device must be configured as Actuator and one as Sensor.</p>
+<h2>Example 1 - one button mapped to four LEDs<a class="headerlink" href="#example-1-one-button-mapped-to-four-leds" title="Permalink to this headline">¶</a></h2>
+<p>Having Thread network configured and operational, you can start KNX IoT device configuration and testing.
+One device must be configured as the Actuator and one as the Sensor.</p>
 <p>One button of KNX IoT Actuator <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK">Nordic nRF52840 DK</a> device will control four LEDs built in to KNX IoT Sensor <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK">Nordic nRF52840 DK</a> device.</p>
 <ol class="arabic">
-<li><p>Configure Actuator device by adding entries to Actuator’s Group Object Table - command <code class="docutils literal notranslate"><span class="pre">knx</span> <span class="pre">got</span></code>.</p>
+<li><p>Configure the Actuator device by adding entries to Actuator’s Group Object Table with the <code class="docutils literal notranslate"><span class="pre">knx</span> <span class="pre">got</span></code> command.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">uart:~$ </span>knx got <span class="m">1</span> /p/1 <span class="m">22</span> <span class="o">[</span><span class="m">1</span><span class="o">]</span>
 <span class="gp">uart:~$ </span>knx got <span class="m">2</span> /p/2 <span class="m">22</span> <span class="o">[</span><span class="m">1</span><span class="o">]</span>
 <span class="gp">uart:~$ </span>knx got <span class="m">3</span> /p/3 <span class="m">22</span> <span class="o">[</span><span class="m">1</span><span class="o">]</span>
@@ -381,13 +384,15 @@ One device must be configured as Actuator and one as Sensor.</p>
 </pre></div>
 </div>
 </li>
-<li><p>Configure Sensor device by adding entries to Sensor’s Group Object Table - command <code class="docutils literal notranslate"><span class="pre">knx</span> <span class="pre">got</span></code>.</p>
+<li><p>Configure the Sensor device by adding entries to Sensor’s Group Object Table with the <code class="docutils literal notranslate"><span class="pre">knx</span> <span class="pre">got</span></code> command.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">uart:~$ </span>knx got <span class="m">1</span> /p/1 <span class="m">22</span> <span class="o">[</span><span class="m">1</span><span class="o">]</span>
 </pre></div>
 </div>
 </li>
-<li><p>Devices are configured. Use sensor’s BUTTON1 to disable or enable all of the assigned actuator’s LEDs. Usage of the other buttons has no effect.
-The interconnections between buttons and LEDs are presented in the following table.</p>
+<li><p>Devices are configured.
+Use sensor’s BUTTON1 to disable or enable all of the assigned actuator’s LEDs.
+Usage of the other buttons has no effect.
+The interconnections between buttons and LEDs are presented in the following table:</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 40%" />
@@ -410,13 +415,13 @@ The interconnections between buttons and LEDs are presented in the following tab
 </ol>
 </div>
 <div class="section" id="example-2-one-button-mapped-to-one-led">
-<h2>Example 2 - One button mapped to one LED<a class="headerlink" href="#example-2-one-button-mapped-to-one-led" title="Permalink to this headline">¶</a></h2>
-<p>Having Thread network configured and operational you can start KNX IoT device configuration and testing.
-One device must be configured as Actuator and one as Sensor.</p>
+<h2>Example 2 - one button mapped to one LED<a class="headerlink" href="#example-2-one-button-mapped-to-one-led" title="Permalink to this headline">¶</a></h2>
+<p>Having Thread network configured and operational, you can start KNX IoT device configuration and testing.
+One device must be configured as an Actuator and one as a Sensor.</p>
 <p>We need to perform configuration/mapping of buttons built in to KNX IoT Sensor <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK">Nordic nRF52840 DK</a> to control LEDs built in to the KNX IoT Actuator <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK">Nordic nRF52840 DK</a> - one button to one LED.
 It is achieved by dedicated on KNX group to every input-output pair.</p>
 <ol class="arabic">
-<li><p>Configure Actuator device by adding entries to Actuator’s Group Object Table - command <code class="docutils literal notranslate"><span class="pre">knx</span> <span class="pre">got</span></code>.</p>
+<li><p>Configure the Actuator device by adding entries to Actuator’s Group Object Table with the <code class="docutils literal notranslate"><span class="pre">knx</span> <span class="pre">got</span></code> command.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">uart:~$ </span>knx got <span class="m">1</span> /p/1 <span class="m">22</span> <span class="o">[</span><span class="m">1</span><span class="o">]</span>
 <span class="gp">uart:~$ </span>knx got <span class="m">2</span> /p/2 <span class="m">22</span> <span class="o">[</span><span class="m">2</span><span class="o">]</span>
 <span class="gp">uart:~$ </span>knx got <span class="m">3</span> /p/3 <span class="m">22</span> <span class="o">[</span><span class="m">3</span><span class="o">]</span>
@@ -424,7 +429,7 @@ It is achieved by dedicated on KNX group to every input-output pair.</p>
 </pre></div>
 </div>
 </li>
-<li><p>Configure Sensor device by adding entries to Sensor’s Group Object Table - command <code class="docutils literal notranslate"><span class="pre">knx</span> <span class="pre">got</span></code>.</p>
+<li><p>Configure the Sensor device by adding entries to Sensor’s Group Object Table with the <code class="docutils literal notranslate"><span class="pre">knx</span> <span class="pre">got</span></code> command.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">uart:~$ </span>knx got <span class="m">1</span> /p/1 <span class="m">22</span> <span class="o">[</span><span class="m">1</span><span class="o">]</span>
 <span class="gp">uart:~$ </span>knx got <span class="m">2</span> /p/2 <span class="m">22</span> <span class="o">[</span><span class="m">2</span><span class="o">]</span>
 <span class="gp">uart:~$ </span>knx got <span class="m">3</span> /p/3 <span class="m">22</span> <span class="o">[</span><span class="m">3</span><span class="o">]</span>
@@ -432,8 +437,9 @@ It is achieved by dedicated on KNX group to every input-output pair.</p>
 </pre></div>
 </div>
 </li>
-<li><p>Devices are configured. Use one of the sensor’s buttons to control one of the assigned actuator’s LEDs.
-The interconnections between buttons and LEDs are presented in the following table.</p>
+<li><p>Devices are configured.
+Use one of the sensor’s buttons to control one of the assigned actuator’s LEDs.
+The interconnections between buttons and LEDs are presented in the following table:</p>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 50%" />
@@ -466,8 +472,8 @@ The interconnections between buttons and LEDs are presented in the following tab
 </div>
 <div class="section" id="example-3-mixed-configuration">
 <h2>Example 3 - Mixed configuration<a class="headerlink" href="#example-3-mixed-configuration" title="Permalink to this headline">¶</a></h2>
-<p>Having Thread network configured and operational you can start KNX IoT device configuration and testing.
-One device must be configured as Actuator and one as Sensor.</p>
+<p>Having Thread network configured and operational, you can start KNX IoT device configuration and testing.
+One device must be configured as an Actuator and one as a Sensor.</p>
 <p>We need to perform configuration/mapping of buttons built in to KNX IoT sensor to control LEDs built in to the KNX IoT Actuator - one button to one LED.
 It is achieved by setting KNX Actuator <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK">Nordic nRF52840 DK</a> to receive events from multple groups.</p>
 <ol class="arabic">
@@ -521,9 +527,8 @@ The interconnections between buttons and LEDs are presented in the following tab
 </div>
 <div class="section" id="sniffing-knx-iot-point-api-communication">
 <h2>Sniffing KNX IoT Point API communication<a class="headerlink" href="#sniffing-knx-iot-point-api-communication" title="Permalink to this headline">¶</a></h2>
-<p>In order to inspect the packets exchanged between KNX devices 802.15.4 sniffer can be used. After setting up the Wireshark as described
-in <a class="reference internal" href="../setting_up_knxiot_environment/setting_up_hardware.html#sniffer-configuration"><span class="std std-ref">sniffer configuration</span></a> with regard to default configuration specified in <a class="reference internal" href="#starting-thread-network"><span class="std std-ref">Starting Thread Network</span></a> section we can capture
-CoAP messages sent through default port (5683).</p>
+<p>In order to inspect the packets exchanged between KNX devices 802.15.4 sniffer can be used.
+After setting up the Wireshark as described in <a class="reference internal" href="../setting_up_knxiot_environment/setting_up_hardware.html#sniffer-configuration"><span class="std std-ref">sniffer configuration</span></a> with regard to default configuration specified in <a class="reference internal" href="#starting-thread-network"><span class="std std-ref">Starting Thread Network</span></a> section we can capture CoAP messages sent through a default port (5683).</p>
 <div class="figure align-default" id="id2">
 <img alt="../_images/example_capture.png" src="../_images/example_capture.png" />
 <p class="caption"><span class="caption-text">Figure: Capture of CoAP messages</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>

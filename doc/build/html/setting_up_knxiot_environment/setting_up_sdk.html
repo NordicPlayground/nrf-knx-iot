@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Setting up SDK &mdash; KNX IoT  documentation</title>
+  <title>SDK setup &mdash; KNX IoT  documentation</title>
   
 
   
@@ -47,7 +47,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Samples" href="../testing_samples/samples.html" />
-    <link rel="prev" title="Setting up hardware" href="setting_up_hardware.html" />
+    <link rel="prev" title="Hardware setup" href="setting_up_hardware.html" />
   <link rel="shortcut icon" href="../_static/images/favicon.ico"/>
 
 </head>
@@ -100,15 +100,10 @@
               <p class="caption" role="heading"><span class="caption-text">Subpages:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../about_knxiot.html">About KNX IoT Point API</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="setting_up_knxiot_environment.html">Setting up the KNX IoT environment</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="setting_up_knxiot_environment.html">KNX IoT environment setup</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="requirements.html">Requirements</a></li>
-<li class="toctree-l2"><a class="reference internal" href="setting_up_hardware.html">Setting up hardware</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Setting up SDK</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#downloading-knx-iot-point-api-repository">Downloading KNX IoT Point API repository</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#downloading-nrf-command-line-tools">Downloading nRF Command Line Tools</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#configuring-wireshark-for-thread">Configuring Wireshark for Thread</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="setting_up_hardware.html">Hardware setup</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">SDK setup</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../testing_samples/samples.html">Samples</a></li>
@@ -163,9 +158,9 @@
     
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
         
-          <li><a href="setting_up_knxiot_environment.html">Setting up the KNX IoT environment</a> &raquo;</li>
+          <li><a href="setting_up_knxiot_environment.html">KNX IoT environment setup</a> &raquo;</li>
         
-      <li>Setting up SDK</li>
+      <li>SDK setup</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -184,53 +179,39 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="setting-up-sdk">
-<span id="id1"></span><h1>Setting up SDK<a class="headerlink" href="#setting-up-sdk" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="sdk-setup">
+<span id="setting-up-sdk"></span><h1>SDK setup<a class="headerlink" href="#sdk-setup" title="Permalink to this headline">¶</a></h1>
 <p>The KNX IoT Point API solution from Nordic Semiconductor is based on the <a class="reference external" href="https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/index.html">nRF Connect SDK v2.3.0</a>.</p>
-<p>In order to create a KNX IoT Point API prototype, you need to use the following devices:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK">Nordic nRF52840 DK</a> - for Light Switch Actuator and Light Switch Sensor samples.</p></li>
-</ul>
-</div></blockquote>
-<p>You can set up your development environment by following one of the installation methods below:</p>
+<p>Use the Nordic’s <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK">nRF52840 DK</a> to create a KNX IoT Point API prototype for Light Switch Actuator and Light Switch Sensor samples.</p>
+<ol class="arabic">
+<li><p>Set up your development environment by following one of the installation methods below:</p>
 <div class="sphinx-tabs docutils container">
 <div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-0-0-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-0-0-0" name="0-0" role="tab" tabindex="0">Automatic installation (Toolchain Manager)</button><button aria-controls="panel-0-0-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-0-0-1" name="0-1" role="tab" tabindex="-1">Manual installation</button></div><div aria-labelledby="tab-0-0-0" class="sphinx-tabs-panel" id="panel-0-0-0" name="0-0" role="tabpanel" tabindex="0"><p>Follow the steps in <a class="reference external" href="https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/gs_assistant.html#installing-automatically">Installing automatically</a> to perform automatic installation using the Toolchain Manager.</p>
 </div><div aria-labelledby="tab-0-0-1" class="sphinx-tabs-panel" hidden="true" id="panel-0-0-1" name="0-1" role="tabpanel" tabindex="0"><p>Follow the steps in <a class="reference external" href="https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/gs_installing.html#install-the-required-tools">Installing manually</a> to perform a manual installation.</p>
 </div></div>
-<p>For additional information on setting up the device and Nordic’s development environment and tools, see the <a class="reference external" href="https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/getting_started.html">nRF Connect SDK Getting started guide</a>.</p>
-<div class="section" id="downloading-knx-iot-point-api-repository">
-<h2>Downloading KNX IoT Point API repository<a class="headerlink" href="#downloading-knx-iot-point-api-repository" title="Permalink to this headline">¶</a></h2>
-<ol class="arabic simple">
-<li><p>Clone the KNX IoT Point API repository</p></li>
-</ol>
-<blockquote>
-<div><div class="admonition note">
+<div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>currently it’s a private repository, we need to change it to a public one later on):</p>
+<p>For additional information on setting up the device as well as Nordic’s development environment and tools, see the <a class="reference external" href="https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/getting_started.html">nRF Connect SDK Getting started guide</a>.</p>
 </div>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git clone https://github.com/konradderda/nordic_knx.git
+</li>
+<li><p>Clone the KNX IoT Point API private repository.</p>
+<blockquote>
+<div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git clone https://github.com/konradderda/nordic_knx.git
 </pre></div>
 </div>
 </div></blockquote>
-<ol class="arabic simple" start="2">
-<li><p>Download dependencies</p></li>
-</ol>
+</li>
+<li><p>Download dependencies.</p>
 <blockquote>
 <div><div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git submodule init
 <span class="gp">$ </span>git submodule update
 </pre></div>
 </div>
 </div></blockquote>
-</div>
-<div class="section" id="downloading-nrf-command-line-tools">
-<h2>Downloading nRF Command Line Tools<a class="headerlink" href="#downloading-nrf-command-line-tools" title="Permalink to this headline">¶</a></h2>
-<p>To download the nRF Command Line, go to the <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Tools/nRF-Command-Line-Tools/Download#infotabs">nRF Command Line Tools</a> page.</p>
-</div>
-<div class="section" id="configuring-wireshark-for-thread">
-<h2>Configuring Wireshark for Thread<a class="headerlink" href="#configuring-wireshark-for-thread" title="Permalink to this headline">¶</a></h2>
-<p>To configure Wireshark for Thread packets sniffing, go to the <a class="reference external" href="https://infocenter.nordicsemi.com/index.jsp?topic=%2Fug_sniffer_802154%2FUG%2Fsniffer_802154%2Fconfiguring_sniffer_802154.html">Configuring Wireshark for Thread</a> page.</p>
-</div>
+</li>
+<li><p>Download the nRF Command Line from the <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Tools/nRF-Command-Line-Tools/Download#infotabs">nRF Command Line Tools</a> page.</p></li>
+<li><p>Optionally, to configure Wireshark for Thread packets sniffing, go to the <a class="reference external" href="https://infocenter.nordicsemi.com/index.jsp?topic=%2Fug_sniffer_802154%2FUG%2Fsniffer_802154%2Fconfiguring_sniffer_802154.html">Configuring Wireshark for Thread</a> page.</p></li>
+</ol>
 </div>
 
 
@@ -244,7 +225,7 @@
         <a href="../testing_samples/samples.html" class="btn btn-neutral float-right" title="Samples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="setting_up_hardware.html" class="btn btn-neutral" title="Setting up hardware" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="setting_up_hardware.html" class="btn btn-neutral" title="Hardware setup" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

@@ -1,10 +1,10 @@
 .. _setting_up_knxiot_environment:
 
-Setting up the KNX IoT environment
-###################################
+KNX IoT environment setup
+#########################
 
-The documentation will guide you through setup of KNX IoT environment.
-Once completed, you will be able to run a sample KNX IoT application and test it.
+The documentation will guide you through the KNX IoT environment setup.
+Once completed, you will be able to run and test a sample KNX IoT application.
 
 For the exact steps on setting up your environment, follow the below documentation:
 
