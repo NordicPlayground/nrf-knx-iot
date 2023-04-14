@@ -18,7 +18,7 @@ KNX IoT CLI
 +---------------------+-------------------------------------------+
 | ``knx dev hwv``     | Read device hardware version              |
 +---------------------+-------------------------------------------+
-| ``knx dev hwvt``    | Read device hardware type                 |
+| ``knx dev hwt``     | Read device hardware type                 |
 +---------------------+-------------------------------------------+
 | ``knx dev model``   | Read device mode                          |
 +---------------------+-------------------------------------------+
@@ -35,8 +35,6 @@ KNX IoT CLI
 | ``knx dev ia``      | Read/write device individual address      |
 +---------------------+-------------------------------------------+
 | ``knx dev port``    | Read/write device port                    |
-+---------------------+-------------------------------------------+
-| ``knx dev pm``      | Read/write device programming mode        |
 +---------------------+-------------------------------------------+
 | ``knx got``         | Print/configure Group Object Table        |
 +---------------------+-------------------------------------------+
@@ -83,16 +81,16 @@ For CLI purposes, `Configuration flags`_ are represented by assigned bits.
 Printing Group Object Table entries
 ===================================
 
-In order to read the Group Object Table content, use the ``knx got show`` command.
+In order to read the Group Object Table content, use the ``knx got print`` command.
 
 .. code-block:: console
   
-   uart:~$ knx got show
+   uart:~$ knx got print
    [ 0]: 124 /p/ls/room 252 [1]
    [ 1]: 256 /p/ls/kitchen 252 [2,3]
    [ 2]: 512 /p/ls/garage 252 [4,5,6]
 
-The ``knx got show`` command output shows three entries in the Group Object Table.
+The ``knx got print`` command output prints three entries in the Group Object Table.
 Entries are described in details in the table below:
   
 +---------+--------------+---------------+---------------------+-----------------------------------------------------------------------------+
@@ -110,8 +108,8 @@ Entries are described in details in the table below:
      Identifiers are used to distinct entries within a device's table.
      They are not used for the communication purposes.
 
-Group adresses meaning
-======================
+Group addresses meaning
+=======================
 
 When a property is a member group with a given address, it can send and receive messages within this group.
 Multiple groups can be assigned to a single group.
