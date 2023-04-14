@@ -20,7 +20,7 @@ This implementation has been integrated with the nRF Connect SDK, hence it can b
 
 KNX Point API devices
 *********************
-Products that implement KNX IoT Point API stack use an IPv6-based physical layer, such as Thread, for communication with the rest of the KNX installation.
+Products that implement the KNX IoT Point API stack use an IPv6-based physical layer, such as Thread, for communication with the rest of the KNX installation.
 KNX IoT Point API devices and other already existing KNX products (using other transmission methods like TP, PL, RF) can be easily interconnected within the same system.
 
 KNX IoT Point API devices are based on the same interoperability concept as classic KNX TP (Twisted Pair), KNX PL (Power Line) and KNX RF (Radio Frequency) methods.
@@ -37,7 +37,7 @@ It means that a middleware is required for sharing the data between KNX classic 
     * From KNX IoT Point API devices through the Thread Border router to the classic part of the KNX system through the KNX IP router.
     * From KNX classic devices through the KNX IP, KNX IoT and Thread Border routers to KNX IoT Point API devices.
  
-    Moreover, if it is needed and there are enough hardware resources, this feature can be implemented as an additional service on Thread Border router device.
+    Moreover, if it is needed and there are enough hardware resources, this feature can be implemented as an additional service on Thread Border Router device.
 
 The diagram below presents a sample of the KNX installation that combines KNX classic and KNX IoT devices within a single system.
 

@@ -5,9 +5,9 @@ SDK setup
 
 The KNX IoT Point API solution from Nordic Semiconductor is based on the `nRF Connect SDK v2.3.0`_.
 
-Use the Nordic's `nRF52840 DK`_ to create a KNX IoT Point API prototype for Light Switch Actuator and Light Switch Sensor samples.
+Use the Nordic's `nRF52840 DK`_ to create a KNX IoT Point API prototype for :ref:`light_switch_actuator` and :ref:`light_switch_sensor` samples.
 
-1. Set up your development environment by following one of the installation methods below:
+#. Set up your development environment by following one of the installation methods below:
 
    .. tabs::
 

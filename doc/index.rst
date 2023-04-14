@@ -3,9 +3,9 @@
 Welcome to nRF Connect SDK – KNX IoT Point API
 ##############################################
 
-KNX IoT extends the capabilities of the KNX standard with the power and flexibility of the Internet of Things (IoT).
+`KNX IoT`_ extends the capabilities of the `KNX`_ standard with the power and flexibility of the Internet of Things (IoT).
 As a result, it allows KNX devices to be integrated with other IoT devices and cloud-based services, enabling the creation of advanced smart building automation systems.
-With KNX IoT, devices can communicate over IP networks, allowing for greater flexibility in how devices are connected and controlled.
+With the KNX IoT, devices can communicate over IP networks, allowing for greater flexibility in how devices are connected and controlled.
 
 KNX IoT consists of 3 main elements responsible for data interoperability:
 
@@ -32,3 +32,5 @@ This documentation provides instructions on how to correctly setup KNX Point API
    additional_resources.rst
 
 .. _nRF Connect SDK: https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/index.html
+.. _KNX IoT: https://www.knx-iotech.org/
+.. _KNX: https://www.knx.org/knx-en/for-professionals/index.php
