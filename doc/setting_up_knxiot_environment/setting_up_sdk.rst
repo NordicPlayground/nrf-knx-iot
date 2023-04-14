@@ -26,7 +26,7 @@ Use the Nordic's `nRF52840 DK`_ to create a KNX IoT Point API prototype for :ref
 
      .. code-block:: console
 
-       $ git clone https://github.com/konradderda/nordic_knx.git
+       $ git clone https://github.com/NordicPlayground/nrf-knx-iot.git
 
 #. Download dependencies.
 
