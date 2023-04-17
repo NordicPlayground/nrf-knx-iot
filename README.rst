@@ -1,17 +1,12 @@
-nrf-knx-iot
------------
+nRF Connect SDK: nrf-knx-iot
+----------------------------
 
-Implementation of KNX IoT over Thread
+This repository contains port of open source KNX IoT Point API stack (https://github.com/KNX-IOT/KNX-IOT-STACK) to the Nordic nRF Connect SDK.
 
-Documentation build system installation
----------------------------------------
+To view the documentation, open https://nordicplayground.github.io/nrf-knx-iot/ in a web browser.
 
-``pip3 install -r requirements.txt``
+For more information about KNX IoT and nRF Connect SDK, refer to the links below:
 
-Building the Documentation
---------------------------
-
-``cd doc
-sphinx-build -M html . build``
-
-Built docs can be found in build/html directory.
+KNX IoT overview: https://www.knx.org/knx-en/for-professionals/benefits/knx-internet-of-things/
+KNX IoT Point API overview: https://knx-iot.github.io/
+Official nRF Connect SDK documentation: https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/index.html
