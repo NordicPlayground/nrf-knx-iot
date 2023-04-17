@@ -22,7 +22,7 @@ Use the Nordic's `nRF52840 DK`_ to create a KNX IoT Point API prototype for :ref
    .. note::
       For additional information on setting up the device as well as Nordic’s development environment and tools, see the `nRF Connect SDK Getting started guide`_.
 
-#. Clone the KNX IoT Point API private repository.
+#. Clone the KNX IoT Point API repository.
 
      .. code-block:: console
 

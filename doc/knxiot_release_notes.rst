@@ -11,5 +11,5 @@ See the release notes for the information about specific KNX IoT Point API suppo
 Added:
 
 * Initial support for current (April'2023) implementation of KNX IoT Point API stack on the top of nRF Connect SDK.
-* Light Switch Sensor and Actuator demos.
+* Light Switch Sensor and Light Switch Actuator demos.
 * Documentation preview for development needs.

@@ -82,11 +82,11 @@ The type specifies how the Datapoint is encoded, its supported range, units, an 
 All Datapoints of given Functional Block and featured types are described in the `KNX Specification`_ page.
 
 Both Light Switch Actuator and Sensor are built with 4 Functional Blocks with a single Switch On/Off Datapoint (type name: DPT_Switch, id: 1.001).
-Every Datapoint controls a single `Nordic nRF52840 DK`_ LED (actuator) or is controlled by a single `Nordic nRF52840 DK`_ button (sensor).
+Every Datapoint controls a single `nRF52840 DK`_ LED (actuator) or is controlled by a single `nRF52840 DK`_ button (sensor).
 For communication between KNX IoT Point API, devices send s-mode messages over the CoAP protocol.
 A recipient of the message checks its Group Object Table to verify that it is capable of processing it.
 
-Tables below present configuration of Datapoints for Actuator and Sensor devices.
+The following tables presents configuration of Datapoints for Light Switch Actuator and Light Switch Sensor devices:
 
 * Light Switch Actuator Datapoints
  
@@ -119,189 +119,40 @@ Tables below present configuration of Datapoints for Actuator and Sensor devices
 LEDs and buttons location
 *************************
 
-All samples run on the `Nordic nRF52840 DK`_ board.
+All samples run on the `nRF52840 DK`_ board.
 The picture below presents a location of LEDs (yellow rectangle) and buttons (green rectangle) used in examples.
 
    .. figure:: /images/dk_leds_and_buttons.png
-      :alt: Location of DKs LEDs (yellow rectangle) and buttons (green rectangle)
-
-Example 1 - one button mapped to four LEDs
-******************************************
-
-Having Thread network configured and operational, you can start KNX IoT device configuration and testing.
-One device must be configured as the Actuator and one as the Sensor.
-
-One button of KNX IoT Actuator `Nordic nRF52840 DK`_ device will control four LEDs built in to KNX IoT Sensor `Nordic nRF52840 DK`_ device.
-
-#. Configure the Actuator device by adding entries to Actuator's Group Object Table with the ``knx got`` command.
-
-   .. code-block:: console
-
-      uart:~$ knx got add 1 /p/1 22 [1]
-      uart:~$ knx got add 2 /p/2 22 [1]
-      uart:~$ knx got add 3 /p/3 22 [1]
-      uart:~$ knx got add 4 /p/4 22 [1]
-
-#. Set device installation identifier and device individual address for Actuator device with the ``knx dev`` command.
-
-   .. code-block:: console
-
-      uart:~$ knx dev iid 1
-      uart:~$ knx dev ia 1
-
-#. Configure the Sensor device by adding entries to Sensor's Group Object Table with the ``knx got`` command.
-
-   .. code-block:: console
-
-      uart:~$ knx got add 1 /p/1 22 [1]
-
-#. Set device installation identifier and device individual address for Sensor device with the ``knx dev`` command.
-
-   .. code-block:: console
-
-      uart:~$ knx dev iid 1
-      uart:~$ knx dev ia 2
-
-#. Devices are configured.
-   Use sensor's BUTTON1 to disable or enable all of the assigned actuator's LEDs.
-   Usage of the other buttons has no effect.
-   The interconnections between buttons and LEDs are presented in the following table:
-
-   +----------------+------------------------+
-   | Control button | Controlled LEDs        |
-   | (Sensor)       | (Actuator)             |
-   +================+========================+
-   | BUTTON1        | LED1, LED2, LED3, LED4 |
-   +----------------+------------------------+
-
-Example 2 - one button mapped to one LED
-****************************************
-
-Having Thread network configured and operational, you can start KNX IoT device configuration and testing.
-One device must be configured as an Actuator and one as a Sensor.
-
-We need to perform configuration/mapping of buttons built in to KNX IoT Sensor `Nordic nRF52840 DK`_ to control LEDs built in to the KNX IoT Actuator `Nordic nRF52840 DK`_ - one button to one LED.
-It is achieved by dedicated on KNX group to every input-output pair.
-
-#. Configure the Actuator device by adding entries to Actuator's Group Object Table with the ``knx got`` command.
-
-   .. code-block:: console
-
-      uart:~$ knx got add 1 /p/1 22 [1]
-      uart:~$ knx got add 2 /p/2 22 [2]
-      uart:~$ knx got add 3 /p/3 22 [3]
-      uart:~$ knx got add 4 /p/4 22 [4]
-
-#. Set device installation identifier and device individual address for Actuator device with the ``knx dev`` command.
-
-   .. code-block:: console
-
-      uart:~$ knx dev iid 1
-      uart:~$ knx dev ia 1
-
-#. Configure the Sensor device by adding entries to Sensor's Group Object Table with the ``knx got`` command.
-
-   .. code-block:: console
-
-      uart:~$ knx got add 1 /p/1 22 [1]
-      uart:~$ knx got add 2 /p/2 22 [2]
-      uart:~$ knx got add 3 /p/3 22 [3]
-      uart:~$ knx got add 4 /p/4 22 [4]
-
-#. Set device installation identifier and device individual address for Sensor device with the ``knx dev`` command.
-
-   .. code-block:: console
-
-      uart:~$ knx dev iid 1
-      uart:~$ knx dev ia 2
-
-#. Devices are configured.
-   Use one of the sensor's buttons to control one of the assigned actuator's LEDs.
-   The interconnections between buttons and LEDs are presented in the following table:
-
-   +----------------+----------------+
-   | Control button | Controlled LED |
-   | (Sensor)       | (Actuator)     |
-   +================+================+
-   | BUTTON1        | LED1           |
-   +----------------+----------------+
-   | BUTTON2        | LED2           |
-   +----------------+----------------+
-   | BUTTON3        | LED3           |
-   +----------------+----------------+
-   | BUTTON4        | LED4           |
-   +----------------+----------------+
-
-Example 3 - Mixed configuration
-*******************************
-
-Having Thread network configured and operational, you can start KNX IoT device configuration and testing.
-One device must be configured as an Actuator and one as a Sensor.
-
-We need to perform configuration/mapping of buttons built in to KNX IoT sensor to control LEDs built in to the KNX IoT Actuator - one button to one LED.
-It is achieved by setting KNX Actuator `Nordic nRF52840 DK`_ to receive events from multple groups.
-
-#. Configure Actuator device by adding entries to Actuator's Group Object Table - command ``knx got`` command.
-
-   .. code-block:: console
-
-      uart:~$ knx got add 1 /p/1 22 [1,2,3,4]
-      uart:~$ knx got add 2 /p/2 22 [2,3,4]
-      uart:~$ knx got add 3 /p/3 22 [3,4]
-      uart:~$ knx got add 4 /p/4 22 [4]
-
-#. Set device installation identifier and device individual address for Actuator device with the ``knx dev`` command.
-
-   .. code-block:: console
-
-      uart:~$ knx dev iid 1
-      uart:~$ knx dev ia 1
-
-#. Configure Sensor device by adding entries to Sensor's Group Object Table - command ``knx got`` command.
-
-   .. code-block:: console
-
-      uart:~$ knx got add 1 /p/1 22 [1]
-      uart:~$ knx got add 2 /p/2 22 [2]
-      uart:~$ knx got add 3 /p/3 22 [3]
-      uart:~$ knx got add 4 /p/4 22 [4]
-
-#. Set device installation identifier and device individual address for Sensor device with the ``knx dev`` command.
-
-   .. code-block:: console
-
-      uart:~$ knx dev iid 1
-      uart:~$ knx dev ia 2
-
-#. Devices are configured. Use one of the sensor's buttons to control one or many of the assigned actuator's LEDs. 
-   The interconnections between buttons and LEDs are presented in the following table:
-
-   +----------------+------------------------+
-   | Control button | Controlled LEDs        |
-   | (Sensor)       | (Actuator)             |
-   +================+========================+
-   | BUTTON1        | LED1                   |
-   +----------------+------------------------+
-   | BUTTON2        | LED1, LED2             |
-   +----------------+------------------------+
-   | BUTTON3        | LED1, LED2, LED3       |
-   +----------------+------------------------+
-   | BUTTON4        | LED1, LED2, LED3, LED4 |
-   +----------------+------------------------+
+      
+      Image: Location of DKs LEDs (yellow rectangle) and buttons (green rectangle).
 
 Sniffing KNX IoT Point API communication
 ****************************************
 
-In order to inspect the packets exchanged between KNX devices 802.15.4 sniffer can be used.
-After setting up the Wireshark as described in :ref:`sniffer configuration <sniffer_configuration>` with regard to default configuration specified in :ref:`Starting Thread Network <starting_thread_network>` section we can capture CoAP messages sent through a default port (5683).
+In order to inspect the packets exchanged between KNX devices, the 802.15.4 sniffer can be used.
+To capture CoAP messages sent through a default port (5683), set up the Wireshark as described in :ref:`sniffer configuration <sniffer_configuration>` with regard to default configuration specified in :ref:`Starting Thread Network <starting_thread_network>` section.
 
 .. figure:: /images/example_capture.png
 
-   Figure: Capture of CoAP messages
+   Figure: Capture of CoAP messages.
 
 .. figure:: /images/example_coap_packet.png
    
-   Figure: Content of CoAP message
+   Figure: Content of CoAP message.
 
-.. _Nordic nRF52840 DK: https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK
+Sample cases
+************
+
+Configure Actuators and Sensors based on the following cases:
+
+.. toctree::
+   :maxdepth: 1
+   :glob:
+   :caption: Subpages:
+
+   testing_cases/case_1.rst
+   testing_cases/case_2.rst
+   testing_cases/case_3.rst
+
+.. _nRF52840 DK: https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK
 .. _KNX Specification: https://www.knx.org/wAssets/docs/downloads/Certification/Interworking-Datapoint-types/03_07_02-Datapoint-Types-v02.02.01-AS.pdf

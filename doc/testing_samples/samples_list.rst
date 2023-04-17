@@ -1,7 +1,9 @@
 .. _samples_list:
 
-List of KNX IoT application samples
-###################################
+Samples building and running
+############################
+
+First, you need to build and run both available samples.
 
 .. toctree::
    :maxdepth: 1

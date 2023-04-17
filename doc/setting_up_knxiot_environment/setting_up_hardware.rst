@@ -3,7 +3,7 @@
 Hardware setup
 ##############
 
-Before setting up the KNX Point API environment, you need to make sure you have correctly set up the required hardware.
+Before setting up the KNX Point API environment, you need to make sure you have set up correctly the required hardware.
 
 Development Kit
 ***************
@@ -16,7 +16,7 @@ For information on how to start working with the devices, refer to the `Getting 
 nRF Sniffer for 802.15.4
 ************************
 
-For information on how to start working with the `nRF52840 Dongle`_ as a sniffer, refer to `nRF Sniffer for 802.15.4`_ page.
+For information on how to start working with the `nRF52840 Dongle`_ as a sniffer, refer to the `nRF Sniffer for 802.15.4`_ page.
 
 .. _Getting started with nRF52 Series: https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/working_with_nrf/nrf52/gs.html
 .. _nRF52840 Dongle: https://www.nordicsemi.com/Products/Development-hardware/nRF52840-Dongle/

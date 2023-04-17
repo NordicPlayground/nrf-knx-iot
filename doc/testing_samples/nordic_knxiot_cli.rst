@@ -3,9 +3,9 @@
 KNX IoT Point API stack configuration
 #####################################
 
-Each KNX IoT device must be configured to make it working as a part of KNX network.
+Each KNX IoT device must be configured to make it working as a part of the KNX network.
 
-For demo purposes, Nordic Semiconductor provides the dedicated KNX IoT CLI to be used to configure KNX IoT device.
+For demo purposes, Nordic Semiconductor provides the dedicated KNX IoT CLI that should be used to configure KNX IoT devices.
 In the future, KNX IoT devices will be configured using the `ETS tool`_.
 
 KNX IoT CLI
@@ -43,7 +43,7 @@ Group Object Table configuration
 ********************************
 
 Group Object Table is used to control interconnections (data sharing) between KNX Datapoint types.
-Every entry in the table consists of the properties described below:
+Every entry in the table consists of the following properties:
 
 +---------------------+--------------------------------------------------------------------------------------+
 | Property            | Description                                                                          |
@@ -91,7 +91,7 @@ In order to read the Group Object Table content, use the ``knx got print`` comma
    [ 2]: 512 /p/ls/garage 252 [4,5,6]
 
 The ``knx got print`` command output prints three entries in the Group Object Table.
-Entries are described in details in the table below:
+The following table contains description of these entries:
   
 +---------+--------------+---------------+---------------------+-----------------------------------------------------------------------------+
 | Entry   | Identifier   | Path          | Flags               | Group addresses                                                             |
@@ -119,12 +119,12 @@ When a group is configured, a device joins the corresponding multicast group wit
 Sample Group Object Table configuration
 =======================================
 
-The following tables show sample sets of configuration for the Light Actuator and Sensor.
+The following tables show sample sets of configuration for the Light Switch Actuator and Light Switch Sensor.
 
 Light Actuator with a single input
 """"""""""""""""""""""""""""""""""
 
-The following entry sample allows the Light Actuator to receive notifications from a group with address equal to `1` for a property with the :file:`/p/light/room` path.
+The following entry sample allows the Light Switch Actuator to receive notifications from a group with address equal to ``1`` for a property with the :file:`/p/light/room` path.
 
 +---------+--------------+---------------------+--------+------------------+
 | Entry   | Identifier   | Path                | Flags  | Group addresses  |
@@ -135,7 +135,7 @@ The following entry sample allows the Light Actuator to receive notifications fr
 Light Sensor with a single output
 """""""""""""""""""""""""""""""""
 
-The following entry sample allows the Light Sensor to send notifications to a group with an address equal to `24` for a property with the :file:`/p/light/livingroom` path.
+The following entry sample allows the Light Switch Sensor to send notifications to a group with an address equal to ``24`` for a property with the :file:`/p/light/livingroom` path.
 
 +---------+--------------+---------------------+--------+------------------+
 | Entry   | Identifier   | Path                | Flags  | Group addresses  |
@@ -146,7 +146,7 @@ The following entry sample allows the Light Sensor to send notifications to a gr
 Light Actuator with multiple inputs
 """""""""""""""""""""""""""""""""""
 
-The following entry sample allows the Light Actuator to receive notifications from groups with addresses equal to `16` and `17` for a property with the :file:`/p/light/basement` path.
+The following entry sample allows the Light Actuator to receive notifications from groups with addresses equal to ``16`` and ``17`` for a property with the :file:`/p/light/basement` path.
 
 +---------+--------------+---------------------+--------+------------------+
 | Entry   | Identifier   | Path                | Flags  | Group addresses  |
@@ -157,7 +157,7 @@ The following entry sample allows the Light Actuator to receive notifications fr
 Light Sensor with multiple outputs
 """"""""""""""""""""""""""""""""""
 
-The following entry sample allows the Light Sensor to send notifications to groups with addresses equal to `32` and `64` for property with the :file:`/p/light/kitchen` path.
+The following entry sample allows the Light Sensor to send notifications to groups with addresses equal to ``32`` and ``64`` for property with the :file:`/p/light/kitchen` path.
 
 +---------+--------------+---------------------+--------+------------------+
 | Entry   | Identifier   | Path                | Flags  | Group addresses  |
