@@ -25,7 +25,7 @@ This documentation provides instructions on how to correctly setup KNX Point API
    :caption: Subpages:
 
    about_knxiot.rst
-   setting_up_knxiot_environment/setting_up_knxiot_environment.rst
+   environment_setup.rst
    testing_samples/samples.rst
    knxiot_release_notes.rst
    knxiot_known_issues.rst

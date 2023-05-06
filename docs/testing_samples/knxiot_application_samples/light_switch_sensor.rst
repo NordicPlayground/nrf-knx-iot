@@ -8,8 +8,8 @@ Each of them is built with a single Switch On/Off input Datapoint (Datapointype 
 
 Check the `KNX Interworking Datapoint Types`_ specification for details.
 
-Requirements
-************
+Supported devices
+*****************
 
 The sample supports the following development kits:
 
@@ -21,34 +21,40 @@ The sample supports the following development kits:
 
 Building and running
 ********************
-This sample can be found in the :file:`samples/light_switch_sensor` directory.
 
 .. note::
-      Zephyr SDK is installed in NCS directory, thus the following additional environment variables must be set:
-      
-      .. code-block:: bash
-      
-        export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
-        export ZEPHYR_SDK_INSTALL_DIR=<NCS_INSTALL_DIR>/toolchains/v2.3.0/opt/zephyr-sdk/
+   Zephyr SDK is installed in NCS directory.
 
-      And run this command:
+1. Set additional environment variables as follows:
 
-      .. code-block:: bash
-      
-        source <NCS_INSTALL_DIR>/v2.3.0/zephyr/zephyr-env.sh
-      
-      where :guilabel:`<NCS_INSTALL_DIR>`` is NCS's directory path.
+   .. code-block:: bash
 
-To build the sample, follow the steps in the `Building and programming an application`_ page.
+      export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
+      export ZEPHYR_SDK_INSTALL_DIR=<NCS_INSTALL_DIR>/toolchains/v2.3.0/opt/zephyr-sdk/
+
+#. Activate the Zephyr environment as follows:
+
+   .. code-block:: bash
+
+      source <NCS_INSTALL_DIR>/v2.3.0/zephyr/zephyr-env.sh
+
+   where :guilabel:`<NCS_INSTALL_DIR>` is an NCS directory path.
+
+#. Build the sample by following the steps in the `Building and programming an application`_ page.
+
+.. note::
+   This sample can be found in the :file:`samples/light_switch_sensor` directory.
 
 Testing
 *******
 
-See `Testing and debugging an application`_ for information on testing and debugging in the nRF Connect SDK.
+Complete the following steps to test and debug the sample in the nRF Connect SDK:
 
-After successfully building the sample and flashing manufacturing data, the sample is ready to use.
-To refresh the logs, restart the program by pressing the :guilabel:`RESET` button on your development kit.
-You should see output similar to the following:
+1. Follow `Testing and debugging an application`_ guidelines.
+   After successfully building the sample and flashing manufacturing data, the sample is ready to use.
+
+#. To refresh the logs, restart the program by pressing the :guilabel:`RESET` button on your development kit.
+   You should see the output similar to the following:
 
 .. code-block:: console
 
@@ -85,7 +91,8 @@ You should see output similar to the following:
 OpenThread configuration
 ========================
 
-The application starts the Thread interface automatically, and either joins or creates a new network.
+The application starts the Thread interface automatically, and either joins an existing network or creates a new one.
+
 A mesh network uses the following configuration:
 
 +------------------+-------------------------------------+
