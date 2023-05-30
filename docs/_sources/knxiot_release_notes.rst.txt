@@ -5,6 +5,14 @@ Release notes
 
 See the release notes for the information about specific KNX IoT Point API support on the top of nRF Connect SDK.
 
+[v0.2.0] - 06/01/2023
+---------------------
+
+Added:
+
+* Support for nRF5340 DK.
+* Support for Thingy:53.
+
 [v0.1.0] - 04/11/2023
 ---------------------
 

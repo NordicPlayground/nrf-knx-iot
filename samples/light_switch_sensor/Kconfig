@@ -1,0 +1,17 @@
+
+#
+# Private config options for Light Switch Sensor Basic sample app.
+#
+# Copyright (c) 2023 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+#
+
+source "Kconfig.zephyr"
+
+#
+# Hidden option to indicate that a board has reduced number of IO 
+# elements, e.g., buttons and LEDs.
+#
+config LSSB_REDUCED_IO
+	bool "Use reduced number of buttons and LEDs"
+    default n

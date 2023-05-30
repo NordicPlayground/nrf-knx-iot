@@ -51,13 +51,13 @@ To verify Thread devices status, do the following:
   * Check if one of devices is set as a Thread leader.
 
     .. code-block:: console
- 
+
        uart:~$ ot state
        leader
        Done
-    
+
   * Check if another device is either a Thread child or leader:
-	
+
     .. code-block:: console
 
        uart:~$ ot state
@@ -68,76 +68,81 @@ To verify Thread devices status, do the following:
 
        uart:~$ ot state
        leader
-       Done	
+       Done
 
-	  
+
 Connecting Light Switch Sensor to Light Switch Actuator
 *******************************************************
 
 KNX IoT devices, just as the classic KNX devices, consist of one or many Functional Blocks.
-The Functional Block contains one or more Datapoints which are its inputs, outputs, and parameters.
+Functional Block contains one or more Datapoints which are its inputs, outputs, and parameters.
 
 The most important feature of Datapoint's description is its type.
 The type specifies how the Datapoint is encoded, its supported range, units, an so on.
-All Datapoints of given Functional Block and featured types are described in the `KNX Specification`_ page.
+All Datapoints of a given Functional Block and featured types are described in the `KNX Specification`_ page.
 
-Both Light Switch Actuator and Sensor are built with 4 Functional Blocks with a single Switch On/Off Datapoint (type name: DPT_Switch, id: 1.001).
-Every Datapoint controls a single `nRF52840 DK`_ LED (actuator) or is controlled by a single `nRF52840 DK`_ button (sensor).
+Both Light Switch Actuator and Sensor - depending on the boards used - are built with 1, 3, or 4 Functional Blocks with a single Switch On/Off Datapoint (type name: DPT_Switch, id: 1.001).
+Every Datapoint either controls a single LED (Actuator) or is controlled by a single button (Sensor).
 For communication between KNX IoT Point API, devices send s-mode messages over the CoAP protocol.
-A recipient of the message checks its Group Object Table to verify that it is capable of processing it.
+A board that is the recipient of the s-mode message checks its Group Object Table to confirm if the message can be processed.
 
-The following tables presents configuration of Datapoints for Light Switch Actuator and Light Switch Sensor devices:
+The following tables present configuration of Datapoints for Light Switch Actuator and Light Switch Sensor devices:
 
-* Light Switch Actuator Datapoints
- 
-  +--------+-------+-----+-----+
-  | LED    | Path  | GET | SET |
-  +========+=======+=====+=====+
-  | LED1   | /p/1  | Yes | Yes |
-  +--------+-------+-----+-----+
-  | LED2   | /p/2  | Yes | Yes |
-  +--------+-------+-----+-----+
-  | LED3   | /p/3  | Yes | Yes |
-  +--------+-------+-----+-----+
-  | LED4   | /p/4  | Yes | Yes |
-  +--------+-------+-----+-----+
+* Light Switch Actuator Datapoints:
 
-* Light Switch Sensor Datapoints
- 
-  +----------+-------+-----+-----+
-  | Button   | Path  | GET | SET |
-  +==========+=======+=====+=====+
-  | BUTTON1  | /p/1  | Yes | No  |
-  +----------+-------+-----+-----+
-  | BUTTON2  | /p/2  | Yes | No  |
-  +----------+-------+-----+-----+
-  | BUTTON3  | /p/3  | Yes | No  |
-  +----------+-------+-----+-----+
-  | BUTTON4  | /p/4  | Yes | No  |
-  +----------+-------+-----+-----+
+  +--------+-------+-----+-----+-----------------------------+
+  | LED    | Path  | GET | SET | Comment                     |
+  +========+=======+=====+=====+=============================+
+  | LED1   | /p/1  | Yes | Yes |                             |
+  +--------+-------+-----+-----+-----------------------------+
+  | LED2   | /p/2  | Yes | Yes |                             |
+  +--------+-------+-----+-----+-----------------------------+
+  | LED3   | /p/3  | Yes | Yes |                             |
+  +--------+-------+-----+-----+-----------------------------+
+  | LED4   | /p/4  | Yes | Yes | Not available for Thingy:53 |
+  +--------+-------+-----+-----+-----------------------------+
 
-LEDs and buttons location
-*************************
+* Light Switch Sensor Datapoints:
 
-All samples run on the `nRF52840 DK`_ board.
-The picture below presents a location of LEDs (yellow rectangle) and buttons (green rectangle) used in examples.
+  +----------+-------+-----+-----+-----------------------------+
+  | Button   | Path  | GET | SET | Comment                     |
+  +==========+=======+=====+=====+=============================+
+  | BUTTON1  | /p/1  | Yes | No  |                             |
+  +----------+-------+-----+-----+-----------------------------+
+  | BUTTON2  | /p/2  | Yes | No  | Not available for Thingy:53 |
+  +----------+-------+-----+-----+-----------------------------+
+  | BUTTON3  | /p/3  | Yes | No  | Not available for Thingy:53 |
+  +----------+-------+-----+-----+-----------------------------+
+  | BUTTON4  | /p/4  | Yes | No  | Not available for Thingy:53 |
+  +----------+-------+-----+-----+-----------------------------+
 
-   .. figure:: /images/dk_leds_and_buttons.png
-      
-      Image: Location of DKs LEDs (yellow rectangle) and buttons (green rectangle).
+Location of LEDs and buttons
+****************************
+
+Pictures below present locations of LEDs (yellow rectangles) and buttons (green rectangles) used in the samples.
+
+   .. figure:: /images/dk_leds_and_buttons_nrf52840dk.png
+
+      Image: Location of LEDs (yellow rectangle) and buttons (green rectangle) of nRF52840 DK.
+   .. figure:: /images/dk_leds_and_buttons_nrf5340dk.png
+
+      Image: Location of LEDs (yellow rectangle) and buttons (green rectangle) of nRF5340 DK.
+   .. figure:: /images/dk_leds_and_buttons_thingy53.png
+
+      Image: Location of RGB LEDs (yellow rectangle) and the button (green rectangle) of Thingy:53.
 
 Sniffing KNX IoT Point API communication
 ****************************************
 
 In order to inspect the packets exchanged between KNX devices, the 802.15.4 sniffer can be used.
-To capture CoAP messages sent through a default port (5683), set up the Wireshark as described in :ref:`sniffer configuration <sniffer_configuration>` with regard to default configuration specified in :ref:`Starting Thread Network <starting_thread_network>` section.
+To capture CoAP messages sent through a default port (5683), set up the Wireshark as described in :ref:`sniffer configuration <sniffer_configuration>` with regard to default configuration specified in the :ref:`Starting Thread Network <starting_thread_network>` section.
 
 .. figure:: /images/example_capture.png
 
    Figure: Capture of CoAP messages.
 
 .. figure:: /images/example_coap_packet.png
-   
+
    Figure: Content of CoAP message.
 
 Sample cases
