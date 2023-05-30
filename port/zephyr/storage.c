@@ -60,7 +60,7 @@ knx_setting_read_cb(const char *key, size_t len,
 	ret = read_cb(cb_arg, ctx->value, len);
 	
 	if (ret <= 0) {
-		PRINT("Failed to read the setting, key: %s ret: %d\n",key, ret);
+		PRINT("Failed to read the setting, key: %s ret: %d\n", key, ret);
 		ctx->status = -EIO;
 		return 1;
 	}
@@ -70,8 +70,7 @@ knx_setting_read_cb(const char *key, size_t len,
 	}
 
 	ctx->status = 0;
-
-	return 1;
+	return 0;
 }
 
 long 
@@ -81,7 +80,7 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
 	char path[KNX_SETTINGS_MAX_PATH_LEN];
 	struct knx_setting_read_ctx read_ctx = {
 		.value = buf,
-		.length = (size_t *)size,
+		.length = (size_t *)&size,
 		.status = -ENOENT,
 	};
 
@@ -89,7 +88,7 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
     PRINT("oc_storage_read(): %s, size: %u\n", store, size);
 #endif
 
-    snprintk(path, sizeof(path), "%s/%s", KNX_SETTINGS_ROOT_KEY, store);
+    snprintf(path, sizeof(path), "%s/%s", KNX_SETTINGS_ROOT_KEY, store);
 
     ret = settings_load_subtree_direct(path, knx_setting_read_cb, &read_ctx);
 
@@ -109,7 +108,7 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
 		return 0;
 	}
 
-	return read_ctx.length;
+	return *read_ctx.length;
 }
 
 long 
@@ -128,9 +127,10 @@ oc_storage_write(const char *store, uint8_t *buf, size_t size)
 
 	if (ret) {
 		PRINT("Failed to write the setting, ret: %d\n", ret);
+		return 0;
 	}
 
-    return ret;
+    return size;
 }
 
 int 

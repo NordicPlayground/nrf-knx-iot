@@ -47,21 +47,25 @@ static CRITICAL_SECTION cs;   /**< event loop variable */
 #define SW2_NODE DT_ALIAS(sw2)
 #define SW3_NODE DT_ALIAS(sw3)
 
-static bool current_states[] = {true, true, true, true};
+static bool current_states[] = {false, false, false, false};
 
 static const struct gpio_dt_spec button0 = GPIO_DT_SPEC_GET_OR(SW0_NODE, gpios,
 							      {0});
+#if !CONFIG_LSSB_REDUCED_IO
 static const struct gpio_dt_spec button1 = GPIO_DT_SPEC_GET_OR(SW1_NODE, gpios,
 							      {0});
 static const struct gpio_dt_spec button2 = GPIO_DT_SPEC_GET_OR(SW2_NODE, gpios,
 							      {0});
 static const struct gpio_dt_spec button3 = GPIO_DT_SPEC_GET_OR(SW3_NODE, gpios,
 							      {0});
+#endif
 
 static struct gpio_callback button0_cb_data;
+#if !CONFIG_LSSB_REDUCED_IO
 static struct gpio_callback button1_cb_data;
 static struct gpio_callback button2_cb_data;
 static struct gpio_callback button3_cb_data;
+#endif
 
 void button0_pressed(const struct device *dev, struct gpio_callback *cb,
 		    uint32_t pins)
@@ -71,6 +75,7 @@ void button0_pressed(const struct device *dev, struct gpio_callback *cb,
   oc_do_s_mode_with_scope_no_check(5, "/p/1", "w");
 }
 
+#if !CONFIG_LSSB_REDUCED_IO
 void button1_pressed(const struct device *dev, struct gpio_callback *cb,
 		    uint32_t pins)
 {
@@ -94,6 +99,7 @@ void button3_pressed(const struct device *dev, struct gpio_callback *cb,
   oc_do_s_mode_with_scope_no_check(2, "/p/4", "w");
   oc_do_s_mode_with_scope_no_check(5, "/p/4", "w");
 }
+#endif
 
 int
 app_init(void)
@@ -219,6 +225,7 @@ get_p_1(oc_request_t *request, oc_interface_mask_t interfaces,
   handle_get_request(request, interfaces, user_data, 0);
 }
 
+#if !CONFIG_LSSB_REDUCED_IO
 static void
 get_p_2(oc_request_t *request, oc_interface_mask_t interfaces,
           void *user_data)
@@ -239,6 +246,7 @@ get_p_4(oc_request_t *request, oc_interface_mask_t interfaces,
 {
   handle_get_request(request, interfaces, user_data, 3);
 }
+#endif
 
 /**
  * register all the resources to the stack
@@ -252,12 +260,12 @@ get_p_4(oc_request_t *request, oc_interface_mask_t interfaces,
  *   - used interfaces
  *
  * URL Table
- * | resource url | functional block/dpa  | GET | PUT |
- * | ------------ | --------------------- | --- | --- |
- * | p/1          | urn:knx:dpa.417.61    | Yes | NO  |
- * | p/2          | urn:knx:dpa.417.61    | Yes | NO  |
- * | p/3          | urn:knx:dpa.417.61    | Yes | NO  |
- * | p/4          | urn:knx:dpa.417.61    | Yes | NO  |
+ * | resource url | functional block/dpa  | GET | PUT | comment                   | 
+ * | ------------ | --------------------- | --- | --- | ------------------------- |
+ * | p/1          | urn:knx:dpa.417.61    | Yes | NO  |                           |
+ * | p/2          | urn:knx:dpa.417.61    | Yes | NO  | not supported by Thingy53 |
+ * | p/3          | urn:knx:dpa.417.61    | Yes | NO  | not supported by Thingy53 |
+ * | p/4          | urn:knx:dpa.417.61    | Yes | NO  | not supported by Thingy53 |
  */
 void
 register_resource(const char *url, oc_request_callback_t get_cb, oc_request_callback_t put_cb)
@@ -292,11 +300,12 @@ register_resource(const char *url, oc_request_callback_t get_cb, oc_request_call
 void register_resources(void)
 {
   register_resource("/p/1", get_p_1, NULL);
+#if !CONFIG_LSSB_REDUCED_IO
   register_resource("/p/2", get_p_2, NULL);
   register_resource("/p/3", get_p_3, NULL);
   register_resource("/p/4", get_p_4, NULL);
+#endif
 }
-
 
 /**
  * @brief initiate preset for device
@@ -398,6 +407,7 @@ main()
 		return;
 	}
 
+#if !CONFIG_LSSB_REDUCED_IO
   if (!device_is_ready(button1.port)) {
 		return;
 	}
@@ -409,12 +419,14 @@ main()
   	if (!device_is_ready(button3.port)) {
 		return;
 	}
+#endif
 
 	ret = gpio_pin_configure_dt(&button0, GPIO_INPUT);
 	if (ret != 0) {
 		return;
 	}
 
+#if !CONFIG_LSSB_REDUCED_IO
   ret = gpio_pin_configure_dt(&button1, GPIO_INPUT);
 	if (ret != 0) {
 		return;
@@ -429,6 +441,7 @@ main()
 	if (ret != 0) {
 		return;
 	}
+#endif
 
 	ret = gpio_pin_interrupt_configure_dt(&button0,
 					      GPIO_INT_EDGE_TO_ACTIVE);
@@ -436,6 +449,7 @@ main()
 		return;
 	}
 
+#if !CONFIG_LSSB_REDUCED_IO
   ret = gpio_pin_interrupt_configure_dt(&button1,
 					      GPIO_INT_EDGE_TO_ACTIVE);
   if (ret != 0) {
@@ -453,17 +467,21 @@ main()
   if (ret != 0) {
 		return;
 	}
+#endif
 
 	gpio_init_callback(&button0_cb_data, button0_pressed, BIT(button0.pin));
+#if !CONFIG_LSSB_REDUCED_IO
 	gpio_init_callback(&button1_cb_data, button1_pressed, BIT(button1.pin));
 	gpio_init_callback(&button2_cb_data, button2_pressed, BIT(button2.pin));
 	gpio_init_callback(&button3_cb_data, button3_pressed, BIT(button3.pin));
-
+#endif
 
 	gpio_add_callback(button0.port, &button0_cb_data);
+#if !CONFIG_LSSB_REDUCED_IO 
   gpio_add_callback(button1.port, &button1_cb_data);
   gpio_add_callback(button2.port, &button2_cb_data);
   gpio_add_callback(button3.port, &button3_cb_data);
+#endif
 
   oc_storage_config(NULL);
 

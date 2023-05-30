@@ -29,6 +29,11 @@ struct k_condvar event_cv;
 #define LED2_NODE DT_ALIAS(led2)
 #define LED3_NODE DT_ALIAS(led3)
 
+#define LED0_DISABLED DT_GPIO_FLAGS(LED0_NODE, gpios) & GPIO_ACTIVE_LOW
+#define LED1_DISABLED DT_GPIO_FLAGS(LED1_NODE, gpios) & GPIO_ACTIVE_LOW
+#define LED2_DISABLED DT_GPIO_FLAGS(LED2_NODE, gpios) & GPIO_ACTIVE_LOW
+#define LED3_DISABLED DT_GPIO_FLAGS(LED3_NODE, gpios) & GPIO_ACTIVE_LOW
+
 static const struct gpio_dt_spec led0 = GPIO_DT_SPEC_GET_OR(LED0_NODE, gpios, {0});
 static const struct gpio_dt_spec led1 = GPIO_DT_SPEC_GET_OR(LED1_NODE, gpios, {0});
 static const struct gpio_dt_spec led2 = GPIO_DT_SPEC_GET_OR(LED2_NODE, gpios, {0});
@@ -166,6 +171,9 @@ handle_put_request(oc_request_t *request, oc_interface_mask_t interfaces,
 {
   (void)interfaces;
   (void)user_data;
+
+  bool state = false;
+
   PRINT("-- Begin put_dpa_417_61:\n");
 
   oc_rep_t *rep = NULL;
@@ -178,6 +186,10 @@ handle_put_request(oc_request_t *request, oc_interface_mask_t interfaces,
     if (rep->type == OC_REP_BOOL) {
       if (rep->iname == 1) {
         PRINT("  put_dpa_417_61 received : %d\n", rep->value.boolean);
+
+        // Translate value to LED state depending on pin configuration
+        state = !rep->value.boolean ^ (leds[res_index]->dt_flags & GPIO_ACTIVE_HIGH);
+
         gpio_pin_set_raw(leds[res_index]->port, leds[res_index]->pin, rep->value.boolean);
         oc_send_cbor_response(request, OC_STATUS_CHANGED);
         PRINT("-- End put_dpa_417_61\n");
@@ -212,12 +224,14 @@ get_p_3(oc_request_t *request, oc_interface_mask_t interfaces,
   handle_get_request(request, interfaces, user_data, 2);
 }
 
+#if !CONFIG_LSAB_REDUCED_IO
 static void
 get_p_4(oc_request_t *request, oc_interface_mask_t interfaces,
           void *user_data)
 {
   handle_get_request(request, interfaces, user_data, 3);
 }
+#endif
 
 static void
 put_p_1(oc_request_t *request, oc_interface_mask_t interfaces,
@@ -240,12 +254,14 @@ put_p_3(oc_request_t *request, oc_interface_mask_t interfaces,
   handle_put_request(request, interfaces, user_data, 2);
 }
 
+#if !CONFIG_LSAB_REDUCED_IO
 static void
 put_p_4(oc_request_t *request, oc_interface_mask_t interfaces,
           void *user_data)
 {
   handle_put_request(request, interfaces, user_data, 3);
 }
+#endif
 
 /**
  * register all the resources to the stack
@@ -259,12 +275,12 @@ put_p_4(oc_request_t *request, oc_interface_mask_t interfaces,
  *   - used interfaces
  *
  * URL Table
- * | resource url | functional block/dpa  | GET | PUT |
- * | ------------ | --------------------- | --- | --- |
- * | p/1          | urn:knx:dpa.417.61    | Yes | Yes |
- * | p/2          | urn:knx:dpa.417.61    | Yes | Yes |
- * | p/3          | urn:knx:dpa.417.61    | Yes | Yes |
- * | p/4          | urn:knx:dpa.417.61    | Yes | Yes |
+ * | resource url | functional block/dpa  | GET | PUT | comment                   |
+ * | ------------ | --------------------- | --- | --- | ------------------------- |
+ * | p/1          | urn:knx:dpa.417.61    | Yes | Yes |                           |
+ * | p/2          | urn:knx:dpa.417.61    | Yes | Yes |                           |
+ * | p/3          | urn:knx:dpa.417.61    | Yes | Yes |                           |
+ * | p/4          | urn:knx:dpa.417.61    | Yes | Yes | not supported by Thingy53 |
  */
 void
 register_resource(const char *url, oc_request_callback_t get_cb, oc_request_callback_t put_cb)
@@ -300,7 +316,9 @@ void register_resources(void)
   register_resource("/p/1", get_p_1, put_p_1);
   register_resource("/p/2", get_p_2, put_p_2);
   register_resource("/p/3", get_p_3, put_p_3);
+#if !CONFIG_LSAB_REDUCED_IO
   register_resource("/p/4", get_p_4, put_p_4);
+#endif
 }
 
 /**
@@ -393,10 +411,11 @@ main()
   if (!device_is_ready(led2.port)) {
 		return;
 	}
-
+#if !CONFIG_LSAB_REDUCED_IO
   if (!device_is_ready(led3.port)) {
 		return;
 	}
+#endif
 
   ret = gpio_pin_configure_dt(&led0, GPIO_OUTPUT);
 	if (ret != 0) {
@@ -413,15 +432,19 @@ main()
 		return;
 	}
 
+#if !CONFIG_LSAB_REDUCED_IO
   ret = gpio_pin_configure_dt(&led3, GPIO_OUTPUT);
 	if (ret != 0) {
 		return;
 	}
+#endif
 
-  gpio_pin_set_raw(led0.port, led0.pin, 1);
-  gpio_pin_set_raw(led1.port, led1.pin, 1);
-  gpio_pin_set_raw(led2.port, led2.pin, 1);
-  gpio_pin_set_raw(led3.port, led3.pin, 1);
+  gpio_pin_set_raw(led0.port, led0.pin, LED0_DISABLED);
+  gpio_pin_set_raw(led1.port, led1.pin, LED1_DISABLED);
+  gpio_pin_set_raw(led2.port, led2.pin, LED2_DISABLED);
+#if !CONFIG_LSAB_REDUCED_IO
+  gpio_pin_set_raw(led3.port, led3.pin, LED3_DISABLED);
+#endif
 
   oc_storage_config(NULL);
 
@@ -434,6 +457,13 @@ main()
                                         .requests_entry = 0
 #endif
   };
+
+  struct otInstance *instance = openthread_get_default_instance();
+
+  while(otThreadGetDeviceRole(instance) < OT_DEVICE_ROLE_CHILD)
+  {
+    k_msleep(100);
+  }
 
   /* set the application callbacks */
   oc_set_hostname_cb(hostname_cb, NULL);
@@ -450,6 +480,7 @@ main()
     PRINT("oc_main_init failed %d, exiting.\n", init);
     return;
   }
+
 #ifdef OC_OSCORE
   PRINT("OSCORE - Enabled\n");
 #else
@@ -458,13 +489,6 @@ main()
 
   PRINT("Server \"%s\" running, waiting for incoming connections.\n",
         MY_NAME);
-
-  struct otInstance *instance = openthread_get_default_instance();
-
-  while(otThreadGetDeviceRole(instance) < OT_DEVICE_ROLE_CHILD)
-  {
-    k_msleep(100);
-  }
 
   k_mutex_init(&event_loop_mutex);
   k_condvar_init(&event_cv);
