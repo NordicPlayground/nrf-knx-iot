@@ -3,7 +3,10 @@
 Samples
 #######
 
-The following samples showcase the KNX IoT Point API usage on the top of the Nordic's `nRF52840 DK`_:
+.. warning::
+    zamiana "Nordic's nRF52840 DK" -> "Nordic's boards"
+
+The following samples showcase the KNX IoT Point API usage on the top of the Nordic's boards:
 
 * :ref:`light_switch_actuator`
 * :ref:`light_switch_sensor`
@@ -13,7 +16,6 @@ The following samples showcase the KNX IoT Point API usage on the top of the Nor
 
 In the `KNX IoT repository`_, all samples are placed in the ``samples`` directory.
 
-.. _nRF52840 DK: https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/zephyr/boards/arm/nrf52840dk_nrf52840/doc/index.html
 .. _KNX IoT repository: https://github.com/NordicPlayground/nrf-knx-iot.git
 
 .. toctree::
