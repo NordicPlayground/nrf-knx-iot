@@ -9,8 +9,20 @@ Once completed, you will be able to run and test a sample KNX IoT application.
 Hardware requirements
 *********************
 
-To meet the hardware requirements, ensure you have two `nRF52840 DK`_ boards.
-To start working with the devices, refer to the `Getting started with nRF52 Series`_ page.
+.. warning::
+   zmiana nRF5240 DK na "two of supported boards:" z listą, zmiana jednego guide'a na listę
+
+To meet the hardware requirements, ensure you have two of the supported boards:
+
+  * `nRF52840 DK`_
+  * `nRF5340 DK`_
+  * `Nordic Thingy\:53`_
+
+To start working with the devices, refer to the following guidelines:
+
+  * `Getting started with nRF52 Series`_
+  * `Getting started with nRF53 Series`_
+  * `Getting started with Thingy\:53`_
 
 .. _sniffer_configuration:
 
@@ -25,7 +37,10 @@ To meet the software requirements, install `nRF Connect SDK v2.3.0`_ and `nRF Co
 nRF Connect SDK
 ===============
 
-Perform the following steps to install `nRF Connect SDK v2.3.0`_ and setup `nRF52840 DK`_ boards:
+.. warning::
+  'setup `nRF52840 DK`_' -> 'setup boards'
+
+Perform the following steps to install `nRF Connect SDK v2.3.0`_ and setup boards:
 
 #. Set up your development environment by choosing one of the installation methods below:
 
@@ -60,11 +75,15 @@ Optionally, for tracing and sniffing purposes, install `Wireshark`_.
 To configure Wireshark for Thread packets sniffing, go to the `Configuring Wireshark for Thread`_ page.
 
 .. _nRF52840 DK: https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK
+.. _nRF5340 DK: https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF5340-DK
+.. _Nordic Thingy\:53: https://www.nordicsemi.com/Products/Development-hardware/Nordic-Thingy-53
 .. _nRF52840 Dongle: https://www.nordicsemi.com/Products/Development-hardware/nRF52840-Dongle
 .. _nRF Connect SDK v2.3.0: https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/index.html
 .. _nRF Command Line Tools: https://www.nordicsemi.com/Software-and-Tools/Development-Tools/nRF-Command-Line-Tools/Download#infotabs
 .. _Wireshark: https://www.wireshark.org/download.html
 .. _Getting started with nRF52 Series: https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/working_with_nrf/nrf52/gs.html
+.. _Getting started with nRF53 Series: https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/working_with_nrf/nrf53/nrf5340_gs.html
+.. _Getting started with Thingy\:53: https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/working_with_nrf/nrf53/thingy53_gs.html
 .. _nRF Sniffer for 802.15.4: https://infocenter.nordicsemi.com/index.jsp?topic=%2Fug_sniffer_802154%2FUG%2Fsniffer_802154%2Finstalling_sniffer_802154.html
 .. _nRF Connect SDK Getting started guide: https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/getting_started.html
 .. _Installing automatically: https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/gs_assistant.html#installing-automatically

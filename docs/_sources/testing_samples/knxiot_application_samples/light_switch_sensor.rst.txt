@@ -3,7 +3,10 @@
 Light Switch Sensor
 ###################
 
-This sample demonstrates KNX IoT Point API device with four Light Switch Sensor basic Functional Blocks.
+.. warning::
+   'four' -> 'one or four'
+
+This sample demonstrates KNX IoT Point API device with one or four Light Switch Sensor basic Functional Blocks.
 Each of them is built with a single Switch On/Off input Datapoint (Datapointype ID: 1.001, Name: DPT_Switch).
 
 Check the `KNX Interworking Datapoint Types`_ specification for details.
@@ -15,7 +18,7 @@ The sample supports the following development kits:
 
 .. warning::
 
-   Nowy hardware: nRF5340 DK i Thingy53
+   Nowy hardware: nRF5340 DK i Thingy:53
 
 +--------------------+----------+--------------------------+------------------------------+
 | Hardware platforms | PCA      | Board name               | Build target                 |
@@ -24,7 +27,7 @@ The sample supports the following development kits:
 +--------------------+----------+--------------------------+------------------------------+
 | nRF5340 DK         | PCA10095 | nrf5340dk_nrf5340_cpuapp | ``nrf5340dk_nrf5340_cpuapp`` |
 +--------------------+----------+--------------------------+------------------------------+
-| Thingy53           | PCA20053 | thingy53_nrf5340_cpuapp  | ``thingy53_nrf5340_cpuapp``  |
+| Thingy:53          | PCA20053 | thingy53_nrf5340_cpuapp  | ``thingy53_nrf5340_cpuapp``  |
 +--------------------+----------+--------------------------+------------------------------+
 
 Building and running

@@ -186,11 +186,20 @@ Functional Block contains one or more Datapoints which are its inputs, outputs, 
 <p>The most important feature of Datapoint’s description is its type.
 The type specifies how the Datapoint is encoded, its supported range, units, an so on.
 All Datapoints of a given Functional Block and featured types are described in the <a class="reference external" href="https://www.knx.org/wAssets/docs/downloads/Certification/Interworking-Datapoint-types/03_07_02-Datapoint-Types-v02.02.01-AS.pdf">KNX Specification</a> page.</p>
-<p>Both Light Switch Actuator and Sensor are built with 4 Functional Blocks with a single Switch On/Off Datapoint (type name: DPT_Switch, id: 1.001).
-Every Datapoint controls a single <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK">nRF52840 DK</a> LED (Actuator) or is controlled by a single <a class="reference external" href="https://www.nordicsemi.com/Software-and-Tools/Development-Kits/nRF52840-DK">nRF52840 DK</a> button (Sensor).
-For communication between KNX IoT Point API, devices send s-mode messages over the CoAP protocol.
-A recipient of the message checks its Group Object Table to verify that it is capable of processing it.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Zmiana 4 functional bloków na 1, 3, albo 4</p>
+</div>
+<p>Both Light Switch Actuator and Sensor are built with 1, 3, or 4 Functional Blocks with a single Switch On/Off Datapoint
+(type name: DPT_Switch, id: 1.001). Every Datapoint controls a single LED (Actuator) or is controlled
+by a single button (Sensor). For communication between KNX IoT Point API, devices send s-mode messages
+over the CoAP protocol. A recipient of the message checks its Group Object Table to verify that it is capable of
+processing it.</p>
 <p>The following tables present configuration of Datapoints for Light Switch Actuator and Light Switch Sensor devices:</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Dodanie komentarza “not supported by Thingy:53”</p>
+</div>
 <ul>
 <li><p>Light Switch Actuator Datapoints:</p>
 <table class="docutils align-default">
@@ -199,6 +208,7 @@ A recipient of the message checks its Group Object Table to verify that it is ca
 <th class="head"><p>Path</p></th>
 <th class="head"><p>GET</p></th>
 <th class="head"><p>SET</p></th>
+<th class="head"><p>Comment</p></th>
 </tr>
 </thead>
 <tbody>
@@ -206,21 +216,25 @@ A recipient of the message checks its Group Object Table to verify that it is ca
 <td><p>/p/1</p></td>
 <td><p>Yes</p></td>
 <td><p>Yes</p></td>
+<td></td>
 </tr>
 <tr class="row-odd"><td><p>LED2</p></td>
 <td><p>/p/2</p></td>
 <td><p>Yes</p></td>
 <td><p>Yes</p></td>
+<td></td>
 </tr>
 <tr class="row-even"><td><p>LED3</p></td>
 <td><p>/p/3</p></td>
 <td><p>Yes</p></td>
 <td><p>Yes</p></td>
+<td></td>
 </tr>
 <tr class="row-odd"><td><p>LED4</p></td>
 <td><p>/p/4</p></td>
 <td><p>Yes</p></td>
 <td><p>Yes</p></td>
+<td><p>Unsupported by Thingy:53</p></td>
 </tr>
 </tbody>
 </table>
@@ -232,6 +246,7 @@ A recipient of the message checks its Group Object Table to verify that it is ca
 <th class="head"><p>Path</p></th>
 <th class="head"><p>GET</p></th>
 <th class="head"><p>SET</p></th>
+<th class="head"><p>Comment</p></th>
 </tr>
 </thead>
 <tbody>
@@ -239,21 +254,25 @@ A recipient of the message checks its Group Object Table to verify that it is ca
 <td><p>/p/1</p></td>
 <td><p>Yes</p></td>
 <td><p>No</p></td>
+<td></td>
 </tr>
 <tr class="row-odd"><td><p>BUTTON2</p></td>
 <td><p>/p/2</p></td>
 <td><p>Yes</p></td>
 <td><p>No</p></td>
+<td><p>Unsupported by Thingy:53</p></td>
 </tr>
 <tr class="row-even"><td><p>BUTTON3</p></td>
 <td><p>/p/3</p></td>
 <td><p>Yes</p></td>
 <td><p>No</p></td>
+<td><p>Unsupported by Thingy:53</p></td>
 </tr>
 <tr class="row-odd"><td><p>BUTTON4</p></td>
 <td><p>/p/4</p></td>
 <td><p>Yes</p></td>
 <td><p>No</p></td>
+<td><p>Unsupported by Thingy:53</p></td>
 </tr>
 </tbody>
 </table>
@@ -284,7 +303,7 @@ Dodane obrazki z nRF5340 DK i Thingy 53</p>
 <figure class="align-default" id="id4">
 <img alt="../_images/dk_leds_and_buttons_thingy53.png" src="../_images/dk_leds_and_buttons_thingy53.png" />
 <figcaption>
-<p><span class="caption-text">Image: Location of DKs LEDs (yellow rectangle) and buttons (green rectangle) of Thingy53.</span><a class="headerlink" href="#id4" title="Permalink to this image"></a></p>
+<p><span class="caption-text">Image: Location of DKs LEDs (yellow rectangle) and buttons (green rectangle) of Thingy:53.</span><a class="headerlink" href="#id4" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
 </div></blockquote>
