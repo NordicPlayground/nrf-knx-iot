@@ -81,50 +81,67 @@ The most important feature of Datapoint's description is its type.
 The type specifies how the Datapoint is encoded, its supported range, units, an so on.
 All Datapoints of a given Functional Block and featured types are described in the `KNX Specification`_ page.
 
-Both Light Switch Actuator and Sensor are built with 4 Functional Blocks with a single Switch On/Off Datapoint (type name: DPT_Switch, id: 1.001).
-Every Datapoint controls a single `nRF52840 DK`_ LED (Actuator) or is controlled by a single `nRF52840 DK`_ button (Sensor).
-For communication between KNX IoT Point API, devices send s-mode messages over the CoAP protocol.
-A recipient of the message checks its Group Object Table to verify that it is capable of processing it.
+.. warning::
+   Zmiana 4 functional bloków na 1, 3, albo 4
+
+Both Light Switch Actuator and Sensor are built with 1, 3, or 4 Functional Blocks with a single Switch On/Off Datapoint
+(type name: DPT_Switch, id: 1.001). Every Datapoint controls a single LED (Actuator) or is controlled
+by a single button (Sensor). For communication between KNX IoT Point API, devices send s-mode messages
+over the CoAP protocol. A recipient of the message checks its Group Object Table to verify that it is capable of
+processing it.
 
 The following tables present configuration of Datapoints for Light Switch Actuator and Light Switch Sensor devices:
 
+.. warning::
+   Dodanie komentarza "not supported by Thingy:53"
+
 * Light Switch Actuator Datapoints:
 
-  +--------+-------+-----+-----+
-  | LED    | Path  | GET | SET |
-  +========+=======+=====+=====+
-  | LED1   | /p/1  | Yes | Yes |
-  +--------+-------+-----+-----+
-  | LED2   | /p/2  | Yes | Yes |
-  +--------+-------+-----+-----+
-  | LED3   | /p/3  | Yes | Yes |
-  +--------+-------+-----+-----+
-  | LED4   | /p/4  | Yes | Yes |
-  +--------+-------+-----+-----+
+  +--------+-------+-----+-----+--------------------------+
+  | LED    | Path  | GET | SET | Comment                  |
+  +========+=======+=====+=====+==========================+
+  | LED1   | /p/1  | Yes | Yes |                          |
+  +--------+-------+-----+-----+--------------------------+
+  | LED2   | /p/2  | Yes | Yes |                          |
+  +--------+-------+-----+-----+--------------------------+
+  | LED3   | /p/3  | Yes | Yes |                          |
+  +--------+-------+-----+-----+--------------------------+
+  | LED4   | /p/4  | Yes | Yes | Unsupported by Thingy:53 |
+  +--------+-------+-----+-----+--------------------------+
 
 * Light Switch Sensor Datapoints:
 
-  +----------+-------+-----+-----+
-  | Button   | Path  | GET | SET |
-  +==========+=======+=====+=====+
-  | BUTTON1  | /p/1  | Yes | No  |
-  +----------+-------+-----+-----+
-  | BUTTON2  | /p/2  | Yes | No  |
-  +----------+-------+-----+-----+
-  | BUTTON3  | /p/3  | Yes | No  |
-  +----------+-------+-----+-----+
-  | BUTTON4  | /p/4  | Yes | No  |
-  +----------+-------+-----+-----+
+  +----------+-------+-----+-----+--------------------------+
+  | Button   | Path  | GET | SET | Comment                  |
+  +==========+=======+=====+=====+==========================+
+  | BUTTON1  | /p/1  | Yes | No  |                          |
+  +----------+-------+-----+-----+--------------------------+
+  | BUTTON2  | /p/2  | Yes | No  | Unsupported by Thingy:53 |
+  +----------+-------+-----+-----+--------------------------+
+  | BUTTON3  | /p/3  | Yes | No  | Unsupported by Thingy:53 |
+  +----------+-------+-----+-----+--------------------------+
+  | BUTTON4  | /p/4  | Yes | No  | Unsupported by Thingy:53 |
+  +----------+-------+-----+-----+--------------------------+
 
 Location of LEDs and buttons
 ****************************
 
-All samples run on the `nRF52840 DK`_ board.
-The picture below presents a location of LEDs (yellow rectangle) and buttons (green rectangle) used in samples.
+.. warning::
 
-   .. figure:: /images/dk_leds_and_buttons.png
+   Usunięte info 'All samples run on the `nRF52840 DK`_ board.', zmiana liczby pojedynczej na mnogie
+   Dodane obrazki z nRF5340 DK i Thingy 53
 
-      Image: Location of DKs LEDs (yellow rectangle) and buttons (green rectangle).
+Pictures below present locations of LEDs (yellow rectangles) and buttons (green rectangles) used in samples.
+
+   .. figure:: /images/dk_leds_and_buttons_nrf52840dk.png
+
+      Image: Location of DKs LEDs (yellow rectangle) and buttons (green rectangle) of nRF52840 DK.
+   .. figure:: /images/dk_leds_and_buttons_nrf5340dk.png
+
+      Image: Location of DKs LEDs (yellow rectangle) and buttons (green rectangle) of nRF5340 DK.
+   .. figure:: /images/dk_leds_and_buttons_thingy53.png
+
+      Image: Location of DKs LEDs (yellow rectangle) and buttons (green rectangle) of Thingy:53.
 
 Sniffing KNX IoT Point API communication
 ****************************************
