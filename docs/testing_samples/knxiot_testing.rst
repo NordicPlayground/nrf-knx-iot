@@ -119,12 +119,22 @@ The following tables present configuration of Datapoints for Light Switch Actuat
 Location of LEDs and buttons
 ****************************
 
-All samples run on the `nRF52840 DK`_ board.
-The picture below presents a location of LEDs (yellow rectangle) and buttons (green rectangle) used in samples.
+.. warning::
 
-   .. figure:: /images/dk_leds_and_buttons.png
+   Usunięte info 'All samples run on the `nRF52840 DK`_ board.', zmiana liczby pojedynczej na mnogie
+   Dodane obrazki z nRF5340 DK i Thingy 53
 
-      Image: Location of DKs LEDs (yellow rectangle) and buttons (green rectangle).
+Pictures below present locations of LEDs (yellow rectangles) and buttons (green rectangles) used in samples.
+
+   .. figure:: /images/dk_leds_and_buttons_nrf52840dk.png
+
+      Image: Location of DKs LEDs (yellow rectangle) and buttons (green rectangle) of nRF52840 DK.
+   .. figure:: /images/dk_leds_and_buttons_nrf5340dk.png
+
+      Image: Location of DKs LEDs (yellow rectangle) and buttons (green rectangle) of nRF5340 DK.
+   .. figure:: /images/dk_leds_and_buttons_thingy53.png
+
+      Image: Location of DKs LEDs (yellow rectangle) and buttons (green rectangle) of Thingy53.
 
 Sniffing KNX IoT Point API communication
 ****************************************
