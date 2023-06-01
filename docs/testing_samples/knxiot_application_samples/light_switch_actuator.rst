@@ -3,9 +3,6 @@
 Light Switch Actuator
 #####################
 
-.. warning::
-   'four' -> 'three or four'
-
 This sample demonstrates KNX IoT Point API device with three or four Light Switch Actuator basic Functional Blocks.
 Each of them is built with a single Switch On/Off input Datapoint (Datapointype ID: 1.001, Name: DPT_Switch).
 
@@ -15,10 +12,6 @@ Supported devices
 *****************
 
 The sample supports the following development kit:
-
-.. warning::
-
-   Nowy hardware: nRF5340 DK i Thingy:53
 
 +--------------------+----------+--------------------------+------------------------------+
 | Hardware platforms | PCA      | Board name               | Build target                 |

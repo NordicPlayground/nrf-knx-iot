@@ -260,12 +260,12 @@ get_p_4(oc_request_t *request, oc_interface_mask_t interfaces,
  *   - used interfaces
  *
  * URL Table
- * | resource url | functional block/dpa  | GET | PUT | comment                   | 
- * | ------------ | --------------------- | --- | --- | ------------------------- |
- * | p/1          | urn:knx:dpa.417.61    | Yes | NO  |                           |
- * | p/2          | urn:knx:dpa.417.61    | Yes | NO  | not supported by Thingy53 |
- * | p/3          | urn:knx:dpa.417.61    | Yes | NO  | not supported by Thingy53 |
- * | p/4          | urn:knx:dpa.417.61    | Yes | NO  | not supported by Thingy53 |
+ * | resource url | functional block/dpa  | GET | PUT | comment                  | 
+ * | ------------ | --------------------- | --- | --- | ------------------------ |
+ * | p/1          | urn:knx:dpa.417.61    | Yes | NO  |                          |
+ * | p/2          | urn:knx:dpa.417.61    | Yes | NO  | unavailable for Thingy53 |
+ * | p/3          | urn:knx:dpa.417.61    | Yes | NO  | unavailable for Thingy53 |
+ * | p/4          | urn:knx:dpa.417.61    | Yes | NO  | unavailable for Thingy53 |
  */
 void
 register_resource(const char *url, oc_request_callback_t get_cb, oc_request_callback_t put_cb)

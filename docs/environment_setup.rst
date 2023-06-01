@@ -9,10 +9,7 @@ Once completed, you will be able to run and test a sample KNX IoT application.
 Hardware requirements
 *********************
 
-.. warning::
-   zmiana nRF5240 DK na "two of supported boards:" z listą, zmiana jednego guide'a na listę
-
-To meet the hardware requirements, ensure you have two of the supported boards:
+To meet the hardware requirements, ensure you have two Nordic's boards from the list of three supported models:
 
   * `nRF52840 DK`_
   * `nRF5340 DK`_
@@ -36,9 +33,6 @@ To meet the software requirements, install `nRF Connect SDK v2.3.0`_ and `nRF Co
 
 nRF Connect SDK
 ===============
-
-.. warning::
-  'setup `nRF52840 DK`_' -> 'setup boards'
 
 Perform the following steps to install `nRF Connect SDK v2.3.0`_ and setup boards:
 

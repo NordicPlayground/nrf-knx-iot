@@ -10,8 +10,8 @@ See the release notes for the information about specific KNX IoT Point API suppo
 
 Added:
 
-* Support for nRF5340 DK platforms
-* Support for Thingy:53 platform
+* Support for nRF5340 DK.
+* Support for Thingy:53.
 
 [v0.1.0] - 04/11/2023
 ---------------------

@@ -3,10 +3,7 @@
 Samples
 #######
 
-.. warning::
-    zamiana "Nordic's nRF52840 DK" -> "Nordic's boards"
-
-The following samples showcase the KNX IoT Point API usage on the top of the Nordic's boards:
+The following samples showcase the KNX IoT Point API usage on the Nordic's boards:
 
 * :ref:`light_switch_actuator`
 * :ref:`light_switch_sensor`
