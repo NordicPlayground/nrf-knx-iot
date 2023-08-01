@@ -1,6 +1,6 @@
 /*
 // Copyright (c) 2016 Intel Corporation
-// Copyright (c) 2022 Cascoda Ltd.
+// Copyright (c) 2022,2023 Cascoda Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,8 +21,17 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <inttypes.h>
 
 static bool mmem_initialized = false;
+
+#ifndef MAX
+#define MAX(n, m) (((n) < (m)) ? (m) : (n))
+#endif
+
+#ifndef MIN
+#define MIN(n, m) (((n) < (m)) ? (n) : (m))
+#endif
 
 static void
 oc_malloc(
@@ -78,6 +87,21 @@ _oc_new_string(
 }
 
 void
+_oc_new_byte_string(
+#ifdef OC_MEMORY_TRACE
+  const char *func,
+#endif
+  oc_string_t *ocstring, const char *str, size_t str_len)
+{
+  oc_malloc(
+#ifdef OC_MEMORY_TRACE
+    func,
+#endif
+    ocstring, str_len, BYTE_POOL);
+  memcpy(oc_string(*ocstring), (const uint8_t *)str, str_len);
+}
+
+void
 _oc_alloc_string(
 #ifdef OC_MEMORY_TRACE
   const char *func,
@@ -127,6 +151,7 @@ _oc_new_array(
   switch (type) {
   case INT_POOL:
   case BYTE_POOL:
+  case FLOAT_POOL:
   case DOUBLE_POOL:
     oc_malloc(
 #ifdef OC_MEMORY_TRACE
@@ -267,6 +292,76 @@ oc_join_string_array(oc_string_array_t *ocstringarray, oc_string_t *ocstring)
 }
 
 int
+oc_conv_uint64_to_dec_string(char *str, uint64_t number)
+{
+  if (number == 0) {
+    snprintf(str, 2, "0");
+    return 0;
+  }
+
+  // Determine the length of the string representation
+  uint64_t temp = number;
+  int numDigits = 0; // Note: This needs to be an int to prevent underflow
+
+  while (temp != 0) {
+    temp /= 10;
+    numDigits++;
+  }
+
+  // Convert the number to a string
+  int i; // int to prevent underflow!!
+  for (i = numDigits - 1; i >= 0; i--) {
+    str[i] = '0' + (number % 10);
+    number /= 10;
+  }
+  str[numDigits] = '\0';
+
+  return 0;
+}
+
+int
+oc_print_uint64_t(uint64_t number, enum StringRepresentation rep)
+{
+  char str[21]; // uint64_t decimal number has max 20 numbers + 1 for null
+                // terminator
+
+  if (rep == DEC_REPRESENTATION)
+    oc_conv_uint64_to_dec_string(str, number);
+  else
+    oc_conv_uint64_to_hex_string(str, number);
+
+  printf("%s", str);
+}
+
+int
+oc_conv_uint64_to_hex_string(char *str, uint64_t number)
+{
+  char temp_str[17];
+
+  if (number == 0) {
+    snprintf(str, 2, "0");
+    return 0;
+  }
+
+  // Convert to hex string, but will include leading zeros
+  for (uint8_t i = 0; i < 16; ++i) {
+    uint8_t nibble = (number >> ((16 - (i + 1)) * 4));
+    sprintf(temp_str + i, "%x", nibble & 0xF);
+  }
+  temp_str[16] = '\0';
+
+  // Remove leading zeros
+  uint8_t leading_zeros;
+  for (leading_zeros = 0; leading_zeros < 16; ++leading_zeros) {
+    if (temp_str[leading_zeros] != '0')
+      break;
+  }
+  strcpy(str, temp_str + leading_zeros);
+
+  return 0;
+}
+
+int
 oc_conv_byte_array_to_hex_string(const uint8_t *array, size_t array_len,
                                  char *hex_str, size_t *hex_str_len)
 {
@@ -334,6 +429,31 @@ oc_conv_hex_string_to_byte_array(const char *hex_str, size_t hex_str_len,
 }
 
 int
+oc_conv_hex_string_to_oc_string(const char *hex_str, size_t hex_str_len,
+                                oc_string_t *out)
+{
+  int return_value = -1;
+  size_t size_bytes = (hex_str_len / 2);
+
+  PRINT("oc_conv_hex_string_to_oc_string len:%d -> bytes:%d\n",
+        (int)hex_str_len, (int)size_bytes);
+
+  oc_free_string(out);
+
+  PRINT("oc_conv_hex_string_to_oc_string free string\n");
+  oc_alloc_string(out, size_bytes);
+  PRINT("oc_conv_hex_string_to_oc_string alloc string\n");
+  char *ptr = oc_string(*out);
+  PRINT("oc_conv_hex_string_to_oc_string ptr\n");
+  if (ptr != NULL) {
+    return_value =
+      oc_conv_hex_string_to_byte_array(hex_str, hex_str_len, ptr, &size_bytes);
+  }
+  PRINT("oc_conv_hex_string_to_oc_string result=%d\n", (int)return_value);
+  return return_value;
+}
+
+int
 oc_string_is_hex_array(oc_string_t hex_string)
 {
   char *array = oc_string(hex_string);
@@ -344,6 +464,40 @@ oc_string_is_hex_array(oc_string_t hex_string)
     }
   }
   return 0;
+}
+
+int
+oc_char_print_hex(const char *str, int str_len)
+{
+  for (int i = 0; i < str_len; i++) {
+    PRINT("%02x", (unsigned char)str[i]);
+  }
+  return str_len;
+}
+
+int
+oc_string_print_hex(oc_string_t hex_string)
+{
+  char *str = oc_string(hex_string);
+  int length = oc_byte_string_len(hex_string);
+  return oc_char_print_hex(str, length);
+}
+
+int
+oc_string_println_hex(oc_string_t hex_string)
+{
+  int retval = oc_string_print_hex(hex_string);
+  PRINT("\n");
+  return retval;
+}
+
+int
+oc_char_println_hex(const char *str, int str_len)
+{
+  int retval;
+  retval = oc_char_print_hex(str, str_len);
+  PRINT("\n");
+  return retval;
 }
 
 int
@@ -359,6 +513,24 @@ oc_string_copy_from_char(oc_string_t *string1, const char *string2)
 {
   oc_free_string(string1);
   oc_new_string(string1, string2, strlen(string2));
+  return 0;
+}
+
+int
+oc_string_copy_from_char_with_size(oc_string_t *string1, const char *string2,
+                                   size_t string2_len)
+{
+  oc_free_string(string1);
+  oc_new_string(string1, string2, string2_len);
+  return 0;
+}
+
+int
+oc_byte_string_copy_from_char_with_size(oc_string_t *string1,
+                                        const char *string2, size_t string2_len)
+{
+  oc_free_string(string1);
+  oc_new_byte_string(string1, string2, string2_len);
   return 0;
 }
 
@@ -468,5 +640,260 @@ oc_uri_get_wildcard_value_as_string(const char *uri_resource, size_t uri_len,
     }
   }
 
+  return -1;
+}
+
+char *
+oc_strnchr(const char *string, char p, int size)
+{
+  int i;
+  for (i = 0; i < size; i++) {
+    if (string[i] == p) {
+      return (char *)&string[i];
+    }
+  }
+  return NULL;
+}
+
+int
+oc_char_convert_to_lower(char *str)
+{
+  for (; *str; ++str)
+    *str = tolower(*str);
+  return 0;
+}
+
+int
+oc_get_sn_from_ep(const char *param, int param_len, char *sn, int sn_len,
+                  uint32_t *ia)
+{
+  int error = -1;
+  memset(sn, 0, 30);
+  *ia = 0;
+  if (param_len < 10) {
+    return error;
+  }
+  if (strncmp(param, "\"knx://sn.", 10) == 0) {
+    // spec 1.1 ep= contents: (with quote)
+    // "knx://sn.<sn> knx://ia.<ia>"
+    char *blank = oc_strnchr(param, ' ', param_len);
+    if (blank == NULL) {
+      // the ia part is missing, so length -10 and 1 less to adjust for quot
+      strncpy(sn, (char *)&param[10], param_len - 11);
+    } else {
+      int offset = blank - param;
+      int len = offset - 10;
+      strncpy(sn, &param[10], len);
+      if (strncmp(&param[offset + 1], "knx://ia.", 9) == 0) {
+        // read from hex
+        *ia = (uint32_t)strtol(&param[offset + 1 + 9], NULL, 16);
+        error = 0;
+      }
+    }
+  } else if (strncmp(param, "knx://sn.", 9) == 0) {
+    // spec 1.1 ep= contents: (without quote)
+    // knx://sn.<sn> knx://ia.<ia>"
+    char *blank = oc_strnchr(param, ' ', param_len);
+    if (blank == NULL) {
+      // the ia part is missing, so length -10 and 1 less to adjust for quot
+      strncpy(sn, (char *)&param[9], param_len - 11);
+    } else {
+      int offset = blank - param;
+      int len = offset - 9;
+      strncpy(sn, &param[9], len);
+      if (strncmp(&param[offset + 1], "knx://ia.", 9) == 0) {
+        // read from hex
+        *ia = (uint32_t)strtol(&param[offset + 1 + 9], NULL, 16);
+        error = 0;
+      }
+    }
+  } else if (strncmp(param, "\"knx://ia.", 10) == 0) {
+    // spec 1.1 ep= contents:
+    // "knx://ia.<sn> knx://sn.<ia>"
+    char *blank = oc_strnchr(param, ' ', param_len);
+    if (blank == NULL) {
+      // the sn part is missing
+      PRINT("oc_get_sn_from_ep 222 string: string ia : '%s'\n", &param[10]);
+      // read from hex
+      *ia = (uint32_t)strtol(&param[10], NULL, 16);
+    } else {
+      int offset = blank - param;
+      char *quote = oc_strnchr(&param[offset], '\"', param_len);
+      int quote_len = quote - (&param[offset]);
+      int len_q = quote_len - 10;
+      int len = param_len - offset - 9;
+      if (len > len_q) {
+        len = len_q;
+      }
+      *ia = (uint32_t)strtol(&param[10], NULL, 16);
+      if (strncmp(&param[offset + 1], "knx://sn.", 9) == 0) {
+        strncpy(sn, (char *)&param[offset + 1 + 9], len);
+        error = 0;
+      }
+    }
+  } else if (strncmp(param, "knx://ia.", 9) == 0) {
+    // spec 1.1 ep= contents:
+    // knx://ia.<sn> knx://sn.<ia>"
+    char *blank = oc_strnchr(param, ' ', param_len);
+    if (blank == NULL) {
+      // the sn part is missing
+      PRINT("oc_get_sn_from_ep 222 string: string ia : '%s'\n", &param[9]);
+      // read from hex
+      *ia = (uint32_t)strtol(&param[9], NULL, 16);
+    } else {
+      int offset = blank - param;
+      char *quote = oc_strnchr(&param[offset], '\"', param_len);
+      int quote_len = quote - (&param[offset]);
+      int len_q = quote_len - 10;
+      int len = param_len - offset - 9;
+      if (len > len_q) {
+        len = len_q;
+      }
+      *ia = (uint32_t)strtol(&param[9], NULL, 16);
+      if (strncmp(&param[offset + 1], "knx://sn.", 9) == 0) {
+        strncpy(sn, (char *)&param[offset + 1 + 9], len);
+        error = 0;
+      }
+    }
+  }
+  return error;
+}
+
+static int
+parse_uint64(const char *str, uint64_t *value)
+{
+  int filled_var = sscanf(str, "%" SCNx64, value);
+
+  if (filled_var == 1) {
+    return 0;
+  }
+  return -1;
+}
+
+// parse ia from "knx://ia.<ia>.
+static int
+parse_ia(const char *str, uint32_t *value)
+{
+  *value = (uint32_t)strtol(&str[9], NULL, 16);
+  return 0;
+}
+
+// parse iid from knx://ia.<ia>.<iid>
+static int
+parse_iid(const char *str, uint64_t *value)
+{
+  char *point = oc_strnchr(&str[1 + 9], '.', 20);
+  if (point == NULL) {
+    return -1;
+  }
+  if (isxdigit(*(point + 1)) == 0) {
+    // first expected digit is not hex
+    return -1;
+  }
+  return parse_uint64(point + 1, value);
+}
+
+// parse iid from knx://sn.<sn>
+static int
+parse_sn(const char *str, char *sn, int len_input)
+{
+  if (str) {
+    int len = strlen(str);
+    int cp_len = len;
+    int cp_len_quote = len;
+    int cp_len_blank = len;
+
+    char *blank = oc_strnchr(str, ' ', len);
+    char *quote = oc_strnchr(str, '"', len);
+    if (blank) {
+      cp_len_blank = MAX((blank - str) - 9, 0);
+    }
+    if (quote) {
+      cp_len_quote = MAX((quote - str) - 9, 0);
+    }
+    cp_len = MIN(cp_len_quote, cp_len_blank);
+    if (cp_len > len_input) {
+      return -1;
+    }
+    if (cp_len == 0) {
+      return -1;
+    }
+    if (str && strncmp(str, "knx://sn.", 9) == 0) {
+      strncpy(sn, (char *)&str[9], cp_len);
+      return 0;
+    }
+  }
+  return -1;
+}
+
+int
+oc_get_sn_ia_iid_from_ep(const char *param, int param_len, char *sn, int sn_len,
+                         uint32_t *ia, uint64_t *iid)
+{
+  int error = -1;
+  memset(sn, 0, sn_len);
+  *ia = 0;
+  *iid = 0;
+  if (param_len < 10) {
+    return -1;
+  }
+  if (param == NULL) {
+    return -1;
+  }
+  char *k = oc_strnchr(param, 'k', param_len);
+  if (k == NULL) {
+    return -1;
+  }
+  // starting with serial number
+  // "knx://sn.<sn> knx://ia.<ia>.<iid>"
+  if (strncmp(k, "knx://sn.", 9) == 0) {
+    error = parse_sn(k, sn, sn_len);
+    if (error) {
+      return -1;
+    }
+    // find the next k, note that the sn can't contain a k
+    char *k2 = oc_strnchr(&param[9], 'k', param_len - 9);
+    if (k2 == NULL) {
+      // the ia part is missing
+      return -1;
+    }
+    // make sure it is the ia string
+    if (strncmp(k2, "knx://ia.", 9) == 0) {
+      error = parse_ia(k2, ia);
+      if (error != 0) {
+        return -1;
+      }
+      error = parse_iid(k2, iid);
+      if (error != 0) {
+        return -1;
+      }
+      // all ok
+      return 0;
+    }
+  } else if (strncmp(k, "knx://ia.", 9) == 0) {
+    // "knx://ia.<ia>.<iid> knx://sn.<sn>"
+    error = parse_ia(k, ia);
+    if (error != 0) {
+      return -1;
+    }
+    error = parse_iid(k, iid);
+    if (error != 0) {
+      return -1;
+    }
+    // find the next k, note that the ia & iid can't contain a k
+    char *k2 = oc_strnchr(&param[9], 'k', param_len - 9);
+    if (k2 == NULL) {
+      // the ia part is missing
+      return -1;
+    }
+    if (strncmp(k2, "knx://sn.", 9) == 0) {
+      error = parse_sn(k2, sn, sn_len);
+      if (error != 0) {
+        return -1;
+      }
+      return 0;
+    }
+  }
+  // if not returned, then error
   return -1;
 }

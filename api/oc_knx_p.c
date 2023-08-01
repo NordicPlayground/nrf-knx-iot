@@ -1,5 +1,5 @@
 /*
- // Copyright (c) 2022 Cascoda Ltd
+ // Copyright (c) 2022-2023 Cascoda Ltd
  //
  // Licensed under the Apache License, Version 2.0 (the "License");
  // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #include "oc_api.h"
 #include "api/oc_knx_p.h"
 #include "api/oc_knx_fp.h"
+#include "api/oc_knx_helpers.h"
 
 #include "oc_core_res.h"
 #include "oc_discovery.h"
@@ -39,7 +40,7 @@ oc_add_data_points_to_response(oc_request_t *request, size_t device_index,
     }
     // add the none discoverable resource that belongs to this device
     oc_add_resource_to_wk(resource, request, device_index, response_length,
-                          matches);
+                          matches, 1);
     matches++;
   }
 
@@ -61,17 +62,52 @@ oc_core_p_get_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   (void)iface_mask;
   size_t response_length = 0;
   int matches = 0;
+  int length = 0;
+  bool ps_exists = false;
+  bool total_exists = false;
 
   PRINT("oc_core_p_get_handler\n");
 
   /* check if the accept header is link-format */
-  if (request->accept != APPLICATION_LINK_FORMAT) {
+  if (oc_check_accept_header(request, APPLICATION_LINK_FORMAT) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
   }
-
   size_t device_index = request->resource->device;
+
+  // handle query parameters: l=ps l=total
+  if (check_if_query_l_exist(request, &ps_exists, &total_exists)) {
+    // example : < /p > l = total>;total=22;ps=5
+    length = oc_frame_query_l("/p", ps_exists, total_exists);
+
+    // count the discoverable resources
+    int matches = 0;
+    oc_resource_t *resource = oc_ri_get_app_resources();
+    for (; resource; resource = resource->next) {
+      if (resource->device != device_index ||
+          (resource->properties & OC_DISCOVERABLE)) {
+        continue;
+      }
+      matches++;
+    }
+
+    response_length += length;
+    if (ps_exists) {
+      length = oc_rep_add_line_to_buffer(";ps=");
+      response_length += length;
+      length = oc_frame_integer(matches);
+      response_length += length;
+    }
+    if (total_exists) {
+      length = oc_rep_add_line_to_buffer(";total=");
+      response_length += length;
+      length = oc_frame_integer(matches);
+      response_length += length;
+    }
+    oc_send_linkformat_response(request, OC_STATUS_OK, response_length);
+    return;
+  }
 
   bool added = oc_add_data_points_to_response(request, device_index,
                                               &response_length, matches);
@@ -99,7 +135,7 @@ oc_core_p_post_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   PRINT("oc_core_p_post_handler\n");
 
   /* check if the accept header is cbor */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;

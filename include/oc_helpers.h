@@ -1,5 +1,6 @@
 /*
 // Copyright (c) 2016 Intel Corporation
+// Copyright (c) 2021 Cascoda Ltd.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,6 +35,11 @@ extern "C" {
 typedef struct oc_mmem oc_handle_t, oc_string_t, oc_array_t, oc_string_array_t,
   oc_byte_string_array_t;
 
+enum StringRepresentation {
+  DEC_REPRESENTATION = 0,
+  HEX_REPRESENTATION,
+};
+
 #define oc_cast(block, type) ((type *)(OC_MMEM_PTR(&(block))))
 
 /**
@@ -60,6 +66,8 @@ typedef struct oc_mmem oc_handle_t, oc_string_t, oc_array_t, oc_string_array_t,
 #define oc_free_int_array(ocarray) (_oc_free_array(__func__, ocarray, INT_POOL))
 #define oc_free_bool_array(ocarray)                                            \
   (_oc_free_array(__func__, ocarray, BYTE_POOL))
+#define oc_free_float_array(ocarray)                                           \
+  (_oc_free_array(__func__, ocarray, FLOAT_POOL))
 #define oc_free_double_array(ocarray)                                          \
   (_oc_free_array(__func__, ocarray, DOUBLE_POOL))
 
@@ -67,6 +75,8 @@ typedef struct oc_mmem oc_handle_t, oc_string_t, oc_array_t, oc_string_array_t,
   (_oc_new_array(__func__, ocarray, size, INT_POOL))
 #define oc_new_bool_array(ocarray, size)                                       \
   (_oc_new_array(__func__, ocarray, size, BYTE_POOL))
+#define oc_new_float_array(ocarray, size)                                      \
+  (_oc_new_array(__func__, ocarray, size, FLOAT_POOL))
 #define oc_new_double_array(ocarray, size)                                     \
   (_oc_new_array(__func__, ocarray, size, DOUBLE_POOL))
 
@@ -91,11 +101,18 @@ typedef struct oc_mmem oc_handle_t, oc_string_t, oc_array_t, oc_string_array_t,
 #define oc_alloc_string(ocstring, size) _oc_alloc_string((ocstring), (size))
 
 /**
- * @brief create new string from string (not null terminated)
+ * @brief create new string from string (null terminated)
  *
  */
 #define oc_new_string(ocstring, str, str_len)                                  \
   _oc_new_string(ocstring, str, str_len)
+
+/**
+ * @brief create new (byte) string from string (not null terminated)
+ *
+ */
+#define oc_new_byte_string(ocstring, str, str_len)                             \
+  _oc_new_byte_string(ocstring, str, str_len)
 
 /**
  * @brief free ocstring
@@ -116,6 +133,12 @@ typedef struct oc_mmem oc_handle_t, oc_string_t, oc_array_t, oc_string_array_t,
 #define oc_free_bool_array(ocarray) (_oc_free_array(ocarray, BYTE_POOL))
 
 /**
+ * @brief free array of floats
+ *
+ */
+#define oc_free_float_array(ocarray) (_oc_free_array(ocarray, FLOAT_POOL))
+
+/**
  * @brief free array of doubles
  *
  */
@@ -133,6 +156,13 @@ typedef struct oc_mmem oc_handle_t, oc_string_t, oc_array_t, oc_string_array_t,
  */
 #define oc_new_bool_array(ocarray, size)                                       \
   (_oc_new_array(ocarray, size, BYTE_POOL))
+
+/**
+ * @brief new float array
+ *
+ */
+#define oc_new_float_array(ocarray, size)                                      \
+  (_oc_new_array(ocarray, size, FLOAT_POOL))
 
 /**
  * @brief new double array
@@ -168,9 +198,11 @@ void oc_concat_strings(oc_string_t *concat, const char *str1, const char *str2);
 
 #define oc_int_array_size(ocintarray) ((ocintarray).size)
 #define oc_bool_array_size(ocboolarray) ((ocboolarray).size)
+#define oc_float_array_size(ocfloatarray) ((ocfloatarray).size)
 #define oc_double_array_size(ocdoublearray) ((ocdoublearray).size)
 #define oc_int_array(ocintarray) (oc_cast(ocintarray, int64_t))
 #define oc_bool_array(ocboolarray) (oc_cast(ocboolarray, bool))
+#define oc_float_array(ocfloatarray) (oc_cast(ocfloatarray, float))
 #define oc_double_array(ocdoublearray) (oc_cast(ocdoublearray, double))
 
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -220,10 +252,23 @@ bool _oc_byte_string_array_add_item(oc_string_array_t *ocstringarray,
  * @brief new oc_string from string
  *
  * @param ocstring the ocstring to be allocated
- * @param str not terminated string
+ * @param str terminated string
  * @param str_len size of the string to be copied
  */
 void _oc_new_string(
+#ifdef OC_MEMORY_TRACE
+  const char *func,
+#endif
+  oc_string_t *ocstring, const char *str, size_t str_len);
+
+/**
+ * @brief new oc_string byte from string
+ *
+ * @param ocstring the ocstring to be allocated
+ * @param str not terminated string
+ * @param str_len size of the string to be copied
+ */
+void _oc_new_byte_string(
 #ifdef OC_MEMORY_TRACE
   const char *func,
 #endif
@@ -294,6 +339,8 @@ void _oc_alloc_string_array(
 /**
  * @brief convert array to hex
  *
+ * Note: hex_str is pre allocated with hex_str_len
+ *
  * @param[in] array the array of bytes
  * @param[in] array_len length of the array
  * @param hex_str data as hex
@@ -314,6 +361,16 @@ int oc_conv_byte_array_to_hex_string(const uint8_t *array, size_t array_len,
  */
 int oc_conv_hex_string_to_byte_array(const char *hex_str, size_t hex_str_len,
                                      uint8_t *array, size_t *array_len);
+/**
+ * @brief convert hex string to oc_string
+ *
+ * @param[in] hex_str hex string input
+ * @param[in] hex_str_len size of the hex string
+ * @param out the allocated oc_string
+ * @return int 0 success
+ */
+int oc_conv_hex_string_to_oc_string(const char *hex_str, size_t hex_str_len,
+                                    oc_string_t *out);
 
 /**
  * @brief checks if the input is an array containing hex values
@@ -323,6 +380,47 @@ int oc_conv_hex_string_to_byte_array(const char *hex_str, size_t hex_str_len,
  * @return int 0 success
  */
 int oc_string_is_hex_array(oc_string_t hex_string);
+
+/**
+ * @brief prints the input as hex string
+ *
+ * @param[in] hex_string the input string to be printed
+ * @return int printed amount of %x
+ */
+int oc_string_print_hex(oc_string_t hex_string);
+
+/**
+ * @brief prints the input as hex string with newline (\n) at the end.
+ *
+ * @param[in] hex_string the input string to be printed
+ * @return int printed amount of %x
+ */
+int oc_string_println_hex(oc_string_t hex_string);
+
+/**
+ * @brief converts the input string to lower case
+ *
+ * @param[in] string the input string that gets converted
+ * @return int 0 success
+ */
+int oc_char_convert_to_lower(char *string);
+
+/**
+ * @brief prints the string as hex
+ *
+ * @param[in] str the input string to be printed
+ * @param[in] str_len the length of the input string
+ * @return int printed amount of %x
+ */
+int oc_char_print_hex(const char *str, int str_len);
+/**
+ * @brief prints the input as hex string with newline (\n) at the end.
+ *
+ * @param[in] str the input string to be printed
+ * @param[in] str_len the length of the input string
+ * @return int printed amount of %x
+ */
+int oc_char_println_hex(const char *str, int str_len);
 
 /**
  * @brief checks if the uri contains a wildcard (e.g. "*")
@@ -407,6 +505,50 @@ int oc_uri_get_wildcard_value_as_string(const char *uri_resource,
                                         size_t invoked_len, const char **value);
 
 /**
+ * @brief search a string (non null terminated) for a character
+ *
+ * @param string the string to be searched
+ * @param p the character to be found
+ * @param size the size of the string
+ * @return NULL = not found, other wise position in string
+ * string
+ */
+char *oc_strnchr(const char *string, char p, int size);
+
+/**
+ * @brief retrieves the serial number and individual address from the ep
+ * parameter
+ *
+ * deprecated!!
+ *
+ * @param param the string to be searched
+ * @param param_len the length of the parameter
+ * @param sn the sn for storage
+ * @param sn_len the length of the sn for storage
+ * @param ia the individual address
+ * @return 0 == ok
+ * string
+ */
+int oc_get_sn_from_ep(const char *param, int param_len, char *sn, int sn_len,
+                      uint32_t *ia);
+
+/**
+ * @brief retrieves the serial number and individual address from the ep
+ * parameter
+ *
+ * @param param the string to be searched
+ * @param param_len the length of the parameter
+ * @param sn the serial number
+ * @param sn_len the length of the serial number
+ * @param ia the individual address
+ * @param iid the installation id
+ * @return 0 == ok
+ * string
+ */
+int oc_get_sn_ia_iid_from_ep(const char *param, int param_len, char *sn,
+                             int sn_len, uint32_t *ia, uint64_t *iid);
+
+/**
  * @brief copy string from char*
  *
  * @param string1 the oc_string to copy to
@@ -414,6 +556,31 @@ int oc_uri_get_wildcard_value_as_string(const char *uri_resource,
  * @return int 0 == success
  */
 int oc_string_copy_from_char(oc_string_t *string1, const char *string2);
+
+/**
+ * @brief copy string from char*
+ *
+ * Note: adds a null terminator
+ * @param string1 the oc_string to copy to
+ * @param string2 the char* to copy from
+ * @param string2_len the length of string2
+ * @return int 0 == success
+ */
+int oc_string_copy_from_char_with_size(oc_string_t *string1,
+                                       const char *string2, size_t string2_len);
+
+/**
+ * @brief copy byte string from char*
+ *
+ * Note: does NOT add a null terminator
+ * @param string1 the oc_string to copy to
+ * @param string2 the char* to copy from
+ * @param string2_len the length of string2
+ * @return int 0 == success
+ */
+int oc_byte_string_copy_from_char_with_size(oc_string_t *string1,
+                                            const char *string2,
+                                            size_t string2_len);
 
 /**
  * @brief copy oc_string
@@ -442,6 +609,35 @@ int oc_string_cmp(oc_string_t string1, oc_string_t string2);
  * @return int 0 == equal
  */
 int oc_url_cmp(oc_string_t string1, oc_string_t string2);
+
+/**
+ * @brief print a uint64_t, in either decimal or hex representation
+ *
+ * @param number
+ * @param rep - string representation chosen (decimal or hex)
+ * @return int always returns 0
+ */
+int oc_print_uint64_t(uint64_t number, enum StringRepresentation rep);
+
+/**
+ * @brief Converts a uint64_t to a decimal string representation
+ *
+ * @param[in] number number to be converted to string
+ * @param[out] str Resulting string after conversion. IMPORTANT: Should have
+ * a size of at least 22 bytes (21 + null terminator)
+ * @return int always returns 0
+ */
+int oc_conv_uint64_to_dec_string(char *str, uint64_t number);
+
+/**
+ * @brief Converts a uint64_t to a hex string representation
+ *
+ * @param[in] number number to be converted to hexadecimal string
+ * @param[out] str Resulting string after conversion. IMPORTANT: Should have
+ * a size of at least 17 bytes (16 + null terminator)
+ * @return int always returns 0
+ */
+int oc_conv_uint64_to_hex_string(char *str, uint64_t number);
 
 #ifdef __cplusplus
 }

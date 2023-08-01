@@ -20,6 +20,7 @@
 #include "api/oc_knx_fp.h"
 #include "oc_discovery.h"
 #include "oc_core_res.h"
+#include "oc_knx_helpers.h"
 #include <stdio.h>
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
@@ -33,14 +34,15 @@
 
 #ifdef OC_IOT_ROUTER
 // ----------------------------------------------------------------------------
-static int g_fra = 0; // the IPv4 sync latency fraction.
-static int g_tol = 0; // the IPv4 routing latency tolerance
-static int g_ttl = 0; // The value defines how many routers a multicast message
-                      // MAY pass until it gets discarded.
+static uint32_t g_fra = 0; // the IPv4 sync latency fraction.
+static uint32_t g_tol = 0; // the IPv4 routing latency tolerance
+static uint32_t g_ttl = 0; // The value defines how many routers a multicast
+                           // message
+                           // MAY pass until it gets discarded.
 #endif
 
-static oc_string_t g_key;   // IPv4 routing backbone key.
-static oc_string_t g_mcast; // Current IPv4 routing multicast address.
+static oc_string_t g_key; // IPv4 routing backbone key.
+static uint32_t g_mcast;  // Current IPv4 routing multicast address.
 
 int
 oc_core_get_group_mapping_table_size()
@@ -103,7 +105,7 @@ oc_get_f_netip_key(size_t device_index)
 #endif
 }
 
-oc_string_t
+uint32_t
 oc_get_f_netip_mcast(size_t device_index)
 {
   (void)device_index;
@@ -417,6 +419,18 @@ oc_free_group_mapping_table()
   }
 }
 
+int
+oc_core_find_nr_used_in_group_mapping_table()
+{
+  int counter = 0;
+  for (int i = 0; i < oc_core_get_group_mapping_table_size(); i++) {
+    if (g_gm_entries[i].ga_len > 0) {
+      counter++;
+    }
+  }
+  return counter;
+}
+
 // -----------------------------------------------------------------------------
 
 static void
@@ -428,14 +442,40 @@ oc_core_fp_gm_get_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   size_t response_length = 0;
   int i;
   int length = 0;
+  bool ps_exists;
+  bool total_exists;
   PRINT("oc_core_fp_gm_get_handler\n");
 
   /* check if the accept header is link-format */
-  if (request->accept != APPLICATION_LINK_FORMAT) {
+  if (oc_check_accept_header(request, APPLICATION_LINK_FORMAT) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
   }
+
+  // handle query parameters: l=ps l=total
+  if (check_if_query_l_exist(request, &ps_exists, &total_exists)) {
+    // example : < / fp / r / ? l = total>; total = 22; ps = 5
+
+    length = oc_frame_query_l("/fp/gm", ps_exists, total_exists);
+    response_length += length;
+    if (ps_exists) {
+      length = oc_rep_add_line_to_buffer(";ps=");
+      response_length += length;
+      length = oc_frame_integer(oc_core_get_group_mapping_table_size());
+      response_length += length;
+    }
+    if (total_exists) {
+      length = oc_rep_add_line_to_buffer(";total=");
+      response_length += length;
+      length = oc_frame_integer(oc_core_find_nr_used_in_group_mapping_table());
+      response_length += length;
+    }
+
+    oc_send_linkformat_response(request, OC_STATUS_OK, response_length);
+    return;
+  }
+
   /* example entry: </fp/gm/1>;ct=60 (cbor)*/
   for (i = 0; i < oc_core_get_group_mapping_table_size(); i++) {
     if (g_gm_entries[i].ga_len == 0) {
@@ -483,7 +523,7 @@ oc_core_fp_gm_post_handler(oc_request_t *request,
   PRINT("oc_core_fp_gm_post_handler\n");
 
   /* check if the accept header is cbor-format */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -649,7 +689,7 @@ oc_core_fp_gm_x_get_handler(oc_request_t *request,
   PRINT("oc_core_fp_gm_x_get_handler\n");
 
   /* check if the accept header is link-format */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -689,9 +729,11 @@ oc_core_fp_gm_x_get_handler(oc_request_t *request,
     oc_rep_i_set_key(oc_rep_object(s), 28);
     oc_rep_start_object(oc_rep_object(s), secSettings);
     // add a (115:28:97)
-    oc_rep_i_set_boolean(secSettings, 97, g_gm_entries[index].authentication);
+    oc_rep_i_set_boolean(secSettings, 97,
+                         (bool)g_gm_entries[index].authentication);
     // add c (115:28:99)
-    oc_rep_i_set_boolean(secSettings, 99, g_gm_entries[index].confidentiality);
+    oc_rep_i_set_boolean(secSettings, 99,
+                         (bool)g_gm_entries[index].confidentiality);
     oc_rep_end_object(oc_rep_object(s), secSettings);
     oc_rep_end_object(oc_rep_object(root), s);
   }
@@ -774,7 +816,7 @@ oc_core_f_netip_fra_get_handler(oc_request_t *request,
   PRINT("oc_core_f_netip_fra_get_handler\n");
 
   /* check if the accept header is cbor */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -806,7 +848,7 @@ oc_core_f_netip_fra_put_handler(oc_request_t *request,
   PRINT("oc_core_f_netip_fra_put_handler\n");
 
   /* check if the accept header is cbor */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -895,7 +937,7 @@ oc_core_f_netip_tol_get_handler(oc_request_t *request,
   PRINT("oc_core_f_netip_tol_get_handler\n");
 
   /* check if the accept header is cbor */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -927,7 +969,7 @@ oc_core_f_netip_tol_put_handler(oc_request_t *request,
   PRINT("oc_core_f_netip_tol_put_handler\n");
 
   /* check if the accept header is cbor */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -1021,7 +1063,7 @@ oc_core_f_netip_key_put_handler(oc_request_t *request,
   PRINT("oc_core_f_netip_key_put_handler\n");
 
   /* check if the accept header is cbor */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -1112,7 +1154,7 @@ oc_core_f_netip_ttl_get_handler(oc_request_t *request,
   PRINT("oc_core_f_netip_ttl_get_handler\n");
 
   /* check if the accept header is cbor */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -1144,7 +1186,7 @@ oc_core_f_netip_ttl_put_handler(oc_request_t *request,
   PRINT("oc_core_f_netip_ttl_put_handler\n");
 
   /* check if the accept header is cbor */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -1206,24 +1248,16 @@ oc_create_f_netip_ttl_resource(size_t device)
 void
 dump_mcast(void)
 {
-  int key_size = oc_string_len(g_mcast);
-  int written = oc_storage_write(GM_STORE_MCAST, oc_string(g_mcast), key_size);
-  if (written != key_size) {
-    PRINT("dump_mcast %d %d\n", key_size, written);
-  }
+  oc_storage_write(GM_STORE_MCAST, (uint8_t *)&g_mcast, sizeof(g_mcast));
 }
 
 void
 load_mcast(void)
 {
   int temp_size;
-  int key_size;
-  char tempstring[100];
-  temp_size = oc_storage_read(GM_STORE_MCAST, (uint8_t *)&tempstring, 99);
-  if (temp_size > 1) {
-    tempstring[temp_size] = 0;
-    oc_new_string(&g_mcast, tempstring, temp_size);
-  }
+
+  temp_size =
+    oc_storage_read(GM_STORE_MCAST, (uint8_t *)&g_mcast, sizeof(g_mcast));
 }
 
 static void
@@ -1238,7 +1272,7 @@ oc_core_f_netip_mcast_get_handler(oc_request_t *request,
   PRINT("oc_core_f_netip_mcast_get_handler\n");
 
   /* check if the accept header is cbor */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -1252,7 +1286,7 @@ oc_core_f_netip_mcast_get_handler(oc_request_t *request,
   // }
   //  Content-Format: "application/cbor"
   oc_rep_begin_root_object();
-  oc_rep_i_set_byte_string(root, 1, oc_string(g_mcast), oc_string_len(g_mcast));
+  oc_rep_i_set_int(root, 1, g_mcast);
   oc_rep_end_root_object();
   oc_send_cbor_response(request, OC_STATUS_OK);
 
@@ -1271,7 +1305,7 @@ oc_core_f_netip_mcast_put_handler(oc_request_t *request,
   PRINT("oc_core_f_netip_mcast_put_handler\n");
 
   /* check if the accept header is cbor */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -1284,11 +1318,11 @@ oc_core_f_netip_mcast_put_handler(oc_request_t *request,
   }
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
-    if (rep->type == OC_REP_BYTE_STRING) {
+    if (rep->type == OC_REP_INT) {
       if (rep->iname == 1) {
-        oc_free_string(&(g_mcast));
-        oc_new_string(&g_mcast, oc_string(rep->value.string),
-                      oc_string_len(rep->value.string));
+        PRINT("  oc_core_f_netip_mcast_put_handler (mcast) : %d\n",
+              (int)rep->value.integer);
+        g_mcast = (int)rep->value.integer;
         dump_mcast();
       }
     }
@@ -1354,10 +1388,12 @@ oc_core_f_netip_get_handler(oc_request_t *request,
   size_t response_length = 0;
   int i;
   int length = 0;
+  bool ps_exists;
+  bool total_exists;
   PRINT("oc_core_f_netip_get_handler\n");
 
   /* check if the accept header is link-format */
-  if (request->accept != APPLICATION_LINK_FORMAT) {
+  if (oc_check_accept_header(request, APPLICATION_LINK_FORMAT) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -1365,6 +1401,29 @@ oc_core_f_netip_get_handler(oc_request_t *request,
   /* example entry: </f/netip/xxx>;ct=60 (cbor)*/
 
 #ifdef OC_IOT_ROUTER
+
+  // handle query parameters: l=ps l=total
+  if (check_if_query_l_exist(request, &ps_exists, &total_exists)) {
+    // example : < / fp / r / ? l = total>; total = 22; ps = 5
+
+    length = oc_frame_query_l("/fp/gm", ps_exists, total_exists);
+    response_length += length;
+    if (ps_exists) {
+      length = oc_rep_add_line_to_buffer(";ps=");
+      response_length += length;
+      length = oc_frame_integer(5);
+      response_length += length;
+    }
+    if (total_exists) {
+      length = oc_rep_add_line_to_buffer(";total=");
+      response_length += length;
+      length = oc_frame_integer(5);
+      response_length += length;
+    }
+    oc_send_linkformat_response(request, OC_STATUS_OK, response_length);
+    return;
+  }
+
   length = oc_rep_add_line_to_buffer("</p/netip/mcast>");
   response_length += length;
   length = oc_rep_add_line_to_buffer(";rt=\":dpa.11.66 :dpt.IPv4\"");

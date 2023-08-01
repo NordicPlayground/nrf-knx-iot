@@ -167,62 +167,172 @@ oc_core_encode_interfaces_mask(CborEncoder *parent,
 }
 
 int
-oc_frame_interfaces_mask_in_response(oc_interface_mask_t iface_mask)
+oc_frame_interfaces_mask_in_response(oc_interface_mask_t iface_mask,
+                                     int truncate)
 {
   int total_size = 0;
+  //  </ point - path - example1>;rt = ":dpa.352.51";if= ":if.i";ct = 50 60,
+
+  // start quote
+  oc_rep_encode_raw((uint8_t *)"\"", 1);
+  total_size += 1;
 
   if (iface_mask & OC_IF_I) {
-    oc_rep_encode_raw((uint8_t *)"if.i", 4);
-    total_size += 4;
+    if (total_size > 1) {
+      oc_rep_encode_raw((uint8_t *)" ", 1);
+      total_size += 1;
+    }
+    if (truncate != 1) {
+      oc_rep_encode_raw((uint8_t *)"urn:knx", 7);
+      total_size += 7;
+    }
+    oc_rep_encode_raw((uint8_t *)":if.i", 5);
+    total_size += 5;
   }
   if (iface_mask & OC_IF_O) {
-    oc_rep_encode_raw((uint8_t *)"if.o", 4);
-    total_size += 4;
+    if (total_size > 1) {
+      oc_rep_encode_raw((uint8_t *)" ", 1);
+      total_size += 1;
+    }
+    if (truncate != 1) {
+      oc_rep_encode_raw((uint8_t *)"urn:knx", 7);
+      total_size += 7;
+    }
+    oc_rep_encode_raw((uint8_t *)":if.o", 5);
+    total_size += 5;
   }
   if (iface_mask & OC_IF_G) {
-    oc_rep_encode_raw((uint8_t *)"if.g.s", 5);
-    total_size += 5;
+    if (total_size > 1) {
+      oc_rep_encode_raw((uint8_t *)" ", 1);
+      total_size += 1;
+    }
+    if (truncate != 1) {
+      oc_rep_encode_raw((uint8_t *)"urn:knx", 7);
+      total_size += 7;
+    }
+    oc_rep_encode_raw((uint8_t *)":if.g.s", 6);
+    total_size += 6;
   }
   if (iface_mask & OC_IF_C) {
-    oc_rep_encode_raw((uint8_t *)"if.c", 4);
-    total_size += 4;
+    if (total_size > 1) {
+      oc_rep_encode_raw((uint8_t *)" ", 1);
+      total_size += 1;
+    }
+    if (truncate != 1) {
+      oc_rep_encode_raw((uint8_t *)"urn:knx", 7);
+      total_size += 7;
+    }
+    oc_rep_encode_raw((uint8_t *)":if.c", 5);
+    total_size += 5;
   }
   if (iface_mask & OC_IF_P) {
-    oc_rep_encode_raw((uint8_t *)"if.p", 4);
-    total_size += 4;
+    if (total_size > 1) {
+      oc_rep_encode_raw((uint8_t *)" ", 1);
+      total_size += 1;
+    }
+    if (truncate != 1) {
+      oc_rep_encode_raw((uint8_t *)"urn:knx", 7);
+      total_size += 7;
+    }
+    oc_rep_encode_raw((uint8_t *)":if.p", 5);
+    total_size += 5;
   }
   if (iface_mask & OC_IF_D) {
-    oc_rep_encode_raw((uint8_t *)"if.d", 4);
-    total_size += 4;
+    if (total_size > 1) {
+      oc_rep_encode_raw((uint8_t *)" ", 1);
+      total_size += 1;
+    }
+    if (truncate != 1) {
+      oc_rep_encode_raw((uint8_t *)"urn:knx", 7);
+      total_size += 7;
+    }
+    oc_rep_encode_raw((uint8_t *)":if.d", 5);
+    total_size += 5;
   }
   if (iface_mask & OC_IF_A) {
-    oc_rep_encode_raw((uint8_t *)"if.a", 4);
-    total_size += 4;
+    if (total_size > 1) {
+      oc_rep_encode_raw((uint8_t *)" ", 1);
+      total_size += 1;
+    }
+    if (truncate != 1) {
+      oc_rep_encode_raw((uint8_t *)"urn:knx", 7);
+      total_size += 7;
+    }
+    oc_rep_encode_raw((uint8_t *)":if.a", 5);
+    total_size += 5;
   }
   if (iface_mask & OC_IF_S) {
-    oc_rep_encode_raw((uint8_t *)"if.s", 4);
-    total_size += 4;
+    if (total_size > 1) {
+      oc_rep_encode_raw((uint8_t *)" ", 1);
+      total_size += 1;
+    }
+    oc_rep_encode_raw((uint8_t *)":if.s", 5);
+    total_size += 5;
   }
   if (iface_mask & OC_IF_LI) {
-    oc_rep_encode_raw((uint8_t *)"if.ll", 5);
-    total_size += 5;
+    if (total_size > 1) {
+      oc_rep_encode_raw((uint8_t *)" ", 1);
+      total_size += 1;
+    }
+    if (truncate != 1) {
+      oc_rep_encode_raw((uint8_t *)"urn:knx", 7);
+      total_size += 7;
+    }
+    oc_rep_encode_raw((uint8_t *)":if.ll", 6);
+    total_size += 6;
   }
   if (iface_mask & OC_IF_B) {
-    oc_rep_encode_raw((uint8_t *)"if.b", 4);
-    total_size += 4;
-  }
-  if (iface_mask & OC_IF_SEC) {
-    oc_rep_encode_raw((uint8_t *)"if.sec", 6);
-    total_size += 6;
-  }
-  if (iface_mask & OC_IF_SWU) {
-    oc_rep_encode_raw((uint8_t *)"if.swu", 6);
-    total_size += 6;
-  }
-  if (iface_mask & OC_IF_PM) {
-    oc_rep_encode_raw((uint8_t *)"if.pm", 5);
+    if (total_size > 1) {
+      oc_rep_encode_raw((uint8_t *)" ", 1);
+      total_size += 1;
+    }
+    if (truncate != 1) {
+      oc_rep_encode_raw((uint8_t *)"urn:knx", 7);
+      total_size += 7;
+    }
+    oc_rep_encode_raw((uint8_t *)":if.b", 5);
     total_size += 5;
   }
+  if (iface_mask & OC_IF_SEC) {
+    if (total_size > 1) {
+      oc_rep_encode_raw((uint8_t *)" ", 1);
+      total_size += 1;
+    }
+    if (truncate != 1) {
+      oc_rep_encode_raw((uint8_t *)"urn:knx", 7);
+      total_size += 7;
+    }
+    oc_rep_encode_raw((uint8_t *)":if.sec", 7);
+    total_size += 7;
+  }
+  if (iface_mask & OC_IF_SWU) {
+    if (total_size > 1) {
+      oc_rep_encode_raw((uint8_t *)" ", 1);
+      total_size += 1;
+    }
+    if (truncate != 1) {
+      oc_rep_encode_raw((uint8_t *)"urn:knx", 7);
+      total_size += 7;
+    }
+    oc_rep_encode_raw((uint8_t *)":if.swu", 7);
+    total_size += 7;
+  }
+  if (iface_mask & OC_IF_PM) {
+    if (total_size > 1) {
+      oc_rep_encode_raw((uint8_t *)" ", 1);
+      total_size += 1;
+    }
+    if (truncate != 1) {
+      oc_rep_encode_raw((uint8_t *)"urn:knx", 7);
+      total_size += 7;
+    }
+    oc_rep_encode_raw((uint8_t *)":if.pm", 6);
+    total_size += 6;
+  }
+
+  // end quote
+  oc_rep_encode_raw((uint8_t *)"\"", 1);
+  total_size += 1;
   return total_size;
 }
 
@@ -260,6 +370,31 @@ oc_core_set_device_hwv(size_t device_index, int major, int minor, int minor2)
 }
 
 int
+oc_core_set_device_ap(size_t device_index, int major, int minor, int minor2)
+{
+  if (device_index >= (int)oc_core_get_num_devices()) {
+    OC_ERR("device_index %d to large\n", (int)device_index);
+    return -1;
+  }
+
+  oc_device_info[device_index].ap.major = major;
+  oc_device_info[device_index].ap.minor = minor;
+  oc_device_info[device_index].ap.patch = minor2;
+  return 0;
+}
+
+int
+oc_core_set_device_mid(size_t device_index, uint32_t mid)
+{
+  if (device_index >= (int)oc_core_get_num_devices()) {
+    OC_ERR("device_index %d to large\n", (int)device_index);
+    return -1;
+  }
+  oc_device_info[device_index].mid = mid;
+  return 0;
+}
+
+int
 oc_core_set_device_ia(size_t device_index, uint32_t ia)
 {
   if (device_index >= (int)oc_core_get_num_devices()) {
@@ -286,14 +421,19 @@ oc_core_set_and_store_device_ia(size_t device_index, uint32_t ia)
 int
 oc_core_set_device_hwt(size_t device_index, const char *hardwaretype)
 {
+  int hwt_len = 0;
   if (device_index >= (int)oc_core_get_num_devices()) {
     OC_ERR("device_index %d to large\n", (int)device_index);
     return -1;
   }
+  hwt_len = strlen(hardwaretype);
+  if (strlen(hardwaretype) > 6) {
+    // truncate the hardware type
+    hwt_len = 6;
+  }
 
   oc_free_string(&oc_device_info[device_index].hwt);
-  oc_new_string(&oc_device_info[device_index].hwt, hardwaretype,
-                strlen(hardwaretype));
+  oc_new_string(&oc_device_info[device_index].hwt, hardwaretype, hwt_len);
 
   return 0;
 }
@@ -347,7 +487,22 @@ oc_core_set_device_iid(size_t device_index, uint64_t iid)
   }
   oc_device_info[device_index].iid = iid;
 
+  printf("iid set: ");
+  oc_print_uint64_t(iid, DEC_REPRESENTATION);
+  printf("\n");
+
   return 0;
+}
+
+uint64_t
+oc_core_get_device_iid(size_t device_index)
+{
+  if (device_index >= (int)oc_core_get_num_devices()) {
+    OC_ERR("  device_index %d to large\n", (int)device_index);
+    return -1;
+  }
+
+  return oc_device_info[device_index].iid;
 }
 
 int
@@ -411,8 +566,14 @@ oc_core_add_device(const char *name, const char *version, const char *base,
 
   /* Construct device resource */
   // int properties = OC_DISCOVERABLE;
-  oc_new_string(&oc_device_info[device_count].serialnumber, serialnumber,
-                strlen(serialnumber));
+
+  // make sure that the serial number used is in lower case
+  char serial_lower[20];
+  strncpy(serial_lower, serialnumber, 19);
+  oc_char_convert_to_lower(serial_lower);
+
+  oc_new_string(&oc_device_info[device_count].serialnumber, serial_lower,
+                strlen(serial_lower));
   oc_device_info[device_count].add_device_cb = add_device_cb;
 
   oc_create_discovery_resource(WELLKNOWNCORE, device_count);
@@ -500,6 +661,18 @@ oc_core_populate_resource(int core_resource, size_t device_index,
   r->put_handler.cb = put;
   r->post_handler.cb = post;
   r->delete_handler.cb = delete;
+}
+
+void
+oc_core_bind_dpt_resource(int core_resource, size_t device_index,
+                          const char *dpt)
+{
+  oc_resource_t *r = oc_core_get_resource_by_index(core_resource, device_index);
+  if (!r) {
+    return;
+  }
+
+  oc_resource_bind_dpt(r, dpt);
 }
 
 oc_device_info_t *

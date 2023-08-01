@@ -144,7 +144,7 @@ oc_core_knx_get_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
 
   /* check if the accept header is cbor-format */
   if (request->accept != APPLICATION_JSON &&
-      request->accept != APPLICATION_CBOR) {
+      request->accept != APPLICATION_CBOR && request->accept != CONTENT_NONE) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -185,6 +185,16 @@ oc_core_knx_get_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   code = "code" Unsigned
   time = "time" Unsigned
 */
+static size_t cached_device_index;
+static int cached_value;
+
+static oc_event_callback_retval_t
+delayed_reset(void *context)
+{
+  oc_reset_device(cached_device_index, cached_value);
+  return OC_EVENT_DONE;
+}
+
 static void
 oc_core_knx_post_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
                          void *data)
@@ -241,7 +251,10 @@ oc_core_knx_post_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
     restart_device(device_index);
     error = false;
   } else if (cmd == RESET_DEVICE) {
-    oc_reset_device(device_index, value);
+    // oc_reset_device(device_index, value);
+    cached_device_index = device_index;
+    cached_value = value;
+    oc_set_delayed_callback_ms(NULL, delayed_reset, 100);
     error = false;
   }
 
@@ -394,7 +407,7 @@ oc_core_knx_lsm_get_handler(oc_request_t *request,
   PRINT("oc_core_knx_lsm_get_handler\n");
 
   /* check if the accept header is cbor-format */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -426,7 +439,7 @@ oc_core_knx_lsm_post_handler(oc_request_t *request,
   oc_rep_t *rep = NULL;
 
   /* check if the accept header is cbor-format */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -510,7 +523,7 @@ oc_core_knx_knx_get_handler(oc_request_t *request,
   PRINT("oc_core_knx_knx_get_handler\n");
 
   /* check if the accept header is cbor-format */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -536,7 +549,8 @@ oc_core_knx_knx_get_handler(oc_request_t *request,
 
   // ga
   oc_rep_i_set_int(value, 7, g_received_notification.ga);
-  // st M Service type code(write = w, read = r, response = rp) Enum : w, r, rp
+  // st M Service type code(write = w, read = r, response = rp) Enum : w, r, a
+  // (rp)
   oc_rep_i_set_text_string(value, 6, oc_string(g_received_notification.st));
   // missing value
 
@@ -601,7 +615,8 @@ oc_core_knx_knx_post_handler(oc_request_t *request,
 
   /* check if the accept header is cbor-format */
   if (request->accept != APPLICATION_CBOR &&
-      request->accept != APPLICATION_OSCORE) {
+      request->accept != APPLICATION_OSCORE &&
+      request->accept != CONTENT_NONE) {
     request->response->response_buffer->code = oc_status_code(OC_IGNORE);
     return;
   }
@@ -661,15 +676,6 @@ oc_core_knx_knx_post_handler(oc_request_t *request,
       while (object != NULL) {
         switch (object->type) {
         case OC_REP_STRING: {
-#ifdef TAGS_AS_STRINGS
-          if (oc_string_len(object->name) == 2 &&
-              memcmp(oc_string(object->name), "st", 2) == 0) {
-            oc_free_string(&g_received_notification.st);
-            oc_new_string(&g_received_notification.st,
-                          oc_string(object->value.string),
-                          oc_string_len(object->value.string));
-          }
-#endif
           if (object->iname == 6) {
             oc_free_string(&g_received_notification.st);
             oc_new_string(&g_received_notification.st,
@@ -685,16 +691,6 @@ oc_core_knx_knx_post_handler(oc_request_t *request,
         } break;
 
         case OC_REP_INT: {
-#ifdef TAGS_AS_STRINGS
-          if (oc_string_len(object->name) == 3 &&
-              memcmp(oc_string(object->name), "sia", 3) == 0) {
-            g_received_notification.sia = (uint32_t)object->value.integer;
-          }
-          if (oc_string_len(object->name) == 2 &&
-              memcmp(oc_string(object->name), "ga", 2) == 0) {
-            g_received_notification.ga = (uint32_t)object->value.integer;
-          }
-#endif
           // sia
           if (object->iname == 4) {
             g_received_notification.sia = (uint32_t)object->value.integer;
@@ -772,9 +768,14 @@ oc_core_knx_knx_post_handler(oc_request_t *request,
     // Received from bus: -st w, any ga ==> @receiver:
     // cflags = w -> overwrite object value
     st_write = true;
-  } else if (strcmp(oc_string(g_received_notification.st), "rp") == 0) {
-    // Case 2)
+  } else if (strcmp(oc_string(g_received_notification.st), "a") == 0) {
+    // Case 2) spec 1.1
     // Received from bus: -st rp, any ga
+    //@receiver: cflags = u -> overwrite object value
+    st_rep = true;
+  } else if (strcmp(oc_string(g_received_notification.st), "rp") == 0) {
+    // Case 2) spec 1.0
+    // Received from bus: -st a (rp), any ga
     //@receiver: cflags = u -> overwrite object value
     st_rep = true;
   } else if (strcmp(oc_string(g_received_notification.st), "r") == 0) {
@@ -878,10 +879,13 @@ oc_core_knx_knx_post_handler(oc_request_t *request,
         // Sent: -st rp, sending association (1st assigned ga)
         // specifically: do not check the transmission flag
         PRINT("   (case3) (RP-UPDATE) sending RP due to READ flag \n");
+
 #ifdef OC_USE_MULTICAST_SCOPE_2
-        oc_do_s_mode_with_scope_no_check(2, oc_string(myurl), "rp");
+        // oc_do_s_mode_with_scope_no_check(2, oc_string(myurl), "rp");
+        oc_do_s_mode_with_scope_no_check(2, oc_string(myurl), "a");
 #endif
-        oc_do_s_mode_with_scope_no_check(5, oc_string(myurl), "rp");
+        // oc_do_s_mode_with_scope_no_check(5, oc_string(myurl), "rp");
+        oc_do_s_mode_with_scope_no_check(5, oc_string(myurl), "a");
       }
     }
     // get the next index in the table to get the url from.
@@ -913,6 +917,17 @@ oc_create_knx_knx_resource(int resource_idx, size_t device)
                             oc_core_knx_knx_post_handler, 0, 1, "urn:knx:g.s");
 }
 
+void
+oc_create_knx_g_resource(int resource_idx, size_t device)
+{
+  OC_DBG("oc_create_knx_g_resource (g)\n");
+
+  oc_core_populate_resource(resource_idx, device, "/g", OC_IF_LI | OC_IF_G,
+                            APPLICATION_CBOR, OC_DISCOVERABLE,
+                            oc_core_knx_knx_get_handler, 0,
+                            oc_core_knx_knx_post_handler, 0, 1, "urn:knx:g.s");
+}
+
 int
 oc_knx_knx_ignore_smessage_from_self(bool ignore)
 {
@@ -931,7 +946,7 @@ oc_core_knx_fingerprint_get_handler(oc_request_t *request,
   PRINT("oc_core_knx_fingerprint_get_handler\n");
 
   /* check if the accept header is cbor-format */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -965,7 +980,7 @@ oc_core_knx_ia_get_handler(oc_request_t *request,
   PRINT("oc_core_knx_ia_get_handler\n");
 
   /* check if the accept header is cbor-format */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -1000,7 +1015,7 @@ oc_core_knx_ia_post_handler(oc_request_t *request,
   bool fid_set = false;
 
   /* check if the accept header is CBOR-format */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     oc_send_cbor_response(request, OC_STATUS_BAD_REQUEST);
     return;
   }
@@ -1078,7 +1093,7 @@ oc_core_knx_osn_get_handler(oc_request_t *request,
   PRINT("oc_core_knx_osn_get_handler\n");
 
   /* check if the accept header is cbor-format */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -1114,7 +1129,7 @@ oc_core_knx_ldevid_get_handler(oc_request_t *request,
   PRINT("oc_core_knx_ldevid_get_handler\n");
 
   /* check if the accept header is cbor-format */
-  if (request->accept != APPLICATION_PKCS7_CMC_REQUEST) {
+  if (oc_check_accept_header(request, APPLICATION_PKCS7_CMC_REQUEST) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -1155,7 +1170,7 @@ oc_core_knx_idevid_get_handler(oc_request_t *request,
   PRINT("oc_core_knx_idevid_get_handler\n");
 
   /* check if the accept header is cbor-format */
-  if (request->accept != APPLICATION_PKCS7_CMC_REQUEST) {
+  if (oc_check_accept_header(request, APPLICATION_PKCS7_CMC_REQUEST) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -1247,12 +1262,7 @@ oc_core_knx_spake_post_handler(oc_request_t *request,
   PRINT("oc_core_knx_spake_post_handler\n");
 
   /* check if the accept header is cbor-format */
-  if (request->accept != APPLICATION_CBOR) {
-    request->response->response_buffer->code =
-      oc_status_code(OC_STATUS_BAD_REQUEST);
-    return;
-  }
-  if (request->content_format != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -1309,7 +1319,7 @@ oc_core_knx_spake_post_handler(oc_request_t *request,
     // this gets overwritten if the ID is present in the
     // request payload handled below
     oc_free_string(&g_pase.id);
-    oc_new_string(&g_pase.id, "responderkey", strlen("responderkey"));
+    oc_new_byte_string(&g_pase.id, "rkey", strlen("rkey"));
   }
   // handle input
   while (rep != NULL) {
@@ -1330,8 +1340,10 @@ oc_core_knx_spake_post_handler(oc_request_t *request,
       if (rep->iname == SPAKE_ID) {
         // if the ID is present, overwrite the default
         oc_free_string(&g_pase.id);
-        oc_new_string(&g_pase.id, oc_string(rep->value.string),
-                      oc_byte_string_len(rep->value.string));
+        oc_new_byte_string(&g_pase.id, oc_string(rep->value.string),
+                           oc_string_len(rep->value.string));
+        PRINT("==> CLIENT RECEIVES %d\n",
+              (int)oc_byte_string_len(rep->value.string));
       }
     } break;
     default:
@@ -1361,8 +1373,8 @@ oc_core_knx_spake_separate_post_handler(void *req_p)
 
   if (valid_request == SPAKE_RND) {
 #ifdef OC_SPAKE
-    // generate random numbers for rnd, salt & it (# of iterations)
-    oc_spake_parameter_exchange(g_pase.rnd, g_pase.salt, &g_pase.it);
+    // get random numbers for rnd, salt & it (# of iterations)
+    oc_spake_get_pbkdf_params(g_pase.rnd, g_pase.salt, &g_pase.it);
     OC_DBG_SPAKE("Rnd:");
     OC_LOGbytes_SPAKE(g_pase.rnd, sizeof(g_pase.rnd));
     OC_DBG_SPAKE("Salt:");
@@ -1372,8 +1384,8 @@ oc_core_knx_spake_separate_post_handler(void *req_p)
 #endif /* OC_SPAKE */
     oc_rep_begin_root_object();
     // id (0)
-    oc_rep_i_set_byte_string(root, SPAKE_ID, oc_cast(g_pase.id, uint8_t),
-                             oc_byte_string_len(g_pase.id));
+    // oc_rep_i_set_byte_string(root, SPAKE_ID, oc_cast(g_pase.id, uint8_t),
+    //                         oc_byte_string_len(g_pase.id));
     // rnd (15)
     oc_rep_i_set_byte_string(root, SPAKE_RND, g_pase.rnd, 32);
     // pbkdf2
@@ -1404,11 +1416,10 @@ oc_core_knx_spake_separate_post_handler(void *req_p)
     mbedtls_mpi_init(&spake_data.y);
     mbedtls_ecp_point_init(&spake_data.pub_y);
 
-    ret = oc_spake_calc_w0_L(password, sizeof(g_pase.salt), g_pase.salt,
-                             g_pase.it, &spake_data.w0, &spake_data.L);
-
+    ret = oc_spake_get_w0_L(password, sizeof(g_pase.salt), g_pase.salt,
+                            g_pase.it, &spake_data.w0, &spake_data.L);
     if (ret != 0) {
-      OC_ERR("oc_spake_calc_w0_L failed with code %d", ret);
+      OC_ERR("oc_spake_get_w0_L failed with code %d", ret);
       goto error;
     }
 
@@ -1433,7 +1444,6 @@ oc_core_knx_spake_separate_post_handler(void *req_p)
       goto error;
     }
 
-    uint8_t Ka_Ke[32];
     if (ret = oc_spake_calc_transcript_responder(&spake_data, g_pase.pa, &pB)) {
       OC_ERR("oc_spake_calc_transcript_responder failed with code %d", ret);
       mbedtls_ecp_point_free(&pB);
@@ -1479,8 +1489,12 @@ oc_core_knx_spake_separate_post_handler(void *req_p)
     // knx does not have multiple devices per instance (for now), so hardcode
     // the use of the first device
     oc_device_info_t *device = oc_core_get_device_info(0);
-    oc_oscore_set_auth(oc_string(device->serialnumber), oc_string(g_pase.id),
-                       shared_key, (int)shared_key_len);
+    // serial number should be supplied as string array
+    PRINT("CLIENT: pase.id length: %d\n", (int)oc_byte_string_len(g_pase.id));
+    oc_oscore_set_auth_device(
+      oc_string(device->serialnumber), oc_string_len(device->serialnumber),
+      oc_string(g_pase.id), oc_byte_string_len(g_pase.id), shared_key,
+      (int)shared_key_len);
 
     // empty payload
     oc_send_empty_separate_response(&spake_separate_rsp, OC_STATUS_CHANGED);
@@ -1635,6 +1649,7 @@ oc_create_knx_resources(size_t device_index)
 
   oc_create_knx_lsm_resource(OC_KNX_LSM, device_index);
   oc_create_knx_knx_resource(OC_KNX_DOT_KNX, device_index);
+  oc_create_knx_knx_resource(OC_KNX_G, device_index);
   oc_create_knx_fingerprint_resource(OC_KNX_FINGERPRINT, device_index);
   oc_create_knx_ia(OC_KNX_IA, device_index);
   oc_create_knx_osn_resource(OC_KNX_OSN, device_index);

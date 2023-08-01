@@ -26,6 +26,7 @@
 
 #include "oc_spake2plus.h"
 #include "port/oc_random.h"
+#include "port/oc_log.h"
 
 static mbedtls_ctr_drbg_context *ctr_drbg_ctx;
 static mbedtls_ecp_group grp;
@@ -54,10 +55,20 @@ uint8_t bytes_N[] = {
   0x60, 0x34, 0x80, 0x8c, 0xd5, 0x64, 0x49, 0x0b, 0x1e, 0x65, 0x6e, 0xdb, 0xe7
 };
 
-static char password[33];
+static char password[33] = { 0 };
 
 #define KNX_RNG_LEN (32)
 #define KNX_SALT_LEN (32)
+
+struct spake_parameters
+{
+  int loaded; /// 0: not loaded, 1: loaded
+  mbedtls_mpi w0;
+  mbedtls_ecp_point L;
+  uint8_t salt[32];
+  uint8_t rand[32];
+  uint32_t iter;
+} g_spake_parameters;
 
 int
 oc_spake_init(void)
@@ -90,6 +101,84 @@ void
 oc_spake_set_password(char *new_pass)
 {
   strncpy(password, new_pass, sizeof(password));
+}
+
+int
+oc_spake_set_parameters(uint8_t rand[32], uint8_t salt[32], int it,
+                        mbedtls_mpi w0, mbedtls_ecp_point L)
+{
+  int ret;
+  g_spake_parameters.loaded = 0;
+  memcpy(g_spake_parameters.rand, rand, 32);
+  memcpy(g_spake_parameters.salt, salt, 32);
+  g_spake_parameters.iter = it;
+  MBEDTLS_MPI_CHK(mbedtls_mpi_copy(&g_spake_parameters.w0, &w0));
+  MBEDTLS_MPI_CHK(mbedtls_mpi_copy(&g_spake_parameters.L.X, &L.X));
+  MBEDTLS_MPI_CHK(mbedtls_mpi_copy(&g_spake_parameters.L.Y, &L.Y));
+  MBEDTLS_MPI_CHK(mbedtls_mpi_copy(&g_spake_parameters.L.Z, &L.Z));
+  g_spake_parameters.loaded = 1;
+  return 0;
+cleanup:
+  mbedtls_mpi_free(&g_spake_parameters.w0);
+  mbedtls_ecp_point_free(&g_spake_parameters.L);
+  return ret;
+}
+
+int
+oc_spake_get_parameters(uint8_t *rand, uint8_t *salt, int *it, mbedtls_mpi *w0,
+                        mbedtls_ecp_point *L)
+{
+  if (g_spake_parameters.loaded != 1)
+    return 1;
+  int ret;
+  if (rand) {
+    memcpy(rand, g_spake_parameters.rand, 32);
+  }
+  if (salt) {
+    memcpy(salt, g_spake_parameters.salt, 32);
+  }
+  if (it) {
+    *it = g_spake_parameters.iter;
+  }
+  if (w0) {
+    MBEDTLS_MPI_CHK(mbedtls_mpi_copy(w0, &g_spake_parameters.w0));
+  }
+  if (L) {
+    MBEDTLS_MPI_CHK(mbedtls_mpi_copy(&L->X, &g_spake_parameters.L.X));
+    MBEDTLS_MPI_CHK(mbedtls_mpi_copy(&L->Y, &g_spake_parameters.L.Y));
+    MBEDTLS_MPI_CHK(mbedtls_mpi_copy(&L->Z, &g_spake_parameters.L.Z));
+  }
+  return 0;
+cleanup:
+  mbedtls_mpi_free(w0);
+  mbedtls_ecp_point_free(L);
+  return ret;
+}
+
+int
+oc_spake_get_pbkdf_params(uint8_t rnd[32], uint8_t salt[32], int *it)
+{
+  if (oc_spake_get_parameters(rnd, salt, it, NULL, NULL) == 0)
+    return 0;
+
+  // generate random numbers for rnd, salt & it (# of iterations)
+  return oc_spake_parameter_exchange(rnd, salt, it);
+}
+
+int
+oc_spake_get_w0_L(const char *pw, size_t len_salt, const uint8_t *salt, int it,
+                  mbedtls_mpi *w0, mbedtls_ecp_point *L)
+{
+  int ret;
+  if (oc_spake_get_parameters(NULL, NULL, NULL, w0, L) == 0)
+    return 0;
+
+  ret = oc_spake_calc_w0_L(password, len_salt, salt, it, w0, L);
+
+  if (ret != 0) {
+    OC_ERR("oc_spake_calc_w0_L failed with code %d", ret);
+  }
+  return ret;
 }
 
 // encode value as zero-padded little endian bytes
@@ -168,9 +257,9 @@ oc_spake_print_point(mbedtls_ecp_point *p)
   len = encode_point(&grp, p, buf);
 
   for (size_t i = 0; i < len; i++) {
-    printf("%02x", buf[i]);
+    PRINT("%02x", buf[i]);
   }
-  printf("\n");
+  PRINT("\n");
 }
 
 void
@@ -182,9 +271,9 @@ oc_spake_print_mpi(mbedtls_mpi *m)
   len = encode_mpi(m, buf);
 
   for (size_t i = 0; i < len; i++) {
-    printf("%02x", buf[i]);
+    PRINT("%02x", buf[i]);
   }
-  printf("\n");
+  PRINT("\n");
 }
 
 int

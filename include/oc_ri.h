@@ -140,7 +140,8 @@ typedef enum {
   APPLICATION_OSCORE = 10001,             /**< application/oscore */
   APPLICATION_VND_OMA_LWM2M_TLV = 11542,  /**< application/vnd.oma.lwm2m+tlv */
   APPLICATION_VND_OMA_LWM2M_JSON = 11543, /**< application/vnd.oma.lwm2m+json */
-  APPLICATION_VND_OMA_LWM2M_CBOR = 11544  /**< application/vnd.oma.lwm2m+cbor */
+  APPLICATION_VND_OMA_LWM2M_CBOR = 11544, /**< application/vnd.oma.lwm2m+cbor */
+  CONTENT_NONE = 99999                    /**< no content format */
 } oc_content_format_t;
 
 /**
@@ -167,24 +168,25 @@ typedef struct oc_response_t
 
 /**
  * @brief interface masks
- *
+ * security access scopes defined as interfaces
+ * note that scope = 1 is not used.
  */
 typedef enum {
-  OC_IF_NONE = 0,      /**< no interface defined */
-  OC_IF_I = 1 << 1,    /**< if.i */
-  OC_IF_O = 1 << 2,    /**< if.o */
-  OC_IF_G = 1 << 3,    /**< if.g.s.[ga] */
-  OC_IF_C = 1 << 4,    /**< if.c */
-  OC_IF_P = 1 << 5,    /**< if.p */
-  OC_IF_D = 1 << 6,    /**< if.d */
-  OC_IF_A = 1 << 7,    /**< if.a */
-  OC_IF_S = 1 << 8,    /**< if.s */
-  OC_IF_LI = 1 << 9,   /**< if.ll */
-  OC_IF_B = 1 << 10,   /**< if.b */
-  OC_IF_SEC = 1 << 11, /**< if.sec */
-  OC_IF_SWU = 1 << 12, /**< if.swu */
-  OC_IF_PM = 1 << 13,  /**< if.pm */
-  OC_IF_M = 1 << 14    /**< if.m (manufacturer) */
+  OC_IF_NONE = 0,        /**< no interface defined */
+  OC_IF_I = (1 << 1),    /**< if.i  (2)*/
+  OC_IF_O = (1 << 2),    /**< if.o (4)*/
+  OC_IF_G = (1 << 3),    /**< if.g.s.[ga] (8) */
+  OC_IF_C = (1 << 4),    /**< if.c (16) */
+  OC_IF_P = (1 << 5),    /**< if.p (32)*/
+  OC_IF_D = (1 << 6),    /**< if.d (64)*/
+  OC_IF_A = (1 << 7),    /**< if.a (128)*/
+  OC_IF_S = (1 << 8),    /**< if.s (256)*/
+  OC_IF_LI = (1 << 9),   /**< if.ll (512)*/
+  OC_IF_B = (1 << 10),   /**< if.b (1024) */
+  OC_IF_SEC = (1 << 11), /**< if.sec (2048)*/
+  OC_IF_SWU = (1 << 12), /**< if.swu (4096)*/
+  OC_IF_PM = (1 << 13),  /**< if.pm (8192)*/
+  OC_IF_M = (1 << 14)    /**< if.m (manufacturer) (16384) */
 } oc_interface_mask_t;
 
 #define OC_MAX_IF_MASKS 14
@@ -192,8 +194,8 @@ typedef enum {
 /**
  * @brief Get the interface string object
  * Note: should be called with a single interface as mask only
- * @param mask the interface mask
- * @return const char* the interface as string
+ * @param mask the interface mask (access scope)
+ * @return const char* the interface as string e.g. "if.i"
  */
 const char *get_interface_string(oc_interface_mask_t mask);
 
@@ -201,7 +203,7 @@ const char *get_interface_string(oc_interface_mask_t mask);
  * @brief Get the method name object
  *
  * @param method the input method
- * @return const char* the method as string
+ * @return const char* the method as string e.g. "GET"
  */
 const char *get_method_name(oc_method_t method);
 
@@ -227,6 +229,14 @@ int oc_get_interface_in_mask_in_string_array(oc_interface_mask_t iface_mask,
                                              oc_string_array_t interface_array);
 
 /**
+ * @brief prints all interfaces in the mask to stdout
+ *
+ * @param iface_mask the interface mask
+ * names in
+ */
+void oc_print_interface(oc_interface_mask_t iface_mask);
+
+/**
  * @brief core resource numbers
  *
  */
@@ -245,12 +255,17 @@ typedef enum {
   OC_DEV_SA,                /**< /dev/sa subnet address */
   OC_DEV_DA,                /**< /dev/da device address */
   OC_DEV_PORT,              /**< /dev/port the coap port number */
+  OC_DEV_MPORT,             /**< /dev/mport the multicast port number */
+  OC_DEV_MID,               /**< /dev/mid the manufacturer id */
   OC_DEV,                   /**< core link */
+  OC_APP,                   /**< application id (list) */
+  OC_APP_X,                 /**< application id entry */
   OC_KNX_SPAKE,             /**< spake */
   OC_KNX_IDEVID,            /**< IDevID */
   OC_KNX_LDEVID,            /**< LDevID */
   OC_KNX_LSM,               /**< load state machine */
   OC_KNX_DOT_KNX,           /**< .knx resource */
+  OC_KNX_G,                 /**< g (renamed) .knx resource */
   OC_KNX_FINGERPRINT,       /**< FINGERPRINT value of loaded contents */
   OC_KNX_IA,                /**< .well-known / knx / ia */
   OC_KNX_OSN,               /**< .well-known / knx / osn */
@@ -467,6 +482,16 @@ void oc_ri_remove_timed_event_callback(void *cb_data,
  * @return int the CoAP status code
  */
 int oc_status_code(oc_status_t key);
+
+/**
+ * @brief checks if the accept header is correct
+ * note that if the accept header is not there, this check is a pass
+ * @param request the request
+ * @param accept the content type of the resource
+ * @return true content type is ok
+ * @return false content type is not ok
+ */
+bool oc_check_accept_header(oc_request_t *request, oc_content_format_t accept);
 
 /**
  * @brief retrieve the resource by uri and device index

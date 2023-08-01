@@ -202,7 +202,6 @@ oc_total_interface_in_mask(oc_interface_mask_t iface_mask)
     total_masks++;
   }
   if (iface_mask & OC_IF_G) {
-    // TODO note: this must be extended with a number...
     total_masks++;
   }
   if (iface_mask & OC_IF_C) {
@@ -300,6 +299,51 @@ oc_get_interface_in_mask_in_string_array(oc_interface_mask_t iface_mask,
   return total_masks;
 }
 
+void
+oc_print_interface(oc_interface_mask_t iface_mask)
+{
+
+  if (iface_mask & OC_IF_I) {
+    PRINT("%s ", get_interface_string(OC_IF_I));
+  }
+  if (iface_mask & OC_IF_O) {
+    PRINT("%s ", get_interface_string(OC_IF_O));
+  }
+  if (iface_mask & OC_IF_G) {
+    PRINT("%s ", get_interface_string(OC_IF_G));
+  }
+  if (iface_mask & OC_IF_C) {
+    PRINT("%s ", get_interface_string(OC_IF_C));
+  }
+  if (iface_mask & OC_IF_P) {
+    PRINT("%s ", get_interface_string(OC_IF_P));
+  }
+  if (iface_mask & OC_IF_D) {
+    PRINT("%s ", get_interface_string(OC_IF_D));
+  }
+  if (iface_mask & OC_IF_A) {
+    PRINT("%s ", get_interface_string(OC_IF_A));
+  }
+  if (iface_mask & OC_IF_S) {
+    PRINT("%s ", get_interface_string(OC_IF_S));
+  }
+  if (iface_mask & OC_IF_LI) {
+    PRINT("%s ", get_interface_string(OC_IF_LI));
+  }
+  if (iface_mask & OC_IF_B) {
+    PRINT("%s ", get_interface_string(OC_IF_B));
+  }
+  if (iface_mask & OC_IF_SEC) {
+    PRINT("%s ", get_interface_string(OC_IF_SEC));
+  }
+  if (iface_mask & OC_IF_SWU) {
+    PRINT("%s ", get_interface_string(OC_IF_SWU));
+  }
+  if (iface_mask & OC_IF_PM) {
+    PRINT("%s ", get_interface_string(OC_IF_PM));
+  }
+}
+
 bool
 oc_ri_new_request_from_request(oc_request_t new_request, oc_request_t request,
                                oc_response_buffer_t response_buffer,
@@ -345,6 +389,18 @@ oc_ri_is_app_resource_valid(oc_resource_t *resource)
   return false;
 }
 #endif
+
+bool
+oc_check_accept_header(oc_request_t *request, oc_content_format_t accept)
+{
+  if (request->accept == accept) {
+    return true;
+  }
+  if (request->accept == CONTENT_NONE) {
+    return true;
+  }
+  return false;
+}
 
 int
 oc_status_code(oc_status_t key)
@@ -885,7 +941,7 @@ oc_ri_get_interface_mask(char *iface, size_t if_len)
     iface_mask |= OC_IF_I;
   if (4 == if_len && strncmp(iface, "if.o", if_len) == 0)
     iface_mask |= OC_IF_O;
-  if (if_len > 8 && strncmp(iface, "if.g.s.", if_len) == 0)
+  if (6 == if_len && strncmp(iface, "if.g.s", if_len) == 0)
     iface_mask |= OC_IF_G;
   if (4 == if_len && strncmp(iface, "if.c", if_len) == 0)
     iface_mask |= OC_IF_C;
@@ -988,7 +1044,7 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
 
   /* Read the accept CoAP option in the request */
   oc_content_format_t accept = 0;
-  unsigned int accept_i = 0;
+  unsigned int accept_i = CONTENT_NONE;
   coap_get_header_accept(request, &accept_i);
   accept = (oc_content_format_t)accept_i;
 

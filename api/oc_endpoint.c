@@ -57,12 +57,38 @@ oc_free_endpoint(oc_endpoint_t *endpoint)
   }
 }
 
-void
-oc_endpoint_set_serial_number(oc_endpoint_t *endpoint, char *serial_number)
+int
+oc_endpoint_set_oscore_id_from_str(oc_endpoint_t *endpoint, char *oscore_id)
 {
+  endpoint->oscore_id_len = SERIAL_NUM_SIZE;
+  return oc_conv_hex_string_to_byte_array(oscore_id, strlen(oscore_id),
+                                          &endpoint->oscore_id,
+                                          &endpoint->oscore_id_len);
+
+  // return oc_conv_hex_string_to_oc_string(oscore_id, strlen(oscore_id),
+  //                                        &endpoint->oscore_id);
+}
+
+int
+oc_endpoint_set_oscore_id(oc_endpoint_t *endpoint, char *oscore_id,
+                          int oscore_id_len)
+{
+  // oc_free_string(&endpoint->oscore_id);
+  // oc_new_byte_string(&endpoint->oscore_id, oscore_id, oscore_id_len);
+  memcpy(endpoint->oscore_id, oscore_id, oscore_id_len);
+  endpoint->oscore_id_len = oscore_id_len;
+
+  return oscore_id_len;
+}
+
+void
+oc_endpoint_set_auth_at_index(oc_endpoint_t *endpoint, int32_t index)
+{
+#ifdef OC_OSCORE
   if (endpoint) {
-    strncpy((char *)&endpoint->serial_number, serial_number, SERIAL_NUM_SIZE);
+    endpoint->auth_at_index = index + 1;
   }
+#endif /* OC_OSCORE */
 }
 
 #ifdef OC_IPV4

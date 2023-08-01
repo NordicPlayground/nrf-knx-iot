@@ -19,15 +19,17 @@ option(BUILD_TESTING "Build KNX tests" OFF)
 
 set(OC_DNS_SD_ENABLED OFF CACHE BOOL "Enable DNS SD")
 set(OC_PUBLISHER_TABLE_ENABLED ON CACHE BOOL "enable Publisher table")
-set(OC_OSCORE_ENABLED OFF CACHE BOOL "Enable oscore")
+set(OC_OSCORE_ENABLED ON CACHE BOOL "Enable oscore")
 set(OC_IOT_ROUTER_ENABLED OFF CACHE BOOL "Enable IoT Router code")
 set(OC_PKI_ENABLED OFF CACHE BOOL "Enable PKI security")
-set(OC_DEBUG_ENABLED OFF CACHE BOOL "Enable debug messages")
+set(OC_PRINT_ENABLED ON CACHE BOOL "Enable print messages. Setting this to OFF will disable virtually all logging.")
+set(OC_PRINT_APP_ENABLED ON CACHE BOOL "Enable application log messages. Independent from OC_PRINT_ENABLED")
+set(OC_DEBUG_ENABLED ON CACHE BOOL "Enable debug messages")
 set(OC_DEBUG_OSCORE_ENABLED OFF CACHE BOOL "Enable security debug messages")
 set(OC_LOG_TO_FILE_ENABLED OFF CACHE BOOL "redirect debug messages to file")
 set(CLANG_TIDY_ENABLED OFF CACHE BOOL "Enable clang-tidy analysis during compilation.")
 set(OC_USE_STORAGE ON CACHE BOOL "Persistent storage of data.")
-set(OC_USE_MULTICAST_SCOPE_2 OFF CACHE BOOL "devices send also group multicast events with scope2.")
+set(OC_USE_MULTICAST_SCOPE_2 ON CACHE BOOL "devices send also group multicast events with scope2.")
 
 set(KNX_BUILTIN_MBEDTLS ON CACHE BOOL "Use built-in mbedTLS, as opposed to external lib from different project")
 set(KNX_BUILTIN_TINYCBOR ON CACHE BOOL "Use built-in TinyCBOR, as opposed to external lib from different project")
@@ -96,6 +98,7 @@ set(API_SOURCES
     ${PROJECT_SOURCE_DIR}/api/oc_knx_fb.c
     ${PROJECT_SOURCE_DIR}/api/oc_knx_fp.c
     ${PROJECT_SOURCE_DIR}/api/oc_knx_gm.c
+    ${PROJECT_SOURCE_DIR}/api/oc_knx_helpers.c
     ${PROJECT_SOURCE_DIR}/api/oc_knx_p.c
     ${PROJECT_SOURCE_DIR}/api/oc_knx_sec.c
     ${PROJECT_SOURCE_DIR}/api/oc_knx_swu.c
@@ -164,6 +167,13 @@ if(OC_IOT_ROUTER_ENABLED)
     target_compile_definitions(kis-common INTERFACE OC_IOT_ROUTER)
 endif()
 
+if(OC_PRINT_ENABLED)
+    target_compile_definitions(kis-common INTERFACE OC_PRINT)
+endif()
+
+if(OC_PRINT_APP_ENABLED)
+    target_compile_definitions(kis-common INTERFACE OC_PRINT_APP)
+endif()
 
 if(OC_DEBUG_ENABLED)
     target_compile_definitions(kis-common INTERFACE OC_DEBUG)

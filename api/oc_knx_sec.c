@@ -1,5 +1,5 @@
 /*
- // Copyright (c) 2021-2022 Cascoda Ltd
+ // Copyright (c) 2021-2023 Cascoda Ltd
  //
  // Licensed under the Apache License, Version 2.0 (the "License");
  // you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
 #include <inttypes.h>
 #include "security/oc_oscore_context.h"
 #include "oc_knx.h"
+#include "oc_knx_helpers.h"
 
 uint64_t g_oscore_replaywindow = 0;
 uint64_t g_oscore_osndelay = 0;
@@ -79,7 +80,7 @@ oc_core_knx_f_oscore_osndelay_get_handler(oc_request_t *request,
   PRINT("oc_core_knx_f_oscore_osndelay_get_handler\n");
 
   /* check if the accept header is cbor-format */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -102,7 +103,7 @@ oc_core_knx_p_oscore_osndelay_put_handler(oc_request_t *request,
   (void)iface_mask;
 
   /* check if the accept header is CBOR-format */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     oc_send_cbor_response(request, OC_STATUS_BAD_REQUEST);
     return;
   }
@@ -146,7 +147,7 @@ oc_core_knx_p_oscore_replwdo_get_handler(oc_request_t *request,
   (void)iface_mask;
 
   /* check if the accept header is cbor-format */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -169,7 +170,7 @@ oc_core_knx_p_oscore_replwdo_put_handler(oc_request_t *request,
   (void)iface_mask;
 
   /* check if the accept header is CBOR-format */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     oc_send_cbor_response(request, OC_STATUS_BAD_REQUEST);
     return;
   }
@@ -215,7 +216,7 @@ oc_core_knx_f_oscore_get_handler(oc_request_t *request,
   int matches = 0;
 
   /* check if the accept header is cbor-format */
-  if (request->accept != APPLICATION_LINK_FORMAT) {
+  if (oc_check_accept_header(request, APPLICATION_LINK_FORMAT) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -227,7 +228,7 @@ oc_core_knx_f_oscore_get_handler(oc_request_t *request,
        i++) {
     oc_resource_t *resource = oc_core_get_resource_by_index(i, device_index);
     if (oc_filter_resource(resource, request, device_index, &response_length,
-                           matches)) {
+                           matches, 1)) {
       matches++;
     }
   }
@@ -279,7 +280,7 @@ oc_core_a_sen_post_handler(oc_request_t *request,
   int cmd = 0;
 
   /* check if the accept header is cbor-format */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     oc_send_cbor_response(request, OC_STATUS_BAD_REQUEST);
     return;
   }
@@ -399,6 +400,24 @@ find_access_token_from_payload(oc_rep_t *object)
   return index;
 }
 
+int
+oc_core_get_at_table_size()
+{
+  return G_AT_MAX_ENTRIES;
+}
+
+int
+oc_core_find_nr_used_in_auth_at_table()
+{
+  int counter = 0;
+  for (int i = 0; i < oc_core_get_at_table_size(); i++) {
+    if (oc_string_len(g_at_entries[i].id) == 0) {
+      counter++;
+    }
+  }
+  return counter;
+}
+
 // ----------------------------------------------------------------------------
 
 static void
@@ -410,14 +429,40 @@ oc_core_auth_at_get_handler(oc_request_t *request,
   size_t response_length = 0;
   int i;
   int length = 0;
+  bool ps_exists;
+  bool total_exists;
   PRINT("oc_core_auth_at_get_handler\n");
 
   /* check if the accept header is link-format */
-  if (request->accept != APPLICATION_LINK_FORMAT) {
+  if (oc_check_accept_header(request, APPLICATION_LINK_FORMAT) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
   }
+
+  // handle query parameters: l=ps l=total
+  if (check_if_query_l_exist(request, &ps_exists, &total_exists)) {
+    // example : < / fp / r / ? l = total>; total = 22; ps = 5
+
+    length = oc_frame_query_l("/auth/at", ps_exists, total_exists);
+    response_length += length;
+    if (ps_exists) {
+      length = oc_rep_add_line_to_buffer(";ps=");
+      response_length += length;
+      length = oc_frame_integer(oc_core_get_at_table_size());
+      response_length += length;
+    }
+    if (total_exists) {
+      length = oc_rep_add_line_to_buffer(";total=");
+      response_length += length;
+      length = oc_frame_integer(oc_core_find_nr_used_in_auth_at_table());
+      response_length += length;
+    }
+
+    oc_send_linkformat_response(request, OC_STATUS_OK, response_length);
+    return;
+  }
+
   /* example entry: </auth/at/token-id>;ct=50 */
   for (i = 0; i < G_AT_MAX_ENTRIES; i++) {
     if (oc_string_len(g_at_entries[i].id) > 0) {
@@ -454,11 +499,13 @@ oc_core_auth_at_post_handler(oc_request_t *request,
   oc_rep_t *subobject = NULL;
   oc_rep_t *oscobject = NULL;
   oc_status_t return_status = OC_STATUS_BAD_REQUEST;
+  bool scope_updated = false;
+  bool other_updated = false;
   int index = -1;
   PRINT("oc_core_auth_at_post_handler\n");
 
   /* check if the accept header is cbor-format */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     oc_send_cbor_response(request, OC_STATUS_BAD_REQUEST);
     return;
   }
@@ -512,6 +559,7 @@ oc_core_auth_at_post_handler(oc_request_t *request,
               interfaces = interfaces + if_mask;
             }
             g_at_entries[index].scope = interfaces;
+            scope_updated = true;
           }
         } else if (object->type == OC_REP_INT_ARRAY) {
           // scope
@@ -525,9 +573,6 @@ oc_core_auth_at_post_handler(oc_request_t *request,
               // make the deep copy
               if ((g_at_entries[index].ga_len > 0) &&
                   (&g_at_entries[index].ga != NULL)) {
-                // always set the group address scope, if there is 1 or more ga
-                // entries
-                g_at_entries[index].scope = OC_IF_G;
                 int64_t *cur_arr = g_at_entries[index].ga;
                 if (cur_arr) {
                   free(cur_arr);
@@ -535,6 +580,9 @@ oc_core_auth_at_post_handler(oc_request_t *request,
                 g_at_entries[index].ga = NULL;
               }
               g_at_entries[index].ga_len = (int)array_size;
+              // always set the group address scope, if there is 1 or more ga
+              // entries
+              g_at_entries[index].scope = OC_IF_G;
               int64_t *new_array =
                 (int64_t *)malloc(array_size * sizeof(uint64_t));
               if (new_array) {
@@ -586,72 +634,55 @@ oc_core_auth_at_post_handler(oc_request_t *request,
               oscobject = subobject->value.object;
               int oscobject_nr = subobject->iname;
               while (oscobject) {
-                if (oscobject->type == OC_REP_STRING) {
-                  if (oscobject->iname == 0 && subobject_nr == 8 &&
+                if (oscobject->type == OC_REP_INT) {
+                  if (oscobject->iname == 4 && subobject_nr == 8 &&
                       oscobject_nr == 4) {
-                    // cnf::osc::kid (id)
-                    oc_free_string(&(g_at_entries[index].osc_id));
-                    oc_new_string(&g_at_entries[index].osc_id,
-                                  oc_string(oscobject->value.string),
-                                  oc_string_len(oscobject->value.string));
+                    // not storing it: we only support value 10 at the moment.
+                    // g_at_entries[index].osc_alg = (int)object->value.integer;
+                    if ((int)object->value.integer != 10) {
+                      OC_ERR("algorithm is not 10 : %d",
+                             (int)object->value.integer);
+                      return_status = OC_STATUS_BAD_REQUEST;
+                    }
+                    other_updated = true;
                   }
+                }
+                if (oscobject->type == OC_REP_BYTE_STRING) {
                   if (oscobject->iname == 2 && subobject_nr == 8 &&
                       oscobject_nr == 4) {
                     // cnf::osc::ms
                     oc_free_string(&(g_at_entries[index].osc_ms));
-                    oc_new_string(&g_at_entries[index].osc_ms,
-                                  oc_string(oscobject->value.string),
-                                  oc_string_len(oscobject->value.string));
-                  }
-                  if (oscobject->iname == 4 && subobject_nr == 8 &&
-                      oscobject_nr == 4) {
-                    // cnf::osc::alg
-                    oc_free_string(&(g_at_entries[index].osc_alg));
-                    oc_new_string(&g_at_entries[index].osc_alg,
-                                  oc_string(oscobject->value.string),
-                                  oc_string_len(oscobject->value.string));
+                    oc_new_byte_string(&g_at_entries[index].osc_ms,
+                                       oc_string(oscobject->value.string),
+                                       oc_string_len(oscobject->value.string));
+                    other_updated = true;
                   }
                   if (oscobject->iname == 6 && subobject_nr == 8 &&
                       oscobject_nr == 4) {
                     // cnf::osc::contextId
                     oc_free_string(&(g_at_entries[index].osc_contextid));
-                    oc_new_string(&g_at_entries[index].osc_contextid,
-                                  oc_string(oscobject->value.string),
-                                  oc_string_len(oscobject->value.string));
+                    oc_new_byte_string(&g_at_entries[index].osc_contextid,
+                                       oc_string(oscobject->value.string),
+                                       oc_string_len(oscobject->value.string));
+                    other_updated = true;
                   }
-                } else if (oscobject->type == OC_REP_BYTE_STRING) {
-                  // byte string, e.g. tolerating 0 in the data
+                  if (oscobject->iname == 7 && subobject_nr == 8 &&
+                      oscobject_nr == 4) {
+                    // cnf::osc::rid
+                    oc_free_string(&(g_at_entries[index].osc_rid));
+                    oc_new_byte_string(&g_at_entries[index].osc_rid,
+                                       oc_string(oscobject->value.string),
+                                       oc_string_len(oscobject->value.string));
+                    other_updated = true;
+                  }
                   if (oscobject->iname == 0 && subobject_nr == 8 &&
                       oscobject_nr == 4) {
-                    // cnf::osc::kid (id)
+                    // cnf::osc::id
                     oc_free_string(&(g_at_entries[index].osc_id));
-                    oc_new_string(&g_at_entries[index].osc_id,
-                                  oc_string(oscobject->value.string),
-                                  oc_string_len(oscobject->value.string));
-                  }
-                  if (oscobject->iname == 2 && subobject_nr == 8 &&
-                      oscobject_nr == 4) {
-                    // cnf::osc::ms
-                    oc_free_string(&(g_at_entries[index].osc_ms));
-                    oc_new_string(&g_at_entries[index].osc_ms,
-                                  oc_string(oscobject->value.string),
-                                  oc_string_len(oscobject->value.string));
-                  }
-                  if (oscobject->iname == 4 && subobject_nr == 8 &&
-                      oscobject_nr == 4) {
-                    // cnf::osc::alg
-                    oc_free_string(&(g_at_entries[index].osc_alg));
-                    oc_new_string(&g_at_entries[index].osc_alg,
-                                  oc_string(oscobject->value.string),
-                                  oc_string_len(oscobject->value.string));
-                  }
-                  if (oscobject->iname == 6 && subobject_nr == 8 &&
-                      oscobject_nr == 4) {
-                    // cnf::osc::contextId
-                    oc_free_string(&(g_at_entries[index].osc_contextid));
-                    oc_new_string(&g_at_entries[index].osc_contextid,
-                                  oc_string(oscobject->value.string),
-                                  oc_string_len(oscobject->value.string));
+                    oc_new_byte_string(&g_at_entries[index].osc_id,
+                                       oc_string(oscobject->value.string),
+                                       oc_string_len(oscobject->value.string));
+                    other_updated = true;
                   }
                 } /* type */
 
@@ -665,6 +696,26 @@ oc_core_auth_at_post_handler(oc_request_t *request,
       } // while (inner object)
     }   // if type == object
     // show the entry on screen
+    //
+    // temp backward compatibility fix: if recipient id is not there then use
+    // SID for recipient ID
+    if (oc_string_len(g_at_entries[index].osc_rid) == 0) {
+      oc_free_string(&(g_at_entries[index].osc_rid));
+      oc_new_byte_string(&g_at_entries[index].osc_rid,
+                         oc_string(g_at_entries[index].osc_id),
+                         oc_byte_string_len(g_at_entries[index].osc_id));
+    }
+    // temp backward compatibility fix: if context id is not there then use
+    // SID for context ID
+    /*
+    if (oc_string_len(g_at_entries[index].osc_contextid) == 0) {
+      oc_free_string(&(g_at_entries[index].osc_contextid));
+      oc_new_byte_string(&g_at_entries[index].osc_contextid,
+                         oc_string(g_at_entries[index].osc_id),
+                         oc_byte_string_len(g_at_entries[index].osc_id));
+    }
+    */
+
     oc_print_auth_at_entry(device_index, index);
 
     // dump the entry to persistent storage
@@ -674,7 +725,15 @@ oc_core_auth_at_post_handler(oc_request_t *request,
 
   PRINT("oc_core_auth_at_post_handler - activating oscore context\n");
   // add the oscore contexts by reinitializing all used oscore keys.
-  oc_init_oscore_from_storage(device_index, false);
+  // do not update the oscore when:
+  // - update of the scope contents only
+  if ((return_status == OC_STATUS_CHANGED) && (other_updated == false) &&
+      (scope_updated == true)) {
+    OC_WRN("update scope only");
+  } else {
+    // update the oscore context
+    oc_init_oscore_from_storage(device_index, false);
+  }
   PRINT("oc_core_auth_at_post_handler - end\n");
   oc_send_cbor_response_no_payload_size(request, return_status);
 }
@@ -687,7 +746,7 @@ oc_core_auth_at_delete_handler(oc_request_t *request,
   (void)iface_mask;
   PRINT("oc_core_auth_at_delete_handler\n");
 
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -704,11 +763,11 @@ oc_core_auth_at_delete_handler(oc_request_t *request,
 void
 oc_create_auth_at_resource(int resource_idx, size_t device)
 {
-  oc_core_populate_resource(resource_idx, device, "/auth/at",
-                            OC_IF_B | OC_IF_SEC, APPLICATION_LINK_FORMAT,
-                            OC_DISCOVERABLE, oc_core_auth_at_get_handler, 0,
-                            oc_core_auth_at_post_handler,
-                            oc_core_auth_at_delete_handler, 1, "dpt.a[n]");
+  oc_core_populate_resource(
+    resource_idx, device, "/auth/at", OC_IF_LI | OC_IF_B | OC_IF_SEC,
+    APPLICATION_LINK_FORMAT, OC_DISCOVERABLE, oc_core_auth_at_get_handler, 0,
+    oc_core_auth_at_post_handler, oc_core_auth_at_delete_handler, 1,
+    "urn:knx:fb.at");
 }
 
 // ----------------------------------------------------------------------------
@@ -733,7 +792,7 @@ oc_core_auth_at_x_get_handler(oc_request_t *request,
   (void)iface_mask;
 
   /* check if the accept header is cbor-format */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     oc_send_cbor_response(request, OC_STATUS_BAD_REQUEST);
     return;
   }
@@ -805,25 +864,33 @@ oc_core_auth_at_x_get_handler(oc_request_t *request,
     oc_rep_i_set_key(&cnf_map, 4);
     CborEncoder osc_map;
     cbor_encoder_create_map(&cnf_map, &osc_map, CborIndefiniteLength);
-    if (oc_string_len(g_at_entries[index].osc_id) > 0) {
-      oc_rep_i_set_byte_string(
-        osc, 0, oc_string(g_at_entries[index].osc_id),
-        oc_string_len(g_at_entries[index].osc_id)); // root::cnf::osc::id
-    }
     if (oc_string_len(g_at_entries[index].osc_ms) > 0) {
       oc_rep_i_set_byte_string(
         osc, 2, oc_string(g_at_entries[index].osc_ms),
-        oc_string_len(g_at_entries[index].osc_ms)); // root::cnf::osc::ms
+        oc_byte_string_len(g_at_entries[index].osc_ms)); // root::cnf::osc::ms
     }
-    if (oc_string_len(g_at_entries[index].osc_alg) > 0) {
-      oc_rep_i_set_text_string(
-        osc, 4, oc_string(g_at_entries[index].osc_alg)); // root::cnf::osc::alg
-    }
+    // if (oc_string_len(g_at_entries[index].osc_alg) > 0) {
+    //   oc_rep_i_set_text_string(
+    //     osc, 4, oc_string(g_at_entries[index].osc_alg)); //
+    //     root::cnf::osc::alg
+    // }
     if (oc_string_len(g_at_entries[index].osc_contextid) > 0) {
       oc_rep_i_set_byte_string(
         osc, 6, oc_string(g_at_entries[index].osc_contextid),
-        oc_string_len(
+        oc_byte_string_len(
           g_at_entries[index].osc_contextid)); // root::cnf::osc::contextid
+    }
+    if (oc_string_len(g_at_entries[index].osc_rid) > 0) {
+      oc_rep_i_set_byte_string(
+        osc, 7, oc_string(g_at_entries[index].osc_rid),
+        oc_byte_string_len(
+          g_at_entries[index].osc_rid)); // root::cnf::osc::osc_rid
+    }
+    if (oc_string_len(g_at_entries[index].osc_id) > 0) {
+      oc_rep_i_set_byte_string(
+        osc, 0, oc_string(g_at_entries[index].osc_id),
+        oc_byte_string_len(
+          g_at_entries[index].osc_id)); // root::cnf::osc::osc_id
     }
     cbor_encoder_close_container_checked(&cnf_map, &osc_map);
     cbor_encoder_close_container_checked(&root_map, &cnf_map);
@@ -847,7 +914,7 @@ oc_core_auth_at_x_post_handler(oc_request_t *request,
   oc_rep_t *rep = NULL;
   int cmd = 0;
   /* check if the accept header is cbor-format */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     oc_send_cbor_response(request, OC_STATUS_BAD_REQUEST);
     return;
   }
@@ -884,7 +951,7 @@ oc_core_auth_at_x_delete_handler(oc_request_t *request,
   const char *value;
   int value_len = -1;
   /* check if the accept header is cbor-format */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -944,7 +1011,7 @@ oc_core_knx_auth_get_handler(oc_request_t *request,
   int i;
   int matches = 0;
   /* check if the accept header is cbor-format */
-  if (request->accept != APPLICATION_LINK_FORMAT) {
+  if (oc_check_accept_header(request, APPLICATION_LINK_FORMAT) == false) {
     request->response->response_buffer->code =
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
@@ -953,7 +1020,7 @@ oc_core_knx_auth_get_handler(oc_request_t *request,
   for (i = (int)OC_KNX_A_SEN; i < (int)OC_KNX_AUTH; i++) {
     oc_resource_t *resource = oc_core_get_resource_by_index(i, device_index);
     if (oc_filter_resource(resource, request, device_index, &response_length,
-                           matches)) {
+                           matches, 1)) {
       matches++;
     }
   }
@@ -968,7 +1035,6 @@ void
 oc_create_knx_auth_resource(int resource_idx, size_t device)
 {
   OC_DBG("oc_create_knx_auth_resource\n");
-  // TODO: what is type of auth resource?
   oc_core_populate_resource(resource_idx, device, "/auth", OC_IF_LI,
                             APPLICATION_LINK_FORMAT, OC_DISCOVERABLE,
                             oc_core_knx_auth_get_handler, 0, 0, 0, 0);
@@ -978,12 +1044,11 @@ void
 oc_print_auth_at_entry(size_t device_index, int index)
 {
   (void)device_index;
-  // PRINT("  at index: %d\n", index);
   if (index > -1) {
     if (oc_string_len(g_at_entries[index].id) > 0) {
 
       PRINT("  at index: %d\n", index);
-      PRINT("    id (0)        : %s\n",
+      PRINT("    id (0)        : '%s'\n",
             oc_string_checked(g_at_entries[index].id));
       PRINT("    scope (9)     : %d\n", g_at_entries[index].scope);
       PRINT("    profile (38)  : %d (%s)\n", g_at_entries[index].profile,
@@ -999,26 +1064,25 @@ oc_print_auth_at_entry(size_t device_index, int index)
         }
       }
       if (g_at_entries[index].profile == OC_PROFILE_COAP_OSCORE) {
-        if (oc_string_len(g_at_entries[index].osc_id) > 0) {
-          PRINT("    osc:id        : %s\n",
-                oc_string_checked(g_at_entries[index].osc_id));
-        }
         if (oc_string_len(g_at_entries[index].osc_ms) > 0) {
-          PRINT("    osc:ms        : ");
-          int length = (int)oc_string_len(g_at_entries[index].osc_ms);
-          char *ms = oc_string(g_at_entries[index].osc_ms);
-          for (int i = 0; i < length; i++) {
-            PRINT("%02x", (unsigned char)ms[i]);
-          }
-          PRINT("\n");
-        }
-        if (oc_string_len(g_at_entries[index].osc_alg) > 0) {
-          PRINT("    osc:alg       : %s\n",
-                oc_string_checked(g_at_entries[index].osc_alg));
+          PRINT("    osc:ms    (h) : (%d) ",
+                (int)oc_byte_string_len(g_at_entries[index].osc_ms));
+          oc_string_println_hex(g_at_entries[index].osc_ms);
         }
         if (oc_string_len(g_at_entries[index].osc_contextid) > 0) {
-          PRINT("    osc:contextid : %s\n",
-                oc_string_checked(g_at_entries[index].osc_contextid));
+          PRINT("    osc:ctx_id (h): (%d) ",
+                (int)oc_byte_string_len(g_at_entries[index].osc_contextid));
+          oc_string_println_hex(g_at_entries[index].osc_contextid);
+        }
+        if (oc_string_len(g_at_entries[index].osc_id) > 0) {
+          PRINT("    osc:id    (h) : (%d) ",
+                (int)oc_byte_string_len(g_at_entries[index].osc_id));
+          oc_string_println_hex(g_at_entries[index].osc_id);
+        }
+        if (oc_string_len(g_at_entries[index].osc_rid) > 0) {
+          PRINT("    osc:rid   (h) : (%d) ",
+                (int)oc_byte_string_len(g_at_entries[index].osc_rid));
+          oc_string_println_hex(g_at_entries[index].osc_rid);
         }
         if (g_at_entries[index].ga_len > 0) {
           PRINT("    osc:ga        : [");
@@ -1030,6 +1094,19 @@ oc_print_auth_at_entry(size_t device_index, int index)
       }
     }
   }
+}
+
+oc_interface_mask_t
+oc_at_get_interface_mask(size_t device_index, int index)
+{
+  (void)device_index;
+  if (index < 0) {
+    return OC_IF_NONE;
+  }
+  if (index > oc_core_get_at_table_size() - 1) {
+    return OC_IF_NONE;
+  }
+  return g_at_entries[index].scope;
 }
 
 int
@@ -1048,16 +1125,16 @@ oc_at_delete_entry(size_t device_index, int index)
   oc_new_string(&g_at_entries[index].id, "", 0);
   g_at_entries[index].scope = OC_IF_NONE;
   g_at_entries[index].profile = OC_PROFILE_UNKNOWN;
-  // oscore
-  oc_free_string(&g_at_entries[index].osc_alg);
-  oc_new_string(&g_at_entries[index].osc_alg, "", 0);
-  oc_free_string(&g_at_entries[index].osc_id);
-  oc_new_string(&g_at_entries[index].osc_id, "", 0);
+  // oscore object
   oc_free_string(&g_at_entries[index].osc_ms);
-  oc_new_string(&g_at_entries[index].osc_ms, "", 0);
+  oc_new_byte_string(&g_at_entries[index].osc_ms, "", 0);
   oc_free_string(&g_at_entries[index].osc_contextid);
-  oc_new_string(&g_at_entries[index].osc_contextid, "", 0);
-  // dtls
+  oc_new_byte_string(&g_at_entries[index].osc_contextid, "", 0);
+  oc_free_string(&g_at_entries[index].osc_rid);
+  oc_new_byte_string(&g_at_entries[index].osc_rid, "", 0);
+  oc_free_string(&g_at_entries[index].osc_id);
+  oc_new_byte_string(&g_at_entries[index].osc_id, "", 0);
+  // dtls object
   oc_free_string(&g_at_entries[index].sub);
   oc_new_string(&g_at_entries[index].sub, "", 0);
   oc_free_string(&g_at_entries[index].kid);
@@ -1070,6 +1147,8 @@ oc_at_delete_entry(size_t device_index, int index)
   return 0;
 }
 
+// Note: storage of the fields is done via the cbor keys in the hierarchy
+// so tag : 842  8.4.2 ==> "cnf":"osc":"ms"
 static void
 oc_at_dump_entry(size_t device_index, int entry)
 {
@@ -1093,16 +1172,15 @@ oc_at_dump_entry(size_t device_index, int entry)
   // interface 9 /// this is different than the response on the wire
   oc_rep_i_set_int(root, 9, g_at_entries[entry].scope);
   oc_rep_i_set_int(root, 38, g_at_entries[entry].profile);
-
-  oc_rep_i_set_byte_string(root, 840, oc_string(g_at_entries[entry].osc_id),
-                           oc_string_len(g_at_entries[entry].osc_id));
   oc_rep_i_set_byte_string(root, 842, oc_string(g_at_entries[entry].osc_ms),
-                           oc_string_len(g_at_entries[entry].osc_ms));
-  oc_rep_i_set_byte_string(root, 844, oc_string(g_at_entries[entry].osc_alg),
-                           oc_string_len(g_at_entries[entry].osc_alg));
-  oc_rep_i_set_byte_string(root, 846,
-                           oc_string(g_at_entries[entry].osc_contextid),
-                           oc_string_len(g_at_entries[entry].osc_contextid));
+                           oc_byte_string_len(g_at_entries[entry].osc_ms));
+  oc_rep_i_set_byte_string(
+    root, 846, oc_string(g_at_entries[entry].osc_contextid),
+    oc_byte_string_len(g_at_entries[entry].osc_contextid));
+  oc_rep_i_set_byte_string(root, 847, oc_string(g_at_entries[entry].osc_rid),
+                           oc_byte_string_len(g_at_entries[entry].osc_rid));
+  oc_rep_i_set_byte_string(root, 840, oc_string(g_at_entries[entry].osc_id),
+                           oc_byte_string_len(g_at_entries[entry].osc_id));
   oc_rep_i_set_text_string(root, 82, oc_string(g_at_entries[entry].sub));
   oc_rep_i_set_text_string(root, 81, oc_string(g_at_entries[entry].kid));
 
@@ -1161,30 +1239,6 @@ oc_at_load_entry(int entry)
             oc_new_string(&g_at_entries[entry].id, oc_string(rep->value.string),
                           oc_string_len(rep->value.string));
           }
-          if (rep->iname == 840) {
-            oc_free_string(&g_at_entries[entry].osc_id);
-            oc_new_string(&g_at_entries[entry].osc_id,
-                          oc_string(rep->value.string),
-                          oc_string_len(rep->value.string));
-          }
-          if (rep->iname == 842) {
-            oc_free_string(&g_at_entries[entry].osc_ms);
-            oc_new_string(&g_at_entries[entry].osc_ms,
-                          oc_string(rep->value.string),
-                          oc_string_len(rep->value.string));
-          }
-          if (rep->iname == 844) {
-            oc_free_string(&g_at_entries[entry].osc_alg);
-            oc_new_string(&g_at_entries[entry].osc_alg,
-                          oc_string(rep->value.string),
-                          oc_string_len(rep->value.string));
-          }
-          if (rep->iname == 846) {
-            oc_free_string(&g_at_entries[entry].osc_contextid);
-            oc_new_string(&g_at_entries[entry].osc_contextid,
-                          oc_string(rep->value.string),
-                          oc_string_len(rep->value.string));
-          }
           if (rep->iname == 82) {
             oc_free_string(&g_at_entries[entry].sub);
             oc_new_string(&g_at_entries[entry].sub,
@@ -1199,29 +1253,32 @@ oc_at_load_entry(int entry)
           }
           break;
         case OC_REP_BYTE_STRING:
+          // note: reading back the strings should be done with oc_string_len
+          // not with oc_byte_string_len
           if (rep->iname == 840) {
             oc_free_string(&g_at_entries[entry].osc_id);
-            oc_new_string(&g_at_entries[entry].osc_id,
-                          oc_string(rep->value.string),
-                          oc_string_len(rep->value.string));
+            oc_new_byte_string(&g_at_entries[entry].osc_id,
+                               oc_string(rep->value.string),
+                               oc_string_len(rep->value.string));
           }
           if (rep->iname == 842) {
             oc_free_string(&g_at_entries[entry].osc_ms);
-            oc_new_string(&g_at_entries[entry].osc_ms,
-                          oc_string(rep->value.string),
-                          oc_string_len(rep->value.string));
-          }
-          if (rep->iname == 844) {
-            oc_free_string(&g_at_entries[entry].osc_alg);
-            oc_new_string(&g_at_entries[entry].osc_alg,
-                          oc_string(rep->value.string),
-                          oc_string_len(rep->value.string));
+            oc_new_byte_string(&g_at_entries[entry].osc_ms,
+                               oc_string(rep->value.string),
+                               oc_string_len(rep->value.string));
           }
           if (rep->iname == 846) {
             oc_free_string(&g_at_entries[entry].osc_contextid);
-            oc_new_string(&g_at_entries[entry].osc_contextid,
-                          oc_string(rep->value.string),
-                          oc_string_len(rep->value.string));
+            oc_new_byte_string(&g_at_entries[entry].osc_contextid,
+                               oc_string(rep->value.string),
+                               oc_string_len(rep->value.string));
+          }
+
+          if (rep->iname == 847) {
+            oc_free_string(&g_at_entries[entry].osc_rid);
+            oc_new_byte_string(&g_at_entries[entry].osc_rid,
+                               oc_string(rep->value.string),
+                               oc_string_len(rep->value.string));
           }
           break;
         case OC_REP_INT_ARRAY:
@@ -1266,12 +1323,6 @@ oc_at_load_entry(int entry)
 }
 
 int
-oc_core_get_at_table_size()
-{
-  return G_AT_MAX_ENTRIES;
-}
-
-int
 oc_core_set_at_table(size_t device_index, int index, oc_auth_at_t entry,
                      bool store)
 {
@@ -1289,20 +1340,22 @@ oc_core_set_at_table(size_t device_index, int index, oc_auth_at_t entry,
     oc_free_string(&g_at_entries[index].kid);
     oc_new_string(&g_at_entries[index].kid, oc_string(entry.kid),
                   oc_string_len(entry.kid));
-    oc_free_string(&g_at_entries[index].osc_id);
-    oc_new_string(&g_at_entries[index].osc_id, oc_string(entry.osc_id),
-                  oc_string_len(entry.osc_id));
     oc_free_string(&g_at_entries[index].osc_ms);
-    oc_new_string(&g_at_entries[index].osc_ms, oc_string(entry.osc_ms),
-                  oc_string_len(entry.osc_ms));
-    oc_free_string(&g_at_entries[index].osc_alg);
-    oc_new_string(&g_at_entries[index].osc_alg, oc_string(entry.osc_alg),
-                  oc_string_len(entry.osc_alg));
+    oc_new_byte_string(&g_at_entries[index].osc_ms, oc_string(entry.osc_ms),
+                       oc_byte_string_len(entry.osc_ms));
+    // oc_free_string(&g_at_entries[index].osc_alg);
+    // oc_new_string(&g_at_entries[index].osc_alg, oc_string(entry.osc_alg),
+    //               oc_string_len(entry.osc_alg));
     oc_free_string(&g_at_entries[index].osc_contextid);
-    oc_new_string(&g_at_entries[index].osc_contextid,
-                  oc_string(entry.osc_contextid),
-                  oc_string_len(entry.osc_contextid));
-
+    oc_new_byte_string(&g_at_entries[index].osc_contextid,
+                       oc_string(entry.osc_contextid),
+                       oc_byte_string_len(entry.osc_contextid));
+    oc_free_string(&g_at_entries[index].osc_rid);
+    oc_new_byte_string(&g_at_entries[index].osc_rid, oc_string(entry.osc_rid),
+                       oc_byte_string_len(entry.osc_rid));
+    oc_free_string(&g_at_entries[index].osc_id);
+    oc_new_byte_string(&g_at_entries[index].osc_id, oc_string(entry.osc_id),
+                       oc_byte_string_len(entry.osc_id));
     // clean up existing entry
     if (g_at_entries[index].ga_len > 0) {
       int64_t *cur_arr = g_at_entries[index].ga;
@@ -1334,19 +1387,18 @@ oc_core_set_at_table(size_t device_index, int index, oc_auth_at_t entry,
     }
   }
   // activate the credentials
-  OC_DBG_OSCORE("oc_core_set_at_table: activating oscore credentials");
+  OC_DBG_OSCORE("oc_core_set_at_table: activating OSCORE credentials");
   oc_init_oscore_from_storage(device_index, false);
 
   return 0;
 }
 
 int
-oc_core_find_at_entry_with_context_id(size_t device_index, char *context_id)
+oc_core_find_at_entry_with_id(size_t device_index, char *id)
 {
   for (int i = 0; i < G_AT_MAX_ENTRIES; i++) {
     if ((oc_string_len(g_at_entries[i].id) > 0) &&
-        (strncmp(oc_string(g_at_entries[i].id), context_id,
-                 strlen(context_id)) == 0)) {
+        (strncmp(oc_string(g_at_entries[i].id), id, strlen(id)) == 0)) {
       return i;
     }
   }
@@ -1391,38 +1443,122 @@ oc_delete_at_table(size_t device_index)
 #endif
 }
 
+void
+oc_reset_at_table(size_t device_index, int erase_code)
+{
+  PRINT("Reset AT Object Table: %d\n", erase_code);
+
+  if (erase_code == 2) {
+    oc_delete_at_table(device_index);
+  } else if (erase_code == 7) {
+    // reset the entries that are not "if.sec"
+    oc_interface_mask_t scope = OC_IF_NONE;
+    for (int i = 0; i < G_AT_MAX_ENTRIES; i++) {
+      scope = oc_at_get_interface_mask(device_index, i);
+      // OC_IF_SEC flag not set
+      if ((scope & OC_IF_SEC) == 0) {
+        // reset the entries that are not "if.sec"
+        oc_at_delete_entry(device_index, i);
+        oc_print_auth_at_entry(device_index, i);
+      }
+    }
+#ifdef OC_OSCORE
+    // create the oscore contexts that still remain
+    oc_init_oscore_from_storage(device_index, true);
+#endif
+  }
+}
+
 // ----------------------------------------------------------------------------
 
 void
-oc_oscore_set_auth(char *serial_number, char *context_id, uint8_t *shared_key,
-                   int shared_key_size)
+oc_oscore_set_auth_mac(char *serial_number, int serial_number_size,
+                       char *client_recipientid, int client_recipientid_size,
+                       uint8_t *shared_key, int shared_key_size)
 {
   // create the token & store in at tables at position 0
   // note there should be no entries.. if there is an entry then overwrite
   // it..
-  PRINT("oc_oscore_set_auth sn:%s ci:%s\n", serial_number, context_id);
+  PRINT("oc_oscore_set_auth_mac sn       : %s\n", serial_number);
+  PRINT("oc_oscore_set_auth_mac rid [%d] : ", client_recipientid_size);
+  oc_char_println_hex(client_recipientid, client_recipientid_size);
+  PRINT("oc_oscore_set_auth_mac ms  [%d] : ", shared_key_size);
+  oc_char_println_hex(shared_key, shared_key_size);
 
-  oc_auth_at_t os_token;
-  memset(&os_token, 0, sizeof(os_token));
-  oc_new_string(&os_token.id, context_id, strlen(context_id));
-  os_token.ga_len = 0;
-  os_token.profile = OC_PROFILE_COAP_OSCORE;
-  os_token.scope = OC_IF_SEC | OC_IF_D | OC_IF_P;
-  oc_new_string(&os_token.osc_ms, (char *)shared_key, shared_key_size);
-  // TODO this is the default, when no context_id is supplied
-  // oc_new_string(&os_token.osc_id, "responderkey", strlen("responderkey"));
-  oc_new_string(&os_token.osc_id, context_id, strlen(context_id));
-  oc_new_string(&os_token.osc_contextid, context_id, strlen(context_id));
-  oc_new_string(&os_token.sub, "", strlen(""));
+  oc_auth_at_t spake_entry;
+  memset(&spake_entry, 0, sizeof(spake_entry));
+  // this is the index in the table, so it is the full string
+  oc_new_string(&spake_entry.id, serial_number, serial_number_size);
+  spake_entry.ga_len = 0;
+  spake_entry.profile = OC_PROFILE_COAP_OSCORE;
+  spake_entry.scope = OC_IF_SEC | OC_IF_D | OC_IF_P;
+  oc_new_byte_string(&spake_entry.osc_ms, (char *)shared_key, shared_key_size);
+  // no context id
+  oc_new_byte_string(&spake_entry.osc_rid, client_recipientid,
+                     client_recipientid_size);
+  // not that HEX was NOT on the wire, but the byte string.
+  // so we have to store the byte string
+  oc_conv_hex_string_to_oc_string(serial_number, serial_number_size,
+                                  &spake_entry.osc_id);
 
-  int index = oc_core_find_at_entry_with_context_id(0, context_id);
+  PRINT("oc_oscore_set_auth_mac osc_id (hex) from serial number: ");
+  oc_string_println_hex(spake_entry.osc_id);
+
+  int index = oc_core_find_at_entry_with_id(0, serial_number);
   if (index == -1) {
     index = oc_core_find_at_entry_empty_slot(0);
   }
   if (index == -1) {
     OC_ERR("no space left in auth/at");
   } else {
-    oc_core_set_at_table((size_t)0, index, os_token, true);
+    oc_core_set_at_table((size_t)0, index, spake_entry, true);
+    oc_at_dump_entry((size_t)0, index);
+    // add the oscore context...
+    oc_init_oscore(0);
+  }
+}
+
+// This looks very similar to oc_oscore_set_auth_mac, but has some very
+// particular differences. The key identifier is the same as before (serial
+// number), but the sender & receiver IDs are swapped. Here, the sender ID is
+// client_recipientid, referring to the MAC. And the receiver ID is the serial
+// number.
+void
+oc_oscore_set_auth_device(char *serial_number, int serial_number_size,
+                          char *client_recipientid, int client_recipientid_size,
+                          uint8_t *shared_key, int shared_key_size)
+{
+  PRINT("oc_oscore_set_auth_device sn :%s\n", serial_number);
+  PRINT("oc_oscore_set_auth_device rid : (%d) ", client_recipientid_size);
+  oc_char_println_hex(client_recipientid, client_recipientid_size);
+  PRINT("oc_oscore_set_auth_device ms : (%d) ", shared_key_size);
+  oc_char_println_hex(shared_key, shared_key_size);
+
+  oc_auth_at_t spake_entry;
+  memset(&spake_entry, 0, sizeof(spake_entry));
+  // this is the index in the table, so it is the full string
+  oc_new_string(&spake_entry.id, serial_number, serial_number_size);
+  spake_entry.ga_len = 0;
+  spake_entry.profile = OC_PROFILE_COAP_OSCORE;
+  spake_entry.scope = OC_IF_SEC | OC_IF_D | OC_IF_P;
+  oc_new_byte_string(&spake_entry.osc_ms, (char *)shared_key, shared_key_size);
+  // no context id
+  oc_new_byte_string(&spake_entry.osc_id, client_recipientid,
+                     client_recipientid_size);
+  oc_conv_hex_string_to_oc_string(serial_number, serial_number_size,
+                                  &spake_entry.osc_rid);
+
+  PRINT("  osc_id (hex) from serial number: ");
+  oc_string_println_hex(spake_entry.osc_id);
+
+  int index = oc_core_find_at_entry_with_id(0, serial_number);
+  if (index == -1) {
+    index = oc_core_find_at_entry_empty_slot(0);
+  }
+  if (index == -1) {
+    OC_ERR("no space left in auth/at");
+  } else {
+    oc_core_set_at_table((size_t)0, index, spake_entry, true);
     oc_at_dump_entry((size_t)0, index);
     // add the oscore context...
     oc_init_oscore(0);
@@ -1497,9 +1633,7 @@ oc_init_oscore_from_storage(size_t device_index, bool from_storage)
   // deleting all contexts!!
   oc_oscore_free_all_contexts();
 
-  OC_DBG_OSCORE(
-    "oc_init_oscore adding OSCORE context, using context id for sender & "
-    "receiver");
+  OC_DBG_OSCORE("oc_init_oscore adding OSCORE context...");
   for (i = 0; i < G_AT_MAX_ENTRIES; i++) {
 
     if (oc_string_len(g_at_entries[i].id) > 0) {
@@ -1509,10 +1643,14 @@ oc_init_oscore_from_storage(size_t device_index, bool from_storage)
         uint64_t ssn = 0;
         // one context: for sending and receiving.
         oc_oscore_context_t *ctx = oc_oscore_add_context(
-          device_index, oc_string(g_at_entries[i].osc_contextid),
-          oc_string(g_at_entries[i].osc_contextid), ssn, "desc",
+          device_index, oc_string(g_at_entries[i].osc_id),
+          oc_byte_string_len(g_at_entries[i].osc_id),
+          oc_string(g_at_entries[i].osc_rid),
+          oc_byte_string_len(g_at_entries[i].osc_rid), ssn, "desc",
           oc_string(g_at_entries[i].osc_ms),
-          oc_string(g_at_entries[i].osc_contextid), i, from_storage);
+          oc_byte_string_len(g_at_entries[i].osc_ms),
+          oc_string(g_at_entries[i].osc_contextid),
+          oc_byte_string_len(g_at_entries[i].osc_contextid), i, from_storage);
         if (ctx == NULL) {
           OC_ERR("  failed to load index= %d", i);
         }
@@ -1664,11 +1802,23 @@ oc_if_method_allowed_according_to_mask(oc_interface_mask_t iface_mask,
   return false;
 }
 
+bool
+oc_knx_contains_interface(oc_interface_mask_t calling_interfaces,
+                          oc_interface_mask_t resource_interfaces)
+{
+  if ((calling_interfaces & resource_interfaces) > 0) {
+    // one of the entries is matching
+    return true;
+  }
+  return false;
+}
+
 static bool
 method_allowed(oc_method_t method, oc_resource_t *resource,
                oc_endpoint_t *endpoint)
 {
   if (oc_is_resource_secure(method, resource) == false) {
+    // not a secure resource
     return true;
   }
   PRINT("method allowed flags:");
@@ -1687,52 +1837,32 @@ method_allowed(oc_method_t method, oc_resource_t *resource,
                   get_method_name(method), oc_string_checked(resource->uri));
     return false;
   }
-#endif
+  if (endpoint->auth_at_index > 0) {
+    // interface of the call, e.g. of the auth/at entry that was used to decrypt
+    // the message
+    oc_interface_mask_t calling_interfaces =
+      oc_at_get_interface_mask(0, endpoint->auth_at_index - 1);
+    // interfaces of the resource
+    oc_interface_mask_t resource_interfaces = resource->interfaces;
+    if (oc_knx_contains_interface(calling_interfaces, resource_interfaces) ==
+        false) {
+      PRINT("method_allowed : not allowed: request  %d : ", calling_interfaces);
+      oc_print_interface(calling_interfaces);
+      PRINT("\n");
+      PRINT("method_allowed : not allowed: resource %d : ",
+            resource_interfaces);
+      oc_print_interface(resource_interfaces);
+      PRINT("\n");
+      OC_WRN(" resource %s call denied: %d  %d", oc_string(resource->uri),
+             calling_interfaces, resource_interfaces);
 
-  return oc_if_method_allowed_according_to_mask(resource->interfaces, method);
-}
-
-bool
-oc_knx_contains_interface(oc_interface_mask_t at_interface,
-                          oc_interface_mask_t resource_interface)
-{
-  int i;
-  oc_interface_mask_t new_mask;
-  oc_interface_mask_t at_mask;
-  oc_interface_mask_t resource_mask;
-  // PRINT("------ oc_knx_contains_interface  at  %d resource %d  \n",
-  // at_interface, resource_interface);
-  for (i = 1; i < OC_MAX_IF_MASKS + 1; i++) {
-    new_mask = 1 << i;
-    at_mask = at_interface & new_mask;
-    resource_mask = resource_interface & new_mask;
-    // PRINT("oc_knx_contains_interface  %d %d %d %d  \n", i, new_mask, at_mask,
-    //      resource_mask);
-    if ((at_mask != 0) && (at_mask == resource_mask)) {
-      return true;
+      return false;
     }
   }
 
-  return false;
-}
+#endif
 
-bool
-oc_knx_sec_check_interface(oc_resource_t *resource, oc_string_t *token)
-{
-  if (resource == NULL) {
-    return false;
-  }
-  if (token == NULL) {
-    return false;
-  }
-  oc_interface_mask_t resource_interfaces = resource->interfaces;
-  int index = find_index_from_at(token);
-  if (index < 0) {
-    return false;
-  }
-
-  return oc_knx_contains_interface(g_at_entries[index].scope,
-                                   resource_interfaces);
+  return oc_if_method_allowed_according_to_mask(resource->interfaces, method);
 }
 
 bool
@@ -1745,7 +1875,7 @@ oc_knx_sec_check_acl(oc_method_t method, oc_resource_t *resource,
   if (method_allowed(method, resource, endpoint) == true) {
     return true;
   }
-  OC_ERR("oc_knx_sec_check_acl: method %s NOT allowed on %s\n",
+  OC_WRN("oc_knx_sec_check_acl: method %s NOT allowed on %s\n",
          get_method_name(method), oc_string_checked(resource->uri));
 
   return false;

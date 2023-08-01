@@ -73,18 +73,19 @@ typedef struct oc_device_info_t
 {
   oc_string_t serialnumber;  /**< knx serial number */
   oc_knx_version_info_t hwv; /**< knx hardware version */
-  oc_knx_version_info_t fwv; /**< fwv firmware version number */
-  oc_string_t hwt;           /**< knx hardware type */
-  oc_string_t model;         /**< knx model */
-  uint32_t sa;               /**< sub address */
-  uint32_t da;               /**< device address */
-  oc_string_t hostname;      /**< knx host name */
-  uint64_t fid;              /**< knx fabric id */
-  uint32_t ia;               /**< knx ia Device individual address */
-  uint64_t iid;              /**< knx iid (installation id) */
-  uint32_t port;             /**< coap port number */
-  bool pm;                   /**< knx programming mode */
-  oc_lsm_state_t lsm_s;      /**< knx lsm states */
+  oc_knx_version_info_t fwv; /**< fwv firmware version */
+  oc_knx_version_info_t ap;  /**< fwv application version */
+  oc_string_t hwt; /**< knx hardware type, should not be larger than 6 chars */
+  oc_string_t model;    /**< knx model */
+  oc_string_t hostname; /**< knx host name */
+  uint32_t mid;         /**< knx manufactorer ID */
+  uint64_t fid;         /**< knx fabric id */
+  uint32_t ia;          /**< knx ia Device individual address */
+  uint64_t iid;         /**< knx iid (installation id) */
+  uint32_t port;        /**< coap port number */
+  uint32_t mport;       /**< multicast port number */
+  bool pm;              /**< knx programming mode */
+  oc_lsm_state_t lsm_s; /**< knx lsm states */
   oc_core_add_device_cb_t add_device_cb; /**< callback when device is changed */
   void *data;                            /**< user data */
 } oc_device_info_t;
@@ -153,6 +154,25 @@ int oc_core_set_device_fwv(size_t device_index, int major, int minor,
  */
 int oc_core_set_device_hwv(size_t device_index, int major, int minor,
                            int patch);
+/**
+ * @brief sets the application version number
+ *
+ * @param device_index the device index
+ * @param major the xxx number of xxx.yyy.zzz
+ * @param minor the yyy number of xxx.yyy.zz
+ * @param patch the zzz number of xxx.yyy.zzz
+ * @return int  error status, 0 = OK
+ */
+int oc_core_set_device_ap(size_t device_index, int major, int minor, int patch);
+
+/**
+ * @brief sets the manufacturer id
+ *
+ * @param device_index the device index
+ * @param mid the manufacturer id
+ * @return int error status, 0 = OK
+ */
+int oc_core_set_device_mid(size_t device_index, uint32_t mid);
 
 /**
  * @brief sets the internal address
@@ -162,6 +182,16 @@ int oc_core_set_device_hwv(size_t device_index, int major, int minor,
  * @return int error status, 0 = OK
  */
 int oc_core_set_device_ia(size_t device_index, uint32_t ia);
+
+/**
+ * @brief sets the manufacturer id
+ *
+ * @param device_index the device index
+ * @param mid  the manufacturer id
+ *
+ * @return int error status, 0 = OK
+ */
+int oc_core_set_mid(size_t device_index, int32_t mid);
 
 /**
  * @brief sets and stores the internal address
@@ -174,6 +204,8 @@ int oc_core_set_and_store_device_ia(size_t device_index, uint32_t ia);
 
 /**
  * @brief sets the hardware type (string)
+ * input string should not be larger than 6,
+ * note that if the input is larger than 6, it will be truncated to 6 chars
  *
  * @param device_index the device index
  * @param hardware_type the hardware type
@@ -236,6 +268,14 @@ int oc_core_set_and_store_device_iid(size_t device_index, uint64_t iid);
 int oc_core_set_device_fid(size_t device_index, uint64_t fid);
 
 /**
+ * @brief sets the installation identifier (iid) (unsigned int)
+ *
+ * @param device_index the device index
+ * @return The KNX installation id
+ */
+uint64_t oc_core_get_device_iid(size_t device_index);
+
+/**
  * @brief retrieve the amount of devices
  *
  * @return size_t the amount of devices
@@ -292,7 +332,7 @@ oc_resource_t *oc_core_get_resource_by_uri(const char *uri, size_t device);
 void oc_check_uri(const char *uri);
 
 /**
- * @brief populate resource for link-format responses
+ * @brief populate core resource
  * mainly used for creation of core resources
  *
  * @param core_resource the resource index
@@ -321,6 +361,16 @@ void oc_core_populate_resource(int core_resource, size_t device_index,
                                int num_resource_types, ...);
 
 /**
+ * @brief bind dpt to a core resource
+ *
+ * @param core_resource the resource index
+ * @param device_index the device index
+ * @param dpt the DPT value of the resource
+ */
+void oc_core_bind_dpt_resource(int core_resource, size_t device_index,
+                               const char *dpt);
+
+/**
  * @brief filter if the query parameters of the request contains the resource
  * (determined by resource type "rt")
  * including wild carts
@@ -346,11 +396,14 @@ bool oc_filter_resource_by_if(oc_resource_t *resource, oc_request_t *request);
 
 /**
  * @brief frame the interface mask in the response, as string in the uri
- *
+ * example: full tag if= ":if.i"
+ * this function frames ":if.i" (truncated) or "urn:knx:if.i"
  * @param iface_mask The interface masks to frame
+ * @param truncated 1 = do not frame "urn:knx"
  * @return int 0 = success
  */
-int oc_frame_interfaces_mask_in_response(oc_interface_mask_t iface_mask);
+int oc_frame_interfaces_mask_in_response(oc_interface_mask_t iface_mask,
+                                         int truncated);
 
 #ifdef __cplusplus
 }

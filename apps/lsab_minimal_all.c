@@ -68,6 +68,7 @@
  *   can be included without changing this code
  */
 
+#define _WIN32_WINNT 0x8000
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "api/oc_knx_fp.h"
@@ -150,6 +151,12 @@ app_init(void)
   /* set the hardware type*/
   oc_core_set_device_hwt(0, "Pi");
 
+  /* set the application info*/
+  oc_core_set_device_ap(0, 1, 0, 0);
+
+  /* set the manufacturer info*/
+  oc_core_set_device_mid(0, 12);
+
   /* set the model */
   oc_core_set_device_model(0, "Cascoda Actuator");
 
@@ -190,7 +197,7 @@ get_o_1_1(oc_request_t *request, oc_interface_mask_t interfaces,
 
   PRINT("-- Begin get_dpa_417_61: interface %d\n", interfaces);
   /* check if the accept header is CBOR */
-  if (request->accept != APPLICATION_CBOR) {
+  if (oc_check_accept_header(request, APPLICATION_CBOR) == false) {
     oc_send_response(request, OC_STATUS_BAD_OPTION);
     return;
   }
@@ -434,9 +441,9 @@ send_delayed_response(void *context)
   if (response->active) {
     oc_set_separate_response_buffer(response);
     oc_send_separate_response(response, OC_STATUS_CHANGED);
-    printf("Delayed response sent\n");
+    PRINT("Delayed response sent\n");
   } else {
-    printf("Delayed response NOT active\n");
+    PRINT("Delayed response NOT active\n");
   }
 
   return OC_EVENT_DONE;
@@ -565,7 +572,7 @@ main(int argc, char *argv[])
 #endif
 
   for (int i = 0; i < argc; i++) {
-    printf("argv[%d] = %s\n", i, argv[i]);
+    PRINT("argv[%d] = %s\n", i, argv[i]);
   }
   if (argc > 1) {
     if (strcmp(argv[1], "reset") == 0) {
@@ -628,7 +635,7 @@ main(int argc, char *argv[])
 #endif /* OC_OSCORE */
 
   oc_device_info_t *device = oc_core_get_device_info(0);
-  PRINT("serial number: %s", oc_string_checked(device->serialnumber));
+  PRINT("serial number: %s\n", oc_string_checked(device->serialnumber));
 
   oc_endpoint_t *my_ep = oc_connectivity_get_endpoints(0);
   if (my_ep != NULL) {

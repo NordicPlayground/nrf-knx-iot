@@ -60,6 +60,7 @@
 extern "C" {
 #endif
 
+#ifdef OC_PRINT
 #ifdef __ANDROID__
 #define TAG "OC-JNI"
 #define PRINT(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
@@ -70,6 +71,15 @@ extern "C" {
 #else
 #define PRINT(...) printf(__VA_ARGS__)
 #endif
+#endif
+#else
+#define PRINT(...)
+#endif
+
+#ifdef OC_PRINT_APP
+#define PRINT_APP(...) printf(__VA_ARGS__)
+#else
+#define PRINT_APP(...)
 #endif
 
 #define SPRINTF(...) sprintf(__VA_ARGS__)

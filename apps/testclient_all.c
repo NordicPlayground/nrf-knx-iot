@@ -78,6 +78,7 @@
  *
  */
 
+#define _WIN32_WINNT 0x8000
 #include "oc_api.h"
 #include "oc_knx.h"
 #include "port/oc_clock.h"
@@ -304,7 +305,7 @@ main(int argc, char *argv[])
   bool do_send_s_mode = false;
 
   for (int i = 0; i < argc; i++) {
-    printf("argv[%d] = %s\n", i, argv[i]);
+    PRINT("argv[%d] = %s\n", i, argv[i]);
   }
   if (argc > 1) {
     PRINT("s-mode: %s\n", argv[1]);

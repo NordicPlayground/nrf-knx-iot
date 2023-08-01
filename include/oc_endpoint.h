@@ -1,5 +1,6 @@
 /*
 // Copyright (c) 2017, 2020 Intel Corporation
+// Copyright (c) 2023 Cascoda Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,9 +24,8 @@
 
 #include "oc_helpers.h"
 #include "oc_uuid.h"
-#ifdef OC_OSCORE
+
 #include "messaging/coap/oscore_constants.h"
-#endif /* OC_OSCORE */
 
 #ifdef __cplusplus
 extern "C" {
@@ -69,18 +69,21 @@ enum transport_flags {
   OSCORE_ENCRYPTED = 1 << 9, /**< OSCORE encrypted message */
 };
 
-#define SERIAL_NUM_SIZE (20)
+#define SERIAL_NUM_SIZE (12) /**< binary: 6 bytes: in hex: 12 bytes*/
 /**
  * @brief the endpoint information
  *
  */
 typedef struct oc_endpoint_t
 {
-  struct oc_endpoint_t *next;              /**< pointer to the next structure */
-  size_t device;                           /**< device index */
-  enum transport_flags flags;              /**< the transport flags */
-  char serial_number[SERIAL_NUM_SIZE + 1]; /**< serial number of the device to
-                                            talk to */
+  struct oc_endpoint_t *next; /**< pointer to the next structure */
+  size_t device;              /**< device index */
+  enum transport_flags flags; /**< the transport flags */
+  // oc_string_t
+  //   oscore_id; /**< OSCORE context (binary), e.g. binary serial number*/
+  char oscore_id[SERIAL_NUM_SIZE + 1]; /**< OSCORE context (binary), e.g.
+                                           binary serial number*/
+  size_t oscore_id_len;
   union dev_addr {
     oc_ipv6_addr_t ipv6; /**< ipv6 address */
     oc_ipv4_addr_t ipv4; /**< ipv4 address */
@@ -88,13 +91,15 @@ typedef struct oc_endpoint_t
   int interface_index;    /**< interface index */
   uint8_t priority;       /**< priority */
   uint32_t group_address; /**< group address,
-                          being used to find back the OSCORE
-                     credential to be used for encryption for s-mode messages
-                     e.g. looping over the list of group addresses of the key */
-#ifdef OC_OSCORE
+                       being used to find back the OSCORE
+                  credential to be used for encryption for s-mode messages
+                  e.g. looping over the list of group addresses of the key */
+  int32_t
+    auth_at_index; /**< auth at index +1 [1-max_indexes], 0 == error.
+                    * Used for matching oscore context of response to request.
+                    * Used for upper layers to check access interfaces. */
   uint8_t piv[OSCORE_PIV_LEN]; /**< OSCORE partial iv */
   uint8_t piv_len;             /**< OSCORE partial iv length */
-#endif                         /* OC_OSCORE */
 } oc_endpoint_t;
 
 #define oc_make_ipv4_endpoint(__name__, __flags__, __port__, ...)              \
@@ -123,13 +128,35 @@ oc_endpoint_t *oc_new_endpoint(void);
 void oc_free_endpoint(oc_endpoint_t *endpoint);
 
 /**
- * @brief set device serial number for the endpoint, e.g. the one to talk too
+ * @brief set the OSCORE identifier (SID)
  *
  * @param endpoint the end point
- * @param serial_number the device serial number
+ * @param oscore_str_id the OSCORE id (as string in hex) to use for
+ * encryption/decryption
+ * @return int 0 success
  */
-void oc_endpoint_set_serial_number(oc_endpoint_t *endpoint,
-                                   char *serial_number);
+int oc_endpoint_set_oscore_id_from_str(oc_endpoint_t *endpoint,
+                                       char *oscore_str_id);
+
+/**
+ * @brief set the OSCORE identifier (SID)
+ *
+ * @param endpoint the end point
+ * @param oscore_id the OSCORE id (SID) to use for
+ * encryption/decryption
+ * @param oscore_id_len the length of the oscore_id
+ * @return int 0 success
+ */
+int oc_endpoint_set_oscore_id(oc_endpoint_t *endpoint, char *oscore_id,
+                              int oscore_id_len);
+
+/**
+ * @brief set auth at index for the endpoint, e.g. the used security context
+ *
+ * @param endpoint the end point
+ * @param index the auth at index
+ */
+void oc_endpoint_set_auth_at_index(oc_endpoint_t *endpoint, int32_t index);
 
 /**
  * @brief convert the endpoint to a human readable string (e.g.

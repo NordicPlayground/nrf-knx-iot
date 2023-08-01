@@ -945,6 +945,17 @@ int oc_get_query_value(oc_request_t *request, const char *key, char **value);
 int oc_query_value_exists(oc_request_t *request, const char *key);
 
 /**
+ * Checks if a query parameter are available
+ *
+ * @param[in] request the oc_request_t that contains the query parameters
+ *
+ * @return
+ *  - False no queries available
+ *  - True queries available
+ */
+bool oc_query_values_available(oc_request_t *request);
+
+/**
  * Called after the response to a GET, PUT, POST or DELETE call has been
  * prepared completed, will respond with CBOR.
  *
@@ -1679,6 +1690,18 @@ bool oc_send_ping(bool custody, oc_endpoint_t *endpoint,
  */
 void oc_set_delayed_callback(void *cb_data, oc_trigger_t callback,
                              uint16_t seconds);
+
+/**
+ * Schedule a callback to be invoked after a set number of miliseconds.
+ *
+ * @param[in] cb_data user defined context pointer that is passed to the
+ *                    oc_trigger_t callback
+ * @param[in] callback the callback invoked after the set number of seconds
+ * @param[in] miliseconds the number of miliseconds to wait till the callback is
+ * invoked
+ */
+void oc_set_delayed_callback_ms(void *cb_data, oc_trigger_t callback,
+                                uint16_t miliseconds);
 
 /**
  * used to cancel a delayed callback
