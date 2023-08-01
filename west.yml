@@ -1,0 +1,36 @@
+# The manifest file (west.yml) for KNX IoT Point API 
+
+manifest:
+  defaults:
+    remote: ncs
+
+  remotes:
+    - name: ncs
+      url-base: https://github.com/nrfconnect
+    - name: google
+      url-base: https://github.com/google
+    - name: intel
+      url-base: https://github.com/intel
+
+  projects:
+    - name: nrf
+      repo-path: sdk-nrf
+      path: nrf
+      revision: v2.4.1
+      import: true
+    # Workaround as west does not support git submodules for 'self'
+    - name: gtest
+      repo-path: googletest
+      path: knx/deps/gtest
+      remote: google
+      revision: c99458533a9b4c743ed51537e25989ea55944908
+    # Workaround as west does not support git submodules for 'self'
+    - name: tinycbor
+      repo-path: tinycbor
+      path: knx/deps/tinycbor
+      remote: intel
+      revision: 70aba6ba51881e5b8d108c105a17ed9cdee6bc30
+
+  # West-related configuration for the knx repository.
+  self:
+    path: knx
