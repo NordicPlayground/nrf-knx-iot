@@ -73,7 +73,7 @@ extern "C" {
 #endif
 #endif
 #else
-#define PRINT(...)
+#define PRINT(...) printk(__VA_ARGS__)
 #endif
 
 #ifdef OC_PRINT_APP

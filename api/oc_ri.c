@@ -1141,6 +1141,10 @@ oc_ri_invoke_coap_entity_handler(void *request, void *response, uint8_t *buffer,
   const char *uri_path = NULL;
   size_t uri_path_len = coap_get_header_uri_path(request, &uri_path);
 
+  if (uri_path_len) {
+    OC_DBG("Parsed URI path = %s (%u)", uri_path, uri_path_len);
+  }
+
   /* Obtain query string from CoAP packet. */
   const char *uri_query = 0;
   size_t uri_query_len = coap_get_header_uri_query(request, &uri_query);

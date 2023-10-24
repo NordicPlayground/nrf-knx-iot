@@ -55,12 +55,29 @@ static CRITICAL_SECTION cs;   /**< event loop variable */
 
 #define btoa(x) ((x) ? "true" : "false")
 
+#define LED0_NODE DT_ALIAS(led0)
+#define LED1_NODE DT_ALIAS(led1)
+#define LED2_NODE DT_ALIAS(led2)
+
+#define LED_DISABLED DT_GPIO_FLAGS(LED1_NODE, gpios) & GPIO_ACTIVE_LOW
+
+static const struct gpio_dt_spec led0 = GPIO_DT_SPEC_GET_OR(LED0_NODE, gpios, {0});
+static const struct gpio_dt_spec led1 = GPIO_DT_SPEC_GET_OR(LED1_NODE, gpios, {0});
+static const struct gpio_dt_spec led2 = GPIO_DT_SPEC_GET_OR(LED2_NODE, gpios, {0});
+
 #define SW0_NODE DT_ALIAS(sw0)
 #define SW1_NODE DT_ALIAS(sw1)
 #define SW2_NODE DT_ALIAS(sw2)
 #define SW3_NODE DT_ALIAS(sw3)
 
 static bool current_states[] = {false, false, false, false};
+
+struct k_work button0_work;
+#if !CONFIG_LSSB_REDUCED_IO
+struct k_work button1_work;
+struct k_work button2_work;
+struct k_work button3_work;
+#endif
 
 static const struct gpio_dt_spec button0 = GPIO_DT_SPEC_GET_OR(SW0_NODE, gpios,
 							      {0});
@@ -80,8 +97,20 @@ static struct gpio_callback button2_cb_data;
 static struct gpio_callback button3_cb_data;
 #endif
 
-void button0_pressed(const struct device *dev, struct gpio_callback *cb,
-		    uint32_t pins)
+static void state_blink(const struct gpio_dt_spec *led)
+{
+  bool state = true;
+
+  for (int i = 0; i < 7; ++i) {
+    gpio_pin_set_raw(led->port, led->pin, !state ^ (led->dt_flags & GPIO_ACTIVE_HIGH));
+    state = !state;
+    k_sleep(K_MSEC(150));
+  }
+
+  gpio_pin_set_raw(led->port, led->pin, LED_DISABLED);
+}
+
+static void button0_worker(struct k_work *work)
 {
   current_states[0] = !current_states[0];
   oc_do_s_mode_with_scope_no_check(2, "/p/1", "w");
@@ -89,28 +118,59 @@ void button0_pressed(const struct device *dev, struct gpio_callback *cb,
 }
 
 #if !CONFIG_LSSB_REDUCED_IO
-void button1_pressed(const struct device *dev, struct gpio_callback *cb,
-		    uint32_t pins)
+static void button1_worker(struct k_work *work)
 {
   current_states[1] = !current_states[1];
   oc_do_s_mode_with_scope_no_check(2, "/p/2", "w");
   oc_do_s_mode_with_scope_no_check(5, "/p/2", "w");
 }
 
-void button2_pressed(const struct device *dev, struct gpio_callback *cb,
-		    uint32_t pins)
-{ 
+static void button2_worker(struct k_work *work)
+{
   current_states[2] = !current_states[2];
   oc_do_s_mode_with_scope_no_check(2, "/p/3", "w");
   oc_do_s_mode_with_scope_no_check(5, "/p/3", "w");
 }
 
-void button3_pressed(const struct device *dev, struct gpio_callback *cb,
-		    uint32_t pins)
+static void button3_worker(struct k_work *work)
 {
   current_states[3] = !current_states[3];
   oc_do_s_mode_with_scope_no_check(2, "/p/4", "w");
   oc_do_s_mode_with_scope_no_check(5, "/p/4", "w");
+}
+#endif
+
+void button0_pressed(const struct device *dev, struct gpio_callback *cb,
+		    uint32_t pins)
+{
+  if (!k_work_is_pending(&button0_work)) {
+    k_work_submit(&button0_work);
+  }
+}
+
+#if !CONFIG_LSSB_REDUCED_IO
+void button1_pressed(const struct device *dev, struct gpio_callback *cb,
+		    uint32_t pins)
+{
+  if (!k_work_is_pending(&button1_work)) {
+    k_work_submit(&button1_work);
+  }
+}
+
+void button2_pressed(const struct device *dev, struct gpio_callback *cb,
+		    uint32_t pins)
+{
+  if (!k_work_is_pending(&button2_work)) {
+    k_work_submit(&button2_work);
+  }
+}
+
+void button3_pressed(const struct device *dev, struct gpio_callback *cb,
+		    uint32_t pins)
+{
+  if (!k_work_is_pending(&button3_work)) {
+    k_work_submit(&button3_work);
+  }
 }
 #endif
 
@@ -409,12 +469,39 @@ signal_event_loop(void)
  * shuts down the stack
  */
 void
-main()
+main(int argc, char *argv[])
 {
   int init;
   oc_clock_time_t next_event;
 
   int ret;
+
+  if (!device_is_ready(led0.port)) {
+		return;
+	}
+
+  if (!device_is_ready(led1.port)) {
+		return;
+	}
+
+  if (!device_is_ready(led2.port)) {
+		return;
+	}
+
+  ret = gpio_pin_configure_dt(&led0, GPIO_OUTPUT);
+	if (ret != 0) {
+		return;
+	}
+
+  ret = gpio_pin_configure_dt(&led1, GPIO_OUTPUT);
+	if (ret != 0) {
+		return;
+	}
+
+  ret = gpio_pin_configure_dt(&led2, GPIO_OUTPUT);
+	if (ret != 0) {
+		return;
+	}
 
 	if (!device_is_ready(button0.port)) {
 		return;
@@ -482,7 +569,40 @@ main()
 	}
 #endif
 
-	gpio_init_callback(&button0_cb_data, button0_pressed, BIT(button0.pin));
+  gpio_pin_set_raw(led0.port, led0.pin, LED_DISABLED);
+  gpio_pin_set_raw(led1.port, led1.pin, LED_DISABLED);
+  gpio_pin_set_raw(led2.port, led2.pin, LED_DISABLED);
+
+  state_blink(&led0);
+
+  oc_storage_config(NULL);
+
+  if (init < 0) {
+    PRINT("oc_main_init failed %d, exiting.\n", init);
+    return;
+  }
+
+#ifdef OC_OSCORE
+  PRINT("OSCORE - Enabled\n");
+#else
+  PRINT("OSCORE - Disabled\n");
+#endif /* OC_OSCORE */
+
+  struct otInstance *instance = openthread_get_default_instance();
+
+  while(otThreadGetDeviceRole(instance) < OT_DEVICE_ROLE_CHILD)
+  {
+    k_msleep(100);
+  }
+
+  k_work_init(&button0_work, button0_worker);
+#if !CONFIG_LSSB_REDUCED_IO
+  k_work_init(&button1_work, button1_worker);
+  k_work_init(&button2_work, button2_worker);
+  k_work_init(&button3_work, button3_worker);
+#endif
+
+  gpio_init_callback(&button0_cb_data, button0_pressed, BIT(button0.pin));
 #if !CONFIG_LSSB_REDUCED_IO
 	gpio_init_callback(&button1_cb_data, button1_pressed, BIT(button1.pin));
 	gpio_init_callback(&button2_cb_data, button2_pressed, BIT(button2.pin));
@@ -490,13 +610,13 @@ main()
 #endif
 
 	gpio_add_callback(button0.port, &button0_cb_data);
-#if !CONFIG_LSSB_REDUCED_IO 
+#if !CONFIG_LSSB_REDUCED_IO
   gpio_add_callback(button1.port, &button1_cb_data);
   gpio_add_callback(button2.port, &button2_cb_data);
   gpio_add_callback(button3.port, &button3_cb_data);
 #endif
 
-  oc_storage_config(NULL);
+  state_blink(&led1);
 
   /*initialize the variables */
   initialize_variables();
@@ -522,29 +642,12 @@ main()
 
   oc_a_lsm_set_state(0, LSM_S_LOADED);
 
-  if (init < 0) {
-    PRINT("oc_main_init failed %d, exiting.\n", init);
-    return;
-  }
-
-#ifdef OC_OSCORE
-  PRINT("OSCORE - Enabled\n");
-#else
-  PRINT("OSCORE - Disabled\n");
-#endif /* OC_OSCORE */
-
-  PRINT("Server \"%s\" running, waiting for incoming connections.\n",
-        MY_NAME);
-
-  struct otInstance *instance = openthread_get_default_instance();
-
-  while(otThreadGetDeviceRole(instance) < OT_DEVICE_ROLE_CHILD)
-  {
-    k_msleep(100);
-  }
+  oc_register_group_multicasts();
 
   k_mutex_init(&event_loop_mutex);
   k_condvar_init(&event_cv);
+
+  state_blink(&led2);
 
   while(1)
   {

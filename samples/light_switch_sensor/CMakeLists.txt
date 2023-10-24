@@ -34,6 +34,7 @@ ${BASE_DIR}/api/oc_client_api.c
 ${BASE_DIR}/api/oc_base64.c
 ${BASE_DIR}/api/oc_ri.c
 ${BASE_DIR}/api/oc_helpers.c
+${BASE_DIR}/api/oc_knx_helpers.c
 ${BASE_DIR}/api/oc_knx.c
 ${BASE_DIR}/api/oc_knx_client.c
 ${BASE_DIR}/api/oc_knx_swu.c

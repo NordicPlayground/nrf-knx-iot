@@ -26,9 +26,13 @@ static void handle_udp_received(void *aContext, otMessage *aMessage, const otMes
 {
     oc_message_t *message = oc_allocate_message();
 
+    if (!message) {
+        return;
+    }
+
     message->endpoint.device = 0;
     message->endpoint.flags = IPV6;
-    message->length = otMessageRead(aMessage, otMessageGetOffset(aMessage), message->data, sizeof(message->data));
+    message->length = otMessageRead(aMessage, otMessageGetOffset(aMessage), message->data, OC_PDU_SIZE);
     message->endpoint.addr.ipv6.port = aMessageInfo->mPeerPort;
 
     memcpy(message->endpoint.addr.ipv6.address, aMessageInfo->mPeerAddr.mFields.m8, 16);
@@ -49,6 +53,7 @@ int oc_connectivity_init(size_t device)
     memset(&socket, 0, sizeof(otUdpSocket));
     memset(&sockaddr, 0, sizeof(sockaddr));
 
+
     sockaddr.mPort = 5683; // CoAP port
 
     if (!otUdpIsOpen(instance, &socket))
@@ -66,7 +71,6 @@ oc_send_buffer(oc_message_t *message)
     otMessageInfo      msgInfo;
     otMessageSettings  msgSettings = {true, OT_MESSAGE_PRIORITY_NORMAL};
     struct otInstance *instance = openthread_get_default_instance();
-
 
     memcpy(msgInfo.mPeerAddr.mFields.m8, message->endpoint.addr.ipv6.address, 16);
     memset(msgInfo.mSockAddr.mFields.m8, 0, 16);

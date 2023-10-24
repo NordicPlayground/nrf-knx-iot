@@ -1878,11 +1878,7 @@ oc_load_group_object_table_entry(int entry)
 
   ret = oc_storage_read(filename, buf, GOT_ENTRY_MAX_SIZE);
   if (ret > 0) {
-  const size_t rep_size = 8; // TODO: find how many should we set
-  char rep_counts[rep_size];
-  uint8_t rep_mem[rep_size * sizeof(oc_rep_t)];
-  struct oc_memb rep_objects = { sizeof(oc_rep_t), rep_size, rep_counts, rep_mem, 0 };
-
+    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
     oc_rep_set_pool(&rep_objects);
     int err = oc_parse_rep(buf, ret, &rep);
     head = rep;
@@ -2608,9 +2604,9 @@ oc_create_multicast_group_address_with_port(oc_endpoint_t in, uint32_t group_nr,
 #endif
 
   oc_make_ipv6_endpoint(group_mcast, my_transport_flags, port, 0xff,
-                        0x30 + scope, 0, 0x30, //  FF35::30:
-                        0xfd, ula_5, ula_4, ula_3, ula_2,
-                        ula_1, // FD11 : 2222 : 3333
+                        0x30 + scope, 0, 0, //  FF35::30:
+                        0, 0x10, 0, 0, 0,
+                        0, // FD11 : 2222 : 3333
                         0, 0,  // ::
                         byte_4, byte_3, byte_2, byte_1);
   PRINT("  oc_create_multicast_group_address_with_port S=%d iid=%" PRIu64

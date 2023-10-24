@@ -53,6 +53,7 @@ oc_abort(const char *msg)
 #else
   PRINT("\n%s\nAbort.\n", msg);
 #endif
+  while(1);
   abort_impl();
 }
 

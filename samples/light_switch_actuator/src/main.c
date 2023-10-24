@@ -54,8 +54,29 @@ static const struct gpio_dt_spec led3 = GPIO_DT_SPEC_GET_OR(LED3_NODE, gpios, {0
 
 static const struct gpio_dt_spec *leds[] = {&led0, &led1, &led2, &led3 };
 
+static bool connected = false;
+
+static void state_blink()
+{
+  bool state = true;
+
+  if (!connected) {
+    for (int i = 0; i < 7; ++i) {
+      gpio_pin_set_raw(led2.port, led2.pin, !state ^ (led2.dt_flags & GPIO_ACTIVE_HIGH));
+      state = !state;
+      k_sleep(K_MSEC(1000));
+    }
+  } else {
+    for (int i = 0; i < 7; ++i) {
+      gpio_pin_set_raw(led1.port, led1.pin, !state ^ (led1.dt_flags & GPIO_ACTIVE_HIGH));
+      state = !state;
+      k_sleep(K_MSEC(1000));
+    }
+  }
+}
+
 int
-app_init(void)
+app_init(void)  
 {
   /* set the manufacturer name */
   int ret = oc_init_platform("Nordic Semiconductor", NULL, NULL);
@@ -410,7 +431,6 @@ main()
 {
   int init;
   oc_clock_time_t next_event;
-
   int ret;
 
   if (!device_is_ready(led0.port)) {
@@ -459,7 +479,33 @@ main()
   gpio_pin_set_raw(led3.port, led3.pin, LED3_DISABLED);
 #endif
 
+  state_blink();
   oc_storage_config(NULL);
+
+  struct otInstance *instance = openthread_get_default_instance();
+
+  while(otThreadGetDeviceRole(instance) < OT_DEVICE_ROLE_CHILD)
+  {
+    k_msleep(100);
+  }
+
+  connected = true;
+  state_blink();
+
+#ifdef OC_OSCORE
+  PRINT("OSCORE - Enabled\n");
+#else
+  PRINT("OSCORE - Disabled\n");
+#endif /* OC_OSCORE */
+
+  PRINT("Server \"%s\" running, waiting for incoming connections.\n",
+        MY_NAME);
+
+  /* set the application callbacks */
+  oc_set_hostname_cb(hostname_cb, NULL);
+  oc_set_reset_cb(reset_cb, NULL);
+  oc_set_restart_cb(restart_cb, NULL);
+  oc_set_factory_presets_cb(factory_presets_cb, NULL);
 
   /* initializes the handlers structure */
   static const oc_handler_t handler = { .init = app_init,
@@ -471,37 +517,17 @@ main()
 #endif
   };
 
-  struct otInstance *instance = openthread_get_default_instance();
-
-  while(otThreadGetDeviceRole(instance) < OT_DEVICE_ROLE_CHILD)
-  {
-    k_msleep(100);
-  }
-
-  /* set the application callbacks */
-  oc_set_hostname_cb(hostname_cb, NULL);
-  oc_set_reset_cb(reset_cb, NULL);
-  oc_set_restart_cb(restart_cb, NULL);
-  oc_set_factory_presets_cb(factory_presets_cb, NULL);
-
   /* start the stack */
   init = oc_main_init(&handler);
-
-  oc_a_lsm_set_state(0, LSM_S_LOADED);
 
   if (init < 0) {
     PRINT("oc_main_init failed %d, exiting.\n", init);
     return;
   }
 
-#ifdef OC_OSCORE
-  PRINT("OSCORE - Enabled\n");
-#else
-  PRINT("OSCORE - Disabled\n");
-#endif /* OC_OSCORE */
+  oc_register_group_multicasts();
 
-  PRINT("Server \"%s\" running, waiting for incoming connections.\n",
-        MY_NAME);
+  oc_a_lsm_set_state(0, LSM_S_LOADED);
 
   k_mutex_init(&event_loop_mutex);
   k_condvar_init(&event_cv);
