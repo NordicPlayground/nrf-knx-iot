@@ -26,21 +26,19 @@
 // -----------------------------------------------------------------------------
 
 bool
-oc_add_data_points_to_response(oc_request_t *request, size_t device_index,
-                               size_t *response_length, int matches)
+oc_add_data_points_to_response(oc_request_t *request,
+                               const oc_resource_t *resource,
+                               size_t device_index, size_t *response_length,
+                               int matches, int page_size)
 {
   (void)request;
   int length = 0;
 
-  oc_resource_t *resource = oc_ri_get_app_resources();
-  for (; resource; resource = resource->next) {
-    if (resource->device != device_index ||
-        (resource->properties & OC_DISCOVERABLE)) {
+  for (; resource && matches < page_size; resource = resource->next) {
+    if (resource->device != device_index) {
       continue;
     }
-    // add the none discoverable resource that belongs to this device
-    oc_add_resource_to_wk(resource, request, device_index, response_length,
-                          matches, 1);
+    oc_add_resource_to_wk(resource, request, device_index, response_length, 1);
     matches++;
   }
 
@@ -60,11 +58,19 @@ oc_core_p_get_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)data;
   (void)iface_mask;
+  int i;
   size_t response_length = 0;
   int matches = 0;
-  int length = 0;
+
   bool ps_exists = false;
   bool total_exists = false;
+  int total = 0;
+  int first_entry = 0; // inclusive
+  int last_entry = 0;  // exclusive
+  // int query_ps = -1;
+  int query_pn = -1;
+  bool more_request_needed =
+    false; // If more requests (pages) are needed to get the full list
 
   PRINT("oc_core_p_get_handler\n");
 
@@ -74,48 +80,67 @@ oc_core_p_get_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
       oc_status_code(OC_STATUS_BAD_REQUEST);
     return;
   }
+
   size_t device_index = request->resource->device;
 
+  const oc_resource_t *my_p = oc_ri_get_app_resources();
+  // Calculate total properties
+  for (; my_p; my_p = my_p->next) {
+    if (my_p->device != device_index) {
+      continue;
+    }
+    if (oc_string(my_p->uri) != NULL) {
+      total++;
+    }
+  }
+  last_entry = total;
+
   // handle query parameters: l=ps l=total
-  if (check_if_query_l_exist(request, &ps_exists, &total_exists)) {
+  int l_exist = check_if_query_l_exist(request, &ps_exists, &total_exists);
+  if (l_exist == 1) {
     // example : < /p > l = total>;total=22;ps=5
-    length = oc_frame_query_l("/p", ps_exists, total_exists);
-
-    // count the discoverable resources
-    int matches = 0;
-    oc_resource_t *resource = oc_ri_get_app_resources();
-    for (; resource; resource = resource->next) {
-      if (resource->device != device_index ||
-          (resource->properties & OC_DISCOVERABLE)) {
-        continue;
-      }
-      matches++;
-    }
-
-    response_length += length;
-    if (ps_exists) {
-      length = oc_rep_add_line_to_buffer(";ps=");
-      response_length += length;
-      length = oc_frame_integer(matches);
-      response_length += length;
-    }
-    if (total_exists) {
-      length = oc_rep_add_line_to_buffer(";total=");
-      response_length += length;
-      length = oc_frame_integer(matches);
-      response_length += length;
-    }
+    response_length =
+      oc_frame_query_l(oc_string(request->resource->uri), ps_exists, PAGE_SIZE,
+                       total_exists, total);
     oc_send_linkformat_response(request, OC_STATUS_OK, response_length);
     return;
   }
+  if (l_exist == -1) {
+    oc_send_response_no_format(request, OC_STATUS_NOT_FOUND);
+    return;
+  }
 
-  bool added = oc_add_data_points_to_response(request, device_index,
-                                              &response_length, matches);
+  my_p = oc_ri_get_app_resources();
+  // handle query with page number (pn)
+  if (check_if_query_pn_exist(request, &query_pn, NULL)) {
+    first_entry = query_pn * PAGE_SIZE;
+    if (first_entry >= last_entry) {
+      oc_send_response_no_format(request, OC_STATUS_BAD_REQUEST);
+      return;
+    }
+
+    // skip endpoints and return the next one
+    for (i = 0; i < first_entry; i++) {
+      my_p = my_p->next;
+    }
+  }
+
+  if (last_entry > first_entry + PAGE_SIZE) {
+    more_request_needed = true;
+  }
+
+  bool added = oc_add_data_points_to_response(
+    request, my_p, device_index, &response_length, matches, PAGE_SIZE);
 
   if (added) {
+    if (more_request_needed) {
+      int next_page_num = query_pn > -1 ? query_pn + 1 : 1;
+      response_length += add_next_page_indicator(
+        oc_string(request->resource->uri), next_page_num);
+    }
     oc_send_linkformat_response(request, OC_STATUS_OK, response_length);
   } else {
-    oc_send_linkformat_response(request, OC_STATUS_INTERNAL_SERVER_ERROR, 0);
+    oc_send_response_no_format(request, OC_STATUS_INTERNAL_SERVER_ERROR);
   }
 
   PRINT("oc_core_p_get_handler - end\n");
@@ -166,7 +191,7 @@ oc_core_p_post_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
   if (error) {
     PRINT("oc_core_p_post_handler - end\n");
-    oc_send_cbor_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+    oc_send_response_no_format(request, OC_STATUS_INTERNAL_SERVER_ERROR);
     return;
   }
 
@@ -194,19 +219,21 @@ oc_core_p_post_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
           memset(&response_buffer, 0, sizeof(oc_response_buffer_t));
           oc_response_t response_obj;
           memset(&response_obj, 0, sizeof(oc_response_t));
-          oc_ri_new_request_from_request(new_request, *request, response_buffer,
-                                         response_obj);
+          oc_ri_new_request_from_request(&new_request, request,
+                                         &response_buffer, &response_obj);
 
           new_request.request_payload = value;
-          new_request.uri_path = "/p";
-          new_request.uri_path_len = 4;
+          new_request.uri_path = oc_string(*myurl);
+          new_request.uri_path_len = oc_string_len(*myurl);
 
-          oc_resource_t *my_resource = oc_ri_get_app_resource_by_uri(
+          const oc_resource_t *my_resource = oc_ri_get_app_resource_by_uri(
             oc_string(*myurl), oc_string_len(*myurl), device_index);
           if (my_resource) {
             // this should not be the request..
-            if (my_resource->post_handler.cb) {
-              my_resource->post_handler.cb(&new_request, iface_mask, NULL);
+            // Reason for changing POST to PUT:
+            // POST is not mandatory for parameters & datapoints
+            if (my_resource->put_handler.cb) {
+              my_resource->put_handler.cb(&new_request, iface_mask, NULL);
             }
           }
         }
@@ -216,10 +243,16 @@ oc_core_p_post_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
     rep = rep->next;
   }
 
-  oc_send_cbor_response(request, OC_STATUS_OK);
+  oc_send_response_no_format(request, OC_STATUS_CHANGED);
   PRINT("oc_core_p_post_handler - end\n");
 }
 
+OC_CORE_CREATE_CONST_RESOURCE_LINKED(knx_p, knx_f, 0, "/p",
+                                     OC_IF_LI | OC_IF_C | OC_IF_B,
+                                     APPLICATION_LINK_FORMAT, 0,
+                                     oc_core_p_get_handler, 0,
+                                     oc_core_p_post_handler, 0, NULL,
+                                     OC_SIZE_MANY(1), "urn:knx:fb.0");
 void
 oc_create_p_resource(int resource_idx, size_t device)
 {
@@ -235,6 +268,12 @@ oc_create_p_resource(int resource_idx, size_t device)
 void
 oc_create_knx_p_resources(size_t device_index)
 {
+  OC_DBG("oc_create_knx_p_resources");
+
+  if (device_index == 0) {
+    OC_DBG("resources for dev 0 created statically");
+    return;
+  }
 
   oc_create_p_resource(OC_KNX_P, device_index);
 }

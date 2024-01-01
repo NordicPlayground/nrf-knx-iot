@@ -31,6 +31,7 @@
 #include "oc_core_res.h"
 #include "oc_signal_event_loop.h"
 
+#include "oc_knx.h"
 #include "oc_knx_dev.h"
 #include "oc_knx_fp.h"
 #include "oc_knx_gm.h"
@@ -285,6 +286,9 @@ oc_main_init(const oc_handler_t *handler)
   oc_ri_init();
   oc_core_init();
   oc_network_event_handler_mutex_init();
+#ifdef OC_SPAKE
+  oc_initialise_spake_data();
+#endif
 
   ret = app_callbacks->init();
   if (ret < 0) {
@@ -399,9 +403,9 @@ oc_main_shutdown(void)
 
   oc_ri_shutdown();
 
-#ifdef OC_OSCORE
+#ifdef OC_SECURITY
   oc_tls_shutdown();
-#endif
+#endif /* OC_SECURITY */
 
   oc_shutdown_all_devices();
 

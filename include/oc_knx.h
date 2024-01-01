@@ -14,7 +14,7 @@
 // limitations under the License.
 */
 /**
-  @brief implementation of /.well-known/knx and .knx resources
+  @brief implementation of /.well-known/knx and /k resources
   @file
 */
 
@@ -125,7 +125,7 @@ typedef enum {
  * created
  * @return the lsm state
  */
-oc_lsm_state_t oc_knx_lsm_state(size_t device_index);
+oc_lsm_state_t oc_a_lsm_state(size_t device_index);
 
 /**
  * @brief retrieve the current lsm state
@@ -135,7 +135,7 @@ oc_lsm_state_t oc_knx_lsm_state(size_t device_index);
  * @param new_state the new lsm_state
  * @return 0 == success
  */
-int oc_knx_lsm_set_state(size_t device_index, oc_lsm_event_t new_state);
+int oc_a_lsm_set_state(size_t device_index, oc_lsm_event_t new_state);
 
 /**
  * @brief convert the load state machine (lsm) event to string
@@ -277,7 +277,7 @@ int oc_reset_device(size_t device_index, int reset_value);
  *
  * creates and handles the following resources:
  * - /a/lsm
- * - /.knx
+ * - /k
  * - /.well-known/knx
  * - /.well-known/knx/osn
  * - /.well-known/knx/f (fingerprint)
@@ -292,7 +292,7 @@ void oc_create_knx_resources(size_t device);
 
 /**
  * @brief runtime switch to ignore s-mode messages send by ourselves.
- * The .knx resource handles all incoming s-mode messages.
+ * The /k resource handles all incoming s-mode messages.
  * This switch can be used to ignore s-mode messages that are send by ourselves.
  *
  * note for the sniffer, all messages must be handled/reported.
@@ -302,6 +302,14 @@ void oc_create_knx_resources(size_t device);
  *
  */
 int oc_knx_knx_ignore_smessage_from_self(bool ignore);
+
+#ifdef OC_SPAKE
+/**
+ * @brief Initialise the RNG used for SPAKE2+ and global data structures
+ *
+ */
+void oc_initialise_spake_data(void);
+#endif
 
 #ifdef __cplusplus
 }

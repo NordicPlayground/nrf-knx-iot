@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2020 Intel Corporation
+// Copyright (c) 2023 Cascoda Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,27 +13,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 */
+/**
+@brief knx /sub resource implementations
+@file
+*/
+#ifndef OC_KNX_SUB_INTERNAL_H
+#define OC_KNX_SUB_INTERNAL_H
 
-#ifndef OC_OSCORE_H
-#define OC_OSCORE_H
-
-#include "port/oc_connectivity.h"
-//#include "security/oc_cred_internal.h"
-#include "util/oc_list.h"
-#include "util/oc_process.h"
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-OC_PROCESS_NAME(oc_oscore_handler);
-
-void oc_oscore_set_next_ssn(uint64_t ssn);
-uint64_t oc_oscore_get_next_ssn();
-bool oc_oscore_is_g_ssn_in_use();
+/**
+ * @brief Creation of the /sub resource.
+ *
+ * @param resource_idx the resource index
+ * @param device the device to which the resource belongs
+ */
+void oc_create_sub_resource(int resource_idx, size_t device);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* OC_OSCORE_H */
+#endif /* OC_KNX_SUB_INTERNAL_H */

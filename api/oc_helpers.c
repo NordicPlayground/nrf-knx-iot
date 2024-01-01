@@ -331,6 +331,8 @@ oc_print_uint64_t(uint64_t number, enum StringRepresentation rep)
     oc_conv_uint64_to_hex_string(str, number);
 
   printf("%s", str);
+
+  return 0;
 }
 
 int
@@ -509,6 +511,14 @@ oc_string_copy(oc_string_t *string1, oc_string_t string2)
 }
 
 int
+oc_byte_string_copy(oc_string_t *string1, oc_string_t string2)
+{
+  oc_free_string(string1);
+  oc_new_byte_string(string1, oc_string(string2), oc_byte_string_len(string2));
+  return 0;
+}
+
+int
 oc_string_copy_from_char(oc_string_t *string1, const char *string2)
 {
   oc_free_string(string1);
@@ -542,6 +552,16 @@ oc_string_cmp(oc_string_t string1, oc_string_t string2)
   }
   return strncmp(oc_string(string1), oc_string(string2),
                  oc_string_len(string1));
+}
+
+int
+oc_byte_string_cmp(oc_string_t string1, oc_string_t string2)
+{
+  if (oc_byte_string_len(string1) != oc_byte_string_len(string2)) {
+    return -1;
+  }
+  return memcmp(oc_string(string1), oc_string(string2),
+                oc_byte_string_len(string1));
 }
 
 int

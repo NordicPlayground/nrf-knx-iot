@@ -454,27 +454,28 @@ oc_core_fp_gm_get_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 
   // handle query parameters: l=ps l=total
-  if (check_if_query_l_exist(request, &ps_exists, &total_exists)) {
-    // example : < / fp / r / ? l = total>; total = 22; ps = 5
+  // if (check_if_query_l_exist(request, &ps_exists, &total_exists)) {
+  //   // example : < / fp / r / ? l = total>; total = 22; ps = 5
 
-    length = oc_frame_query_l("/fp/gm", ps_exists, total_exists);
-    response_length += length;
-    if (ps_exists) {
-      length = oc_rep_add_line_to_buffer(";ps=");
-      response_length += length;
-      length = oc_frame_integer(oc_core_get_group_mapping_table_size());
-      response_length += length;
-    }
-    if (total_exists) {
-      length = oc_rep_add_line_to_buffer(";total=");
-      response_length += length;
-      length = oc_frame_integer(oc_core_find_nr_used_in_group_mapping_table());
-      response_length += length;
-    }
+  //   length = oc_frame_query_l("/fp/gm", ps_exists, total_exists);
+  //   response_length += length;
+  //   if (ps_exists) {
+  //     length = oc_rep_add_line_to_buffer(";ps=");
+  //     response_length += length;
+  //     length = oc_frame_integer(oc_core_get_group_mapping_table_size());
+  //     response_length += length;
+  //   }
+  //   if (total_exists) {
+  //     length = oc_rep_add_line_to_buffer(";total=");
+  //     response_length += length;
+  //     length =
+  //     oc_frame_integer(oc_core_find_nr_used_in_group_mapping_table());
+  //     response_length += length;
+  //   }
 
-    oc_send_linkformat_response(request, OC_STATUS_OK, response_length);
-    return;
-  }
+  //   oc_send_linkformat_response(request, OC_STATUS_OK, response_length);
+  //   return;
+  // }
 
   /* example entry: </fp/gm/1>;ct=60 (cbor)*/
   for (i = 0; i < oc_core_get_group_mapping_table_size(); i++) {
@@ -501,7 +502,7 @@ oc_core_fp_gm_get_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   // if (response_length > 0) {
   //   oc_send_linkformat_response(request, OC_STATUS_OK, response_length);
   // } else {
-  //   oc_send_linkformat_response(request, OC_STATUS_INTERNAL_SERVER_ERROR, 0);
+  //   oc_send_response_no_format(request, OC_STATUS_INTERNAL_SERVER_ERROR);
   // }
 
   PRINT("oc_core_fp_gm_get_handler - end\n");
@@ -519,6 +520,7 @@ oc_core_fp_gm_post_handler(oc_request_t *request,
   oc_rep_t *sec_object = NULL;
   oc_status_t return_status = OC_STATUS_BAD_REQUEST;
   int id = -1;
+  bool do_save = true;
 
   PRINT("oc_core_fp_gm_post_handler\n");
 
@@ -530,9 +532,9 @@ oc_core_fp_gm_post_handler(oc_request_t *request,
   }
   // check loading state
   size_t device_index = request->resource->device;
-  if (oc_knx_lsm_state(device_index) != LSM_S_LOADING) {
+  if (oc_a_lsm_state(device_index) != LSM_S_LOADING) {
     OC_ERR(" not in loading state\n");
-    oc_send_cbor_response(request, OC_STATUS_BAD_REQUEST);
+    oc_send_response_no_format(request, OC_STATUS_BAD_REQUEST);
     return;
   }
   // find the id of the entry
@@ -546,7 +548,7 @@ oc_core_fp_gm_post_handler(oc_request_t *request,
       id = oc_table_find_id_from_rep(object);
       if (id == -1) {
         OC_ERR("  ERROR id %d", id);
-        oc_send_cbor_response(request, OC_STATUS_BAD_REQUEST);
+        oc_send_response_no_format(request, OC_STATUS_BAD_REQUEST);
         return;
       }
       // entry storage
@@ -560,7 +562,7 @@ oc_core_fp_gm_post_handler(oc_request_t *request,
         index = find_empty_group_mapping_index();
         if (index == -1) {
           PRINT("  no space left!\n");
-          oc_send_cbor_response(request, OC_STATUS_BAD_REQUEST);
+          oc_send_response_no_format(request, OC_STATUS_BAD_REQUEST);
           return;
         }
         return_status = OC_STATUS_CREATED;
@@ -569,9 +571,11 @@ oc_core_fp_gm_post_handler(oc_request_t *request,
       g_gm_entries[index].id = id;
 
       // parse the response
+      bool id_only = true;
       object = rep->value.object;
       while (object != NULL) {
         if (object->type == OC_REP_INT_ARRAY) {
+          id_only = false;
           // ga
           if (object->iname == 7) {
             int64_t *array = 0;
@@ -603,12 +607,16 @@ oc_core_fp_gm_post_handler(oc_request_t *request,
             }
           }
         } else if (object->type == OC_REP_INT) {
+          if (object->iname != 0) {
+            id_only = false;
+          }
           if (object->iname == 116) {
             // dataType (116)
             PRINT("   dataType %d\n", (int)object->value.integer);
             g_gm_entries[index].dataType = (int)object->value.integer;
           }
         } else if (object->type == OC_REP_OBJECT) {
+          id_only = false;
           // level of s
           s_object = object->value.object;
           int s_object_nr = object->iname;
@@ -654,30 +662,42 @@ oc_core_fp_gm_post_handler(oc_request_t *request,
         }
         object = object->next;
       } // while (inner object)
-    }   // case
-    }   // switch (over all objects)
+      if (id_only) {
+        PRINT("  only found id in request, deleting entry at index: %d\n",
+              index);
+        oc_delete_group_mapping_table_entry(index);
+        do_save = false;
+      }
+    } // case
+    } // switch (over all objects)
     rep = rep->next;
   }
 
-  for (int i = 0; i < oc_core_get_group_mapping_table_size(); i++) {
-    if (g_gm_entries[i].ga_len != 0) {
-      oc_dump_group_mapping_table_entry(i);
+  if (do_save) {
+    for (int i = 0; i < oc_core_get_group_mapping_table_size(); i++) {
+      if (g_gm_entries[i].ga_len != 0) {
+        oc_dump_group_mapping_table_entry(i);
+      }
     }
   }
 
-  request->response->response_buffer->content_format = APPLICATION_CBOR;
-  request->response->response_buffer->code = oc_status_code(return_status);
-  request->response->response_buffer->response_length = response_length;
+  oc_send_response_no_format(request, return_status);
 }
+
+OC_CORE_CREATE_CONST_RESOURCE_LINKED(knx_fp_gm, knx_fp_gm_x, 0, "/fp/gm",
+                                     OC_IF_C | OC_IF_B, APPLICATION_CBOR,
+                                     OC_DISCOVERABLE, oc_core_fp_gm_get_handler,
+                                     0, oc_core_fp_gm_post_handler, 0, NULL,
+                                     OC_SIZE_MANY(1), "urn:knx:if.c");
 
 void
 oc_create_fp_gm_resource(int resource_idx, size_t device)
 {
   OC_DBG("oc_create_fp_gm_resource\n");
-  oc_core_populate_resource(
-    resource_idx, device, "/fp/gm", OC_IF_C | OC_IF_B, APPLICATION_CBOR,
-    OC_DISCOVERABLE, oc_core_fp_gm_get_handler, 0, oc_core_fp_gm_post_handler,
-    0, 0, 1, "urn:knx:if.c");
+  oc_core_populate_resource(resource_idx, device, "/fp/gm", OC_IF_C | OC_IF_B,
+                            APPLICATION_CBOR, OC_DISCOVERABLE,
+                            oc_core_fp_gm_get_handler, 0,
+                            oc_core_fp_gm_post_handler, 0, 1, "urn:knx:if.c");
 }
 
 static void
@@ -699,14 +719,14 @@ oc_core_fp_gm_x_get_handler(oc_request_t *request,
     oc_string(request->resource->uri), oc_string_len(request->resource->uri),
     request->uri_path, request->uri_path_len);
   if (value >= oc_core_get_group_mapping_table_size()) {
-    oc_send_cbor_response(request, OC_STATUS_BAD_REQUEST);
+    oc_send_response_no_format(request, OC_STATUS_BAD_REQUEST);
     return;
   }
   // convert from [0,max-1] to [1-max]
   int index = value - 1;
   if (g_gm_entries[index].ga_len == 0) {
     // it is empty
-    oc_send_cbor_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+    oc_send_response_no_format(request, OC_STATUS_INTERNAL_SERVER_ERROR);
     return;
   }
 
@@ -755,7 +775,7 @@ oc_core_fp_gm_x_del_handler(oc_request_t *request,
     request->uri_path, request->uri_path_len);
 
   if (value >= oc_core_get_group_mapping_table_size()) {
-    oc_send_cbor_response(request, OC_STATUS_BAD_REQUEST);
+    oc_send_response_no_format(request, OC_STATUS_BAD_REQUEST);
     return;
   }
   int index = value - 1;
@@ -774,6 +794,13 @@ oc_core_fp_gm_x_del_handler(oc_request_t *request,
   oc_send_cbor_response(request, OC_STATUS_OK);
 }
 
+OC_CORE_CREATE_CONST_RESOURCE_LINKED(knx_fp_gm_x, well_known_core, 0,
+                                     "/fp/gm/*", OC_IF_D, APPLICATION_CBOR,
+                                     OC_DISCOVERABLE,
+                                     oc_core_fp_gm_x_get_handler, 0, 0,
+                                     oc_core_fp_gm_x_del_handler, NULL,
+                                     OC_SIZE_MANY(1), "urn:knx:if.c");
+
 void
 oc_create_fp_gm_x_resource(int resource_idx, size_t device)
 {
@@ -781,7 +808,7 @@ oc_create_fp_gm_x_resource(int resource_idx, size_t device)
   oc_core_populate_resource(resource_idx, device, "/fp/gm/*", OC_IF_D,
                             APPLICATION_CBOR, OC_DISCOVERABLE,
                             oc_core_fp_gm_x_get_handler, 0, 0,
-                            oc_core_fp_gm_x_del_handler, 0, 1, "urn:knx:if.c");
+                            oc_core_fp_gm_x_del_handler, 1, "urn:knx:if.c");
 }
 
 // -----------------------------------------------------------------------------
@@ -825,7 +852,7 @@ oc_core_f_netip_fra_get_handler(oc_request_t *request,
   // size_t device_index = request->resource->device;
   // oc_device_info_t *device = oc_core_get_device_info(device_index);
   // if (device == NULL) {
-  //   oc_send_cbor_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+  //   oc_send_response_no_format(request, OC_STATUS_INTERNAL_SERVER_ERROR);
   //   return;
   // }
   //  Content-Format: "application/cbor"
@@ -857,7 +884,7 @@ oc_core_f_netip_fra_put_handler(oc_request_t *request,
   size_t device_index = request->resource->device;
   oc_device_info_t *device = oc_core_get_device_info(device_index);
   if (device == NULL) {
-    oc_send_cbor_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+    oc_send_response_no_format(request, OC_STATUS_INTERNAL_SERVER_ERROR);
     return;
   }
   oc_rep_t *rep = request->request_payload;
@@ -946,7 +973,7 @@ oc_core_f_netip_tol_get_handler(oc_request_t *request,
   // size_t device_index = request->resource->device;
   // oc_device_info_t *device = oc_core_get_device_info(device_index);
   // if (device == NULL) {
-  //   oc_send_cbor_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+  //   oc_send_response_no_format(request, OC_STATUS_INTERNAL_SERVER_ERROR);
   //   return;
   // }
   //  Content-Format: "application/cbor"
@@ -977,7 +1004,7 @@ oc_core_f_netip_tol_put_handler(oc_request_t *request,
   size_t device_index = request->resource->device;
   oc_device_info_t *device = oc_core_get_device_info(device_index);
   if (device == NULL) {
-    oc_send_cbor_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+    oc_send_response_no_format(request, OC_STATUS_INTERNAL_SERVER_ERROR);
     return;
   }
   oc_rep_t *rep = request->request_payload;
@@ -1072,7 +1099,7 @@ oc_core_f_netip_key_put_handler(oc_request_t *request,
   size_t device_index = request->resource->device;
   oc_device_info_t *device = oc_core_get_device_info(device_index);
   if (device == NULL) {
-    oc_send_cbor_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+    oc_send_response_no_format(request, OC_STATUS_INTERNAL_SERVER_ERROR);
     return;
   }
   oc_rep_t *rep = request->request_payload;
@@ -1163,7 +1190,7 @@ oc_core_f_netip_ttl_get_handler(oc_request_t *request,
   // size_t device_index = request->resource->device;
   // oc_device_info_t *device = oc_core_get_device_info(device_index);
   // if (device == NULL) {
-  //   oc_send_cbor_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+  //   oc_send_response_no_format(request, OC_STATUS_INTERNAL_SERVER_ERROR);
   //   return;
   // }
   // Content-Format: "application/cbor"
@@ -1195,7 +1222,7 @@ oc_core_f_netip_ttl_put_handler(oc_request_t *request,
   size_t device_index = request->resource->device;
   oc_device_info_t *device = oc_core_get_device_info(device_index);
   if (device == NULL) {
-    oc_send_cbor_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+    oc_send_response_no_format(request, OC_STATUS_INTERNAL_SERVER_ERROR);
     return;
   }
   oc_rep_t *rep = request->request_payload;
@@ -1281,7 +1308,7 @@ oc_core_f_netip_mcast_get_handler(oc_request_t *request,
   // size_t device_index = request->resource->device;
   // oc_device_info_t *device = oc_core_get_device_info(device_index);
   // if (device == NULL) {
-  //   oc_send_cbor_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+  //   oc_send_response_no_format(request, OC_STATUS_INTERNAL_SERVER_ERROR);
   //   return;
   // }
   //  Content-Format: "application/cbor"
@@ -1313,7 +1340,7 @@ oc_core_f_netip_mcast_put_handler(oc_request_t *request,
   size_t device_index = request->resource->device;
   oc_device_info_t *device = oc_core_get_device_info(device_index);
   if (device == NULL) {
-    oc_send_cbor_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+    oc_send_response_no_format(request, OC_STATUS_INTERNAL_SERVER_ERROR);
     return;
   }
   oc_rep_t *rep = request->request_payload;
@@ -1321,8 +1348,8 @@ oc_core_f_netip_mcast_put_handler(oc_request_t *request,
     if (rep->type == OC_REP_INT) {
       if (rep->iname == 1) {
         PRINT("  oc_core_f_netip_mcast_put_handler (mcast) : %d\n",
-              (int)rep->value.integer);
-        g_mcast = (int)rep->value.integer;
+              (uint32_t)rep->value.integer);
+        g_mcast = (uint32_t)rep->value.integer;
         dump_mcast();
       }
     }
@@ -1363,6 +1390,8 @@ oc_create_f_netip_mcast_resource(size_t device)
 
 // -----------------------------------------------------------------------------
 
+// This is never called and has no oc_core_resource_t entry?
+// I guess no OC_CORE_CREATE_CONST_RESOURCE_LINKED().
 // to be removed
 void
 oc_create_f_netip_resource(int resource_idx, size_t device)
@@ -1403,26 +1432,26 @@ oc_core_f_netip_get_handler(oc_request_t *request,
 #ifdef OC_IOT_ROUTER
 
   // handle query parameters: l=ps l=total
-  if (check_if_query_l_exist(request, &ps_exists, &total_exists)) {
-    // example : < / fp / r / ? l = total>; total = 22; ps = 5
+  // if (check_if_query_l_exist(request, &ps_exists, &total_exists)) {
+  //   // example : < / fp / r / ? l = total>; total = 22; ps = 5
 
-    length = oc_frame_query_l("/fp/gm", ps_exists, total_exists);
-    response_length += length;
-    if (ps_exists) {
-      length = oc_rep_add_line_to_buffer(";ps=");
-      response_length += length;
-      length = oc_frame_integer(5);
-      response_length += length;
-    }
-    if (total_exists) {
-      length = oc_rep_add_line_to_buffer(";total=");
-      response_length += length;
-      length = oc_frame_integer(5);
-      response_length += length;
-    }
-    oc_send_linkformat_response(request, OC_STATUS_OK, response_length);
-    return;
-  }
+  //   length = oc_frame_query_l("/fp/gm", ps_exists, total_exists);
+  //   response_length += length;
+  //   if (ps_exists) {
+  //     length = oc_rep_add_line_to_buffer(";ps=");
+  //     response_length += length;
+  //     length = oc_frame_integer(5);
+  //     response_length += length;
+  //   }
+  //   if (total_exists) {
+  //     length = oc_rep_add_line_to_buffer(";total=");
+  //     response_length += length;
+  //     length = oc_frame_integer(5);
+  //     response_length += length;
+  //   }
+  //   oc_send_linkformat_response(request, OC_STATUS_OK, response_length);
+  //   return;
+  // }
 
   length = oc_rep_add_line_to_buffer("</p/netip/mcast>");
   response_length += length;
@@ -1464,7 +1493,7 @@ oc_core_f_netip_get_handler(oc_request_t *request,
   if (response_length > 0) {
     oc_send_linkformat_response(request, OC_STATUS_OK, response_length);
   } else {
-    oc_send_linkformat_response(request, OC_STATUS_INTERNAL_SERVER_ERROR, 0);
+    oc_send_response_no_format(request, OC_STATUS_INTERNAL_SERVER_ERROR);
   }
 
   PRINT("oc_core_f_netip_get_handler - end\n");
@@ -1473,12 +1502,16 @@ oc_core_f_netip_get_handler(oc_request_t *request,
 void
 oc_create_knx_iot_router_resources(size_t device_index)
 {
-  (void)device_index;
 #ifdef OC_IOT_ROUTER
   OC_DBG("oc_create_knx_gm_resources");
-  // creating the resources
-  oc_create_fp_gm_resource(OC_KNX_FP_GM, device_index);
-  oc_create_fp_gm_x_resource(OC_KNX_FP_GM_X, device_index);
+
+  if (device_index == 0) {
+    OC_DBG("resources for dev 0 created statically");
+  } else {
+    // creating the resources
+    oc_create_fp_gm_resource(OC_KNX_FP_GM, device_index);
+    oc_create_fp_gm_x_resource(OC_KNX_FP_GM_X, device_index);
+  }
 
   // loading the stored state
   oc_load_group_mapping_table();

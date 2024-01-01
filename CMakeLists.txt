@@ -30,6 +30,7 @@ set(OC_LOG_TO_FILE_ENABLED OFF CACHE BOOL "redirect debug messages to file")
 set(CLANG_TIDY_ENABLED OFF CACHE BOOL "Enable clang-tidy analysis during compilation.")
 set(OC_USE_STORAGE ON CACHE BOOL "Persistent storage of data.")
 set(OC_USE_MULTICAST_SCOPE_2 ON CACHE BOOL "devices send also group multicast events with scope2.")
+set(OC_REPLAY_PROTECTION_ENABLED OFF CACHE BOOL "Enable replay protection using the Echo option")
 
 set(KNX_BUILTIN_MBEDTLS ON CACHE BOOL "Use built-in mbedTLS, as opposed to external lib from different project")
 set(KNX_BUILTIN_TINYCBOR ON CACHE BOOL "Use built-in TinyCBOR, as opposed to external lib from different project")
@@ -44,6 +45,8 @@ set(KNX_GRT_MAX_ENTRIES "" CACHE STRING "Maximum number of group recipient table
 set(KNX_SPAKE_MIN_IT "1000" CACHE STRING "Minimum number of SHA256 iterations used within the SPAKE2+ handshake")
 set(KNX_SPAKE_MAX_IT "100000" CACHE STRING "Maximum number of SHA256 iterations used within the SPAKE2+ handshake")
 mark_as_advanced(KNX_SPAKE_MIN_IT KNX_SPAKE_MAX_IT)
+
+set(KNX_PAGE_SIZE "" CACHE STRING "Default page size for pagination")
 
 include(tools/clang-tidy.cmake)
 
@@ -88,6 +91,7 @@ set(API_SOURCES
     ${PROJECT_SOURCE_DIR}/api/oc_main.c
     ${PROJECT_SOURCE_DIR}/api/oc_network_events.c
     ${PROJECT_SOURCE_DIR}/api/oc_rep.c
+    ${PROJECT_SOURCE_DIR}/api/oc_replay.c
     ${PROJECT_SOURCE_DIR}/api/oc_ri.c
     ${PROJECT_SOURCE_DIR}/api/oc_server_api.c
     ${PROJECT_SOURCE_DIR}/api/oc_session_events.c
@@ -102,6 +106,7 @@ set(API_SOURCES
     ${PROJECT_SOURCE_DIR}/api/oc_knx_p.c
     ${PROJECT_SOURCE_DIR}/api/oc_knx_sec.c
     ${PROJECT_SOURCE_DIR}/api/oc_knx_swu.c
+    ${PROJECT_SOURCE_DIR}/api/oc_knx_sub.c
     ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_compare.c
     ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_format.c
     ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_parse.c
@@ -133,7 +138,6 @@ set(CORE_SOURCES
     ${PROJECT_SOURCE_DIR}/security/oc_oscore_context.c
     ${PROJECT_SOURCE_DIR}/security/oc_oscore_crypto.c
     ${PROJECT_SOURCE_DIR}/security/oc_oscore_engine.c
-    ${PROJECT_SOURCE_DIR}/security/oc_oscore_replay.c
     ${PROJECT_SOURCE_DIR}/security/oc_spake2plus.c
     ${PROJECT_SOURCE_DIR}/security/oc_tls.c
 
@@ -182,6 +186,9 @@ endif()
 if(OC_DEBUG_OSCORE_ENABLED)
     target_compile_definitions(kis-common INTERFACE OC_DEBUG_OSCORE)
 endif()
+if(OC_REPLAY_PROTECTION_ENABLED)
+    target_compile_definitions(kis-common INTERFACE OC_REPLAY_PROTECTION)
+endif()
 
 
 
@@ -211,6 +218,10 @@ endif()
 
 if(NOT ${KNX_GRT_MAX_ENTRIES} EQUAL "")
     add_compile_definitions(GRT_MAX_ENTRIES=${KNX_GRT_MAX_ENTRIES})
+endif()
+
+if(NOT ${KNX_PAGE_SIZE} EQUAL "")
+    add_compile_definitions(PAGE_SIZE=${KNX_PAGE_SIZE})
 endif()
 
 # Client and server versions

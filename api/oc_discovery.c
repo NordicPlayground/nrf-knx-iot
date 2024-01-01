@@ -37,9 +37,13 @@
 #endif
 #include <inttypes.h>
 
+int basic_resources[] = {
+  OC_DEV, OC_KNX_K, OC_KNX_SWU, OC_KNX_SUB, OC_KNX_AUTH
+}; // must be in response if implemented and passed filtering
+
 bool
-oc_add_resource_to_wk(oc_resource_t *resource, oc_request_t *request,
-                      size_t device_index, size_t *response_length, int matches,
+oc_add_resource_to_wk(const oc_resource_t *resource, oc_request_t *request,
+                      size_t device_index, size_t *response_length,
                       int truncate)
 {
   (void)device_index; /* variable not used */
@@ -53,7 +57,8 @@ oc_add_resource_to_wk(oc_resource_t *resource, oc_request_t *request,
     return false;
   }
 
-  if (matches > 0) {
+  if (*response_length > 0) {
+    /* frame the trailing comma */
     length = oc_rep_add_line_to_buffer(",\n");
     *response_length += length;
   }
@@ -154,9 +159,9 @@ oc_add_resource_to_wk(oc_resource_t *resource, oc_request_t *request,
 }
 
 bool
-oc_filter_resource(oc_resource_t *resource, oc_request_t *request,
-                   size_t device_index, size_t *response_length, int matches,
-                   int truncate)
+oc_filter_resource(const oc_resource_t *resource, oc_request_t *request,
+                   size_t device_index, size_t *response_length, int *skipped,
+                   int first_entry)
 {
   (void)device_index; /* variable not used */
 
@@ -172,34 +177,58 @@ oc_filter_resource(oc_resource_t *resource, oc_request_t *request,
     return false;
   }
 
-  return oc_add_resource_to_wk(resource, request, device_index, response_length,
-                               matches, truncate);
-}
-
-int
-oc_process_resources(oc_request_t *request, size_t device_index,
-                     size_t *response_length)
-{
-  int matches = 0;
-
-  if (*response_length > 0) {
-    /* frame the trailing comma */
-    matches = 1;
+  if (*skipped < first_entry) {
+    (*skipped)++;
+    return false;
   }
 
-  oc_resource_t *resource = oc_ri_get_app_resources();
+  int truncate = oc_filter_resource_by_urn(resource, request);
+
+  return oc_add_resource_to_wk(resource, request, device_index, response_length,
+                               truncate);
+}
+
+bool
+oc_process_resources(oc_request_t *request, size_t device_index,
+                     size_t *response_length, int *matches, int *skipped,
+                     int first_entry, int last_entry)
+{
+
+  const oc_resource_t *resource = oc_ri_get_app_resources();
   for (; resource; resource = resource->next) {
     if (resource->device != device_index ||
         !(resource->properties & OC_DISCOVERABLE))
       continue;
 
     if (oc_filter_resource(resource, request, device_index, response_length,
-                           matches, 0)) {
-      matches++;
+                           skipped, first_entry)) {
+      (*matches)++;
+      if (first_entry + (*matches) >= last_entry) {
+        return true;
+      }
     }
   }
 
-  return matches;
+  return false;
+}
+
+bool
+oc_process_basic_resources(oc_request_t *request, size_t device_index,
+                           size_t *response_length, int *matches, int *skipped,
+                           int first_entry, int last_entry)
+{
+  for (int i = 0; i < sizeof(basic_resources) / sizeof(basic_resources[0]);
+       i++) {
+    if (oc_filter_resource(
+          oc_core_get_resource_by_index(basic_resources[i], device_index),
+          request, device_index, response_length, skipped, first_entry)) {
+      (*matches)++;
+      if (first_entry + (*matches) >= last_entry) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 static int
@@ -214,6 +243,7 @@ frame_sn(char *serial_number, uint64_t iid, uint32_t ia)
   response_length = response_length + framed_bytes;
 
   framed_bytes = oc_rep_add_line_to_buffer(" knx://ia.");
+  response_length = response_length + framed_bytes;
   char text_hex[20];
   oc_conv_uint64_to_hex_string(text_hex, iid);
   framed_bytes = oc_rep_add_line_to_buffer(text_hex);
@@ -235,15 +265,19 @@ oc_wkcore_discovery_handler(oc_request_t *request,
   (void)iface_mask;
   size_t response_length = 0;
   int matches = 0;
+  int skipped = 0;
+  bool finished = false;
+  bool query_match = false;
   int framed_bytes;
+  bool more_request_needed =
+    false; // If more requests (pages) are needed to get the full list
 
   /* check if the accept header is link-format */
   if (request->accept != APPLICATION_LINK_FORMAT &&
       request->accept != APPLICATION_JSON && request->accept != CONTENT_NONE) {
     /* handle bad request..
     note below layer ignores this message if it is a multi cast request */
-    request->response->response_buffer->code =
-      oc_status_code(OC_STATUS_BAD_REQUEST);
+    oc_send_response_no_format(request, OC_STATUS_BAD_REQUEST);
     return;
   }
 
@@ -259,9 +293,14 @@ oc_wkcore_discovery_handler(oc_request_t *request,
   int if_len = 0;
   char *d_request = 0;
   int d_len = 0;
+
   bool ps_exists = false;
   bool total_exists = false;
-  int length;
+  int total = 0;
+  int first_entry = 0; // inclusive
+  int last_entry = 0;  // exclusive
+  // int query_ps = -1;
+  int query_pn = -1;
 
   value_len = -1;
   oc_init_query_iterator();
@@ -269,18 +308,22 @@ oc_wkcore_discovery_handler(oc_request_t *request,
     if (strncmp(key, "rt", key_len) == 0) {
       rt_request = value;
       rt_len = (int)value_len;
+      query_match = true;
     }
     if (strncmp(key, "ep", key_len) == 0) {
       ep_request = value;
       ep_len = (int)value_len;
+      query_match = true;
     }
     if (strncmp(key, "if", key_len) == 0) {
       if_request = value;
       if_len = (int)value_len;
+      query_match = true;
     }
     if (strncmp(key, "d", key_len) == 0) {
       d_request = value;
       d_len = (int)value_len;
+      query_match = true;
     }
   }
 
@@ -288,34 +331,69 @@ oc_wkcore_discovery_handler(oc_request_t *request,
   size_t device_index = request->resource->device;
   oc_device_info_t *device = oc_core_get_device_info(device_index);
 
-  // handle query parameters: l=ps l=total
-  if (check_if_query_l_exist(request, &ps_exists, &total_exists)) {
-    // example : < / fp / r / ? l = total>; total = 22; ps = 5
-
-    length = oc_frame_query_l("/.well-known/core", ps_exists, total_exists);
-    response_length += length;
-    // count the application functional blocks
-    int nr_functional_blocks = oc_count_functional_blocks(device_index);
-    // add the others that always be there
-    // - dev
-    // - swu
-    // - auth
-    // and the <ep> entry
-    nr_functional_blocks += 4;
-    if (ps_exists) {
-      length = oc_rep_add_line_to_buffer(";ps=");
-      response_length += length;
-      length = oc_frame_integer(nr_functional_blocks);
-      response_length += length;
-    }
-    if (total_exists) {
-      length = oc_rep_add_line_to_buffer(";total=");
-      response_length += length;
-      length = oc_frame_integer(nr_functional_blocks);
-      response_length += length;
-    }
-
+  /* handle multicast with no queries */
+  if (request->query_len == 0 && request->origin &&
+      (request->origin->flags & MULTICAST) != 0) {
+    response_length =
+      frame_sn(oc_string(device->serialnumber), device->iid, device->ia);
     oc_send_linkformat_response(request, OC_STATUS_OK, response_length);
+    return;
+  }
+
+  if (rt_len > 0 || if_len > 0) {
+    const oc_resource_t *my_resource = oc_ri_get_app_resources();
+    // Calculate total properties
+    for (; my_resource; my_resource = my_resource->next) {
+      if (my_resource->device != device_index ||
+          !(my_resource->properties & OC_DISCOVERABLE)) {
+        continue;
+      }
+      if (oc_string(my_resource->uri) != NULL) {
+        total++;
+      }
+    }
+  }
+  total += sizeof(basic_resources) / sizeof(basic_resources[0]);
+  total += oc_count_functional_blocks(device_index);
+  last_entry = total;
+
+  // handle query parameters: l=ps l=total
+  int l_exist = check_if_query_l_exist(request, &ps_exists, &total_exists);
+  if (l_exist == 1) {
+    // example : < /.well-known/core > l = total>;total=22;ps=5
+    response_length =
+      oc_frame_query_l(oc_string(request->resource->uri), ps_exists, PAGE_SIZE,
+                       total_exists, total);
+    oc_send_linkformat_response(request, OC_STATUS_OK, response_length);
+    return;
+  }
+  if (l_exist == -1) {
+    oc_send_response_no_format(request, OC_STATUS_NOT_FOUND);
+    return;
+  }
+
+  // handle query with page number (pn)
+  if (check_if_query_pn_exist(request, &query_pn, NULL)) {
+    query_match = true;
+    first_entry += query_pn * PAGE_SIZE;
+    if (first_entry >= last_entry) {
+      oc_send_response_no_format(request, OC_STATUS_BAD_REQUEST);
+      return;
+    }
+  }
+
+  if (last_entry > first_entry + PAGE_SIZE) {
+    last_entry = first_entry + PAGE_SIZE;
+    more_request_needed = true;
+  }
+
+  if (request->query_len > 0 && !query_match) {
+    if (request->origin && (request->origin->flags & MULTICAST) == 0) {
+      // for unicast
+      oc_send_linkformat_response(request, OC_STATUS_OK, 0);
+    } else {
+      oc_ignore_request(request);
+    }
     return;
   }
 
@@ -327,28 +405,30 @@ oc_wkcore_discovery_handler(oc_request_t *request,
     int group_address = atoi(&d_request[12]);
     PRINT(" group address: %d\n", group_address);
     // if not loaded the we can just return
-    oc_lsm_state_t lsm = oc_knx_lsm_state(device_index);
+    oc_lsm_state_t lsm = oc_a_lsm_state(device_index);
     if (lsm != LSM_S_LOADED) {
       /* handle bad request..
       note below layer ignores this message if it is a multi cast request */
       PRINT(" not loaded!");
-      request->response->response_buffer->code =
-        oc_status_code(OC_STATUS_BAD_REQUEST);
+      oc_send_response_no_format(request, OC_STATUS_BAD_REQUEST);
+      return;
+    }
+    if (strncmp(d_request, "urn:knx:g.s.*", 13) == 0) {
+      // Quote from EITT test 5.1.1.8: "Must fail since the response would
+      // likely be excessively large"
+      oc_send_response_no_format(request, OC_STATUS_BAD_REQUEST);
       return;
     }
     // create the response
-    bool added = oc_add_points_in_group_object_table_to_response(
+    bool ret = oc_add_points_in_group_object_table_to_response(
       request, device_index, group_address, &response_length, matches);
-    if (added) {
-      request->response->response_buffer->content_format =
-        APPLICATION_LINK_FORMAT;
-      request->response->response_buffer->response_length = response_length;
-      request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
+    if (ret) {
+      oc_send_linkformat_response(request, OC_STATUS_OK, response_length);
+    } else if (request->origin && (request->origin->flags & MULTICAST) == 0) {
+      oc_send_linkformat_response(request, OC_STATUS_OK, 0);
     } else {
-      request->response->response_buffer->code =
-        oc_status_code(OC_STATUS_BAD_REQUEST);
+      oc_ignore_request(request);
     }
-
     return;
   }
 
@@ -362,26 +442,39 @@ oc_wkcore_discovery_handler(oc_request_t *request,
          the ep=urn:knx:sn.* and if=urn:knx:if.pm concatenation. since that only
          needs to respond when the device is in programming mode
       */
-      response_length =
-        frame_sn(oc_string(device->serialnumber), device->iid, device->ia);
-      matches = 1;
+      // if unicast & serial number is wrong, return error
+      if (ep_request != 0 && ep_len > 9 &&
+          strncmp(ep_request, "knx://sn.", 9) == 0) {
+        char *ep_serialnumber = ep_request + 9;
 
-      request->response->response_buffer->response_length = response_length;
-      request->response->response_buffer->content_format =
-        APPLICATION_LINK_FORMAT;
-      request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
+        if (strncmp(oc_string(device->serialnumber), ep_serialnumber,
+                    strlen(oc_string(device->serialnumber))) != 0) {
+          if (request->origin && (request->origin->flags & MULTICAST) == 0) {
+            oc_send_response_no_format(request, OC_STATUS_NOT_FOUND);
+          } else {
+            oc_ignore_request(request);
+          }
+          return;
+        }
+      } else {
+        if (skipped < first_entry) {
+          skipped++;
+        } else {
+          response_length =
+            frame_sn(oc_string(device->serialnumber), device->iid, device->ia);
+          matches++;
+        }
 
-      PRINT(" oc_wkcore_discovery_handler PM HANDLING: OK\n");
+        PRINT(" oc_wkcore_discovery_handler PM HANDLING: OK\n");
+      }
     } else {
       /* device is not in programming mode so ignore this request*/
-      request->response->response_buffer->content_format =
-        APPLICATION_LINK_FORMAT;
       if (request->origin && (request->origin->flags & MULTICAST) == 0) {
-        request->response->response_buffer->code =
-          oc_status_code(OC_STATUS_BAD_REQUEST);
+        oc_send_response_no_format(request, OC_STATUS_NOT_FOUND);
       } else {
-        request->response->response_buffer->code = OC_IGNORE;
+        oc_ignore_request(request);
       }
+      return;
     }
   }
 
@@ -391,30 +484,22 @@ oc_wkcore_discovery_handler(oc_request_t *request,
     char *if_ia_s = if_request + 11;
     int if_ia_i = atoi(if_ia_s);
     if (if_ia_i == device->ia) {
-      /* return the ll entry: </dev/ia>;rt="dpt.value2Ucount";ct=50 */
       framed_bytes =
         oc_rep_add_line_to_buffer("</dev/sna>;rt=\"dpa.0.57\";ct=50,");
       response_length = response_length + framed_bytes;
       framed_bytes =
         oc_rep_add_line_to_buffer("</dev/da>;rt=\"dpa.0.58\";ct=50,");
       response_length = response_length + framed_bytes;
-      framed_bytes =
-        oc_rep_add_line_to_buffer("</dev/ia>;rt=\"dpt.value2Ucount\";ct=50");
-      response_length = response_length + framed_bytes;
 
-      request->response->response_buffer->response_length = response_length;
-      request->response->response_buffer->content_format =
-        APPLICATION_LINK_FORMAT;
-      request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
+      oc_send_linkformat_response(request, OC_STATUS_OK, response_length);
 
       PRINT(" oc_wkcore_discovery_handler IA HANDLING: OK\n");
-      return;
     } else {
       /* should ignore this request*/
       // PRINT(" oc_wkcore_discovery_handler IA HANDLING: IGNORE\n");
-      request->response->response_buffer->code = OC_IGNORE;
-      return;
+      oc_ignore_request(request);
     }
+    return;
   }
 
   /* handle individual address, spec 1.1 */
@@ -423,25 +508,31 @@ oc_wkcore_discovery_handler(oc_request_t *request,
     bool frame_ep = false;
     /* new style release 1.1 */
     /* request for all devices via serial number wild card*/
-    char *ep_ia = ep_request + 9;
-    uint32_t ia = atoi(ep_ia);
+    /* example:     knx://ia.d773e094b6.1101 */
+    char *ep_ia = ep_request + 20; // at the end, after the second dot
+    uint32_t ia = strtol(ep_ia, NULL, 16);
     if (ia == device->ia) {
       // ia is the same
       // now do the extra work to check the iid
       // do this with string compare, otherwise we have to create an uint64 from
       // string
-      int iid_str_len = ep_len - 10;
-      char *iid_str = oc_strnchr(&ep_request[10], '.', iid_str_len);
+      int iid_str_len = 10;
+      char *iid_str = oc_strnchr(ep_request, '.', iid_str_len);
       if (iid_str) {
         char iid_dev[20];
         oc_conv_uint64_to_hex_string(iid_dev, device->iid);
-        if (strncmp(iid_dev, iid_str + 1, iid_str_len - 1) == 0) {
-          response_length = response_length =
+        if (strncmp(iid_dev, iid_str + 1, iid_str_len) == 0) {
+          response_length =
             frame_sn(oc_string(device->serialnumber), device->iid, device->ia);
-          matches = 1;
+          oc_send_linkformat_response(request, OC_STATUS_OK, response_length);
+          return;
         }
       }
     }
+    /* should ignore this request*/
+    // PRINT(" oc_wkcore_discovery_handler IA HANDLING: IGNORE\n");
+    oc_ignore_request(request);
+    return;
   }
 
   /* handle serial number spec 1.0 */
@@ -461,14 +552,19 @@ oc_wkcore_discovery_handler(oc_request_t *request,
       frame_ep = true;
     }
     if (frame_ep) {
-      /* return <>; ep="urn:knx:sn.<serial-number>"*/
-      framed_bytes = oc_rep_add_line_to_buffer("<>;ep=\"urn:knx:sn.");
-      response_length = response_length + framed_bytes;
-      framed_bytes = oc_rep_add_line_to_buffer(oc_string(device->serialnumber));
-      response_length = response_length + framed_bytes;
-      framed_bytes = oc_rep_add_line_to_buffer("\"");
-      response_length = response_length + framed_bytes;
-      matches = 1;
+      if (skipped < first_entry) {
+        skipped++;
+      } else {
+        /* return <>; ep="urn:knx:sn.<serial-number>"*/
+        framed_bytes = oc_rep_add_line_to_buffer("<>;ep=\"urn:knx:sn.");
+        response_length = response_length + framed_bytes;
+        framed_bytes =
+          oc_rep_add_line_to_buffer(oc_string(device->serialnumber));
+        response_length = response_length + framed_bytes;
+        framed_bytes = oc_rep_add_line_to_buffer("\"");
+        response_length = response_length + framed_bytes;
+        matches++;
+      }
     }
   }
   /* handle serial number spec 1.1 */
@@ -477,76 +573,78 @@ oc_wkcore_discovery_handler(oc_request_t *request,
     /* new style release 1.1 */
     /* request for all devices via serial number wild card*/
     char *ep_serialnumber = ep_request + 9;
-    bool frame_ep = false;
 
-    if (strncmp(ep_serialnumber, "*", 1) == 0) {
-      /* matches wild card*/
-      frame_ep = true;
-    }
-    if (strncmp(oc_string(device->serialnumber), ep_serialnumber,
+    if (strncmp(ep_serialnumber, "*", 1) == 0 ||
+        strncmp(oc_string(device->serialnumber), ep_serialnumber,
                 strlen(oc_string(device->serialnumber))) == 0) {
-      frame_ep = true;
-    }
-    if (frame_ep) {
-      response_length = response_length =
+      response_length =
         frame_sn(oc_string(device->serialnumber), device->iid, device->ia);
-      matches = 1;
+      oc_send_linkformat_response(request, OC_STATUS_OK, response_length);
+    } else {
+      oc_ignore_request(request);
     }
+    return;
   }
 
   if (rt_len > 0 || if_len > 0) {
     size_t device = request->resource->device;
     PRINT("  oc_wkcore_discovery_handler rt='%.*s'\n", rt_len, rt_request);
     PRINT("  oc_wkcore_discovery_handler if='%.*s'\n", if_len, if_request);
-    matches = oc_process_resources(request, device, &response_length);
-  }
-
-  oc_add_resource_to_wk(oc_core_get_resource_by_index(OC_DEV, device_index),
-                        request, device_index, &response_length, matches, 0);
-
-  oc_add_resource_to_wk(
-    oc_core_get_resource_by_index(OC_KNX_AUTH, device_index), request,
-    device_index, &response_length, matches, 0);
-
-  oc_add_resource_to_wk(oc_core_get_resource_by_index(OC_KNX_SWU, device_index),
-                        request, device_index, &response_length, matches, 0);
-
-  // optional, not yet implemented
-  // oc_add_resource_to_wk(oc_core_get_resource_by_index(OC_SUB, device_index),
-  //                      request, device_index, &response_length, matches);
-
-  if (request->origin && (request->origin->flags & MULTICAST) == 0) {
-    // only for unicast
-    bool added = oc_add_function_blocks_to_response(request, device_index,
-                                                    &response_length, matches);
-    if (added) {
-      matches++;
+    if (!finished) {
+      finished =
+        oc_process_resources(request, device, &response_length, &matches,
+                             &skipped, first_entry, last_entry);
     }
   }
 
-  request->response->response_buffer->content_format = APPLICATION_LINK_FORMAT;
+  if (!finished) {
+    finished =
+      oc_process_basic_resources(request, device_index, &response_length,
+                                 &matches, &skipped, first_entry, last_entry);
+  }
+
+  if (!finished && request->origin &&
+      (request->origin->flags & MULTICAST) == 0) {
+    // only for unicast
+    if (oc_filter_functional_blocks(request)) {
+      oc_add_function_blocks_to_response(request, device_index,
+                                         &response_length, &matches, &skipped,
+                                         first_entry, last_entry);
+    }
+  }
 
   if (matches > 0 && response_length > 0) {
+    if (more_request_needed) {
+      int next_page_num = query_pn > -1 ? query_pn + 1 : 1;
+      response_length += add_next_page_indicator(
+        oc_string(request->resource->uri), next_page_num);
+    }
     PRINT("  oc_wkcore_discovery_handler response_length %d'\n",
           (int)response_length);
-    request->response->response_buffer->response_length = response_length;
-    request->response->response_buffer->code = oc_status_code(OC_STATUS_OK);
+    oc_send_linkformat_response(request, OC_STATUS_OK, response_length);
   } else if (request->origin && (request->origin->flags & MULTICAST) == 0) {
-    request->response->response_buffer->code =
-      oc_status_code(OC_STATUS_BAD_REQUEST);
+    oc_send_linkformat_response(request, OC_STATUS_OK, 0);
   } else {
-    request->response->response_buffer->code = OC_IGNORE;
+    oc_ignore_request(request);
   }
 }
+
+OC_CORE_CREATE_CONST_RESOURCE_FINAL(well_known_core, 0, "/.well-known/core",
+                                    OC_IF_NONE, APPLICATION_LINK_FORMAT,
+                                    OC_DISCOVERABLE,
+                                    oc_wkcore_discovery_handler, 0, 0, 0, NULL,
+                                    OC_SIZE_MANY(1), "wk");
 
 void
 oc_create_discovery_resource(int resource_idx, size_t device)
 {
-  if (resource_idx == WELLKNOWNCORE) {
+  if (resource_idx == WELLKNOWNCORE && device > 0) {
     oc_core_populate_resource(resource_idx, device, "/.well-known/core",
                               OC_IF_NONE, APPLICATION_LINK_FORMAT,
                               OC_DISCOVERABLE, oc_wkcore_discovery_handler, 0,
                               0, 0, 1, "wk");
+  } else if (device == 0) {
+    OC_DBG("resources for dev 0 created statically");
   }
 }
 

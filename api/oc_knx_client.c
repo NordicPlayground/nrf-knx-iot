@@ -50,7 +50,6 @@ typedef struct oc_spake_context_t
 {
   char spake_password[MAX_PASSWORD_LEN]; /**< spake password */
   oc_string_t serial_number; /**< the serial number of the device string */
-  oc_string_t recipient_id;  /**< the recipient id used (byte string) */
   oc_string_t oscore_id;     /**< the oscore id used (byte string) */
 } oc_spake_context_t;
 
@@ -63,7 +62,7 @@ oc_spake_cb_t m_spake_cb = NULL;
 #ifdef OC_SPAKE
 static mbedtls_mpi w0, w1, privA;
 static mbedtls_ecp_point pA, pubA;
-static uint8_t Ka_Ke[MAX_SECRET_LEN];
+static uint8_t K_main[MAX_SECRET_LEN];
 static oc_spake_context_t g_spake_ctx;
 #endif
 
@@ -73,7 +72,7 @@ static void oc_send_s_mode(oc_endpoint_t *endpoint, char *path,
                            uint32_t sia_value, uint32_t group_address, char *rp,
                            uint8_t *value_data, int value_size);
 
-static int oc_s_mode_get_resource_value(char *resource_url, char *rp,
+static int oc_s_mode_get_resource_value(const char *resource_url, char *rp,
                                         uint8_t *buf, int buf_size);
 
 // ----------------------------------------------------------------------------
@@ -84,11 +83,9 @@ static void
 update_tokens(uint8_t *secret, int secret_size)
 {
   PRINT("update_tokens: \n");
-  oc_oscore_set_auth_mac(oc_string(g_spake_ctx.serial_number),
-                         oc_string_len(g_spake_ctx.serial_number),
-                         oc_string(g_spake_ctx.recipient_id),
-                         oc_byte_string_len(g_spake_ctx.recipient_id), secret,
-                         secret_size);
+  oc_oscore_set_auth_mac(oc_string(g_spake_ctx.oscore_id),
+                         oc_byte_string_len(g_spake_ctx.oscore_id), "", 0,
+                         secret, secret_size);
 }
 
 static void
@@ -104,9 +101,10 @@ finish_spake_handshake(oc_client_response_t *data)
     return;
   }
 
-  // shared_key is 16-byte array - NOT NULL TERMINATED
-  uint8_t *shared_key = Ka_Ke + 16;
-  int shared_key_len = 16;
+  // shared_key is 32-byte array - NOT NULL TERMINATED
+  uint8_t shared_key[16];
+  uint8_t shared_key_len = sizeof(shared_key);
+  oc_spake_calc_K_shared(K_main, shared_key);
 
   update_tokens(shared_key, shared_key_len);
 
@@ -116,6 +114,7 @@ finish_spake_handshake(oc_client_response_t *data)
   mbedtls_mpi_free(&privA);
   mbedtls_ecp_point_free(&pA);
   mbedtls_ecp_point_free(&pubA);
+  memset(K_main, 0, sizeof(K_main));
 
   if (m_spake_cb) {
     m_spake_cb(
@@ -170,12 +169,12 @@ do_credential_verification(oc_client_response_t *data)
   mbedtls_ecp_group_init(&grp);
   mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_DP_SECP256R1);
 
-  oc_spake_calc_transcript_initiator(&w0, &w1, &privA, &pA, pB_bytes, Ka_Ke);
-  oc_spake_calc_cA(Ka_Ke, cA, pB_bytes);
+  oc_spake_calc_transcript_initiator(&w0, &w1, &privA, &pA, pB_bytes, K_main);
+  oc_spake_calc_confirmP(K_main, cA, pB_bytes);
 
   mbedtls_ecp_point_write_binary(&grp, &pA, MBEDTLS_ECP_PF_UNCOMPRESSED,
                                  &len_pA, pA_bytes, kPubKeySize);
-  oc_spake_calc_cB(Ka_Ke, local_cB, pA_bytes);
+  oc_spake_calc_confirmV(K_main, local_cB, pA_bytes);
 
   mbedtls_ecp_group_free(&grp);
 
@@ -229,11 +228,6 @@ do_credential_exchange(oc_client_response_t *data)
         inner_rep = inner_rep->next;
       }
     }
-    // oscore context
-    if (rep->type == OC_REP_BYTE_STRING && rep->iname == 0) {
-      strncpy((char *)&g_spake_ctx.oscore_id, oc_string(rep->value.string),
-              MAX_PASSWORD_LEN);
-    }
     rep = rep->next;
   }
 
@@ -246,7 +240,7 @@ do_credential_exchange(oc_client_response_t *data)
   oc_spake_calc_w0_w1(g_spake_ctx.spake_password, 32, salt, it, &w0, &w1);
 
   oc_spake_gen_keypair(&privA, &pubA);
-  oc_spake_calc_pA(&pA, &pubA, &w0);
+  oc_spake_calc_shareP(&pA, &pubA, &w0);
   uint8_t bytes_pA[kPubKeySize];
   oc_spake_encode_pubkey(&pA, bytes_pA);
 
@@ -281,9 +275,9 @@ oc_initiate_spake_parameter_request(oc_endpoint_t *endpoint,
     rnd[32]; // not actually used by the server, so just send some gibberish
   oc_rep_begin_root_object();
 
-  oc_rep_i_set_byte_string(root, 0, recipient_id, recipient_id_len);
-  oc_byte_string_copy_from_char_with_size(&g_spake_ctx.recipient_id,
-                                          recipient_id, recipient_id_len);
+  oc_rep_i_set_text_string(root, 0, recipient_id);
+  oc_byte_string_copy_from_char_with_size(&g_spake_ctx.oscore_id, recipient_id,
+                                          recipient_id_len);
 
   oc_rep_i_set_byte_string(root, 15, rnd, 32);
   oc_rep_end_root_object();
@@ -328,9 +322,9 @@ oc_initiate_spake(oc_endpoint_t *endpoint, char *password, char *recipient_id)
   if (recipient_id) {
     // convert from hex string to bytes
     oc_conv_hex_string_to_oc_string(recipient_id, strlen(recipient_id),
-                                    &g_spake_ctx.recipient_id);
-    oc_rep_i_set_byte_string(root, 0, oc_string(g_spake_ctx.recipient_id),
-                             oc_byte_string_len(g_spake_ctx.recipient_id));
+                                    &g_spake_ctx.oscore_id);
+    oc_rep_i_set_byte_string(root, 0, oc_string(g_spake_ctx.oscore_id),
+                             oc_byte_string_len(g_spake_ctx.oscore_id));
     // oc_rep_i_set_byte_string(root, 0, oscore_id, strlen(oscore_id));
     // strncpy((char *)&g_spake_ctx.recipient_id, recipient_id,
     // MAX_PASSWORD_LEN);
@@ -400,7 +394,7 @@ discovery_ia_cb(const char *payload, int len, oc_endpoint_t *endpoint,
 }
 
 int
-oc_knx_client_do_broker_request(char *resource_url, uint32_t ia,
+oc_knx_client_do_broker_request(const char *resource_url, uint32_t ia,
                                 char *destination, char *rp)
 {
   char query[20];
@@ -441,6 +435,9 @@ oc_is_redirected_request(oc_request_t *request)
   PRINT("  oc_is_redirected_request %.*s\n", (int)request->uri_path_len,
         request->uri_path);
   if (strncmp(".knx", request->uri_path, request->uri_path_len) == 0) {
+    return true;
+  }
+  if (strncmp("k", request->uri_path, request->uri_path_len) == 0) {
     return true;
   }
   if (strncmp("/p", request->uri_path, request->uri_path_len) == 0) {
@@ -510,8 +507,10 @@ oc_issue_s_mode(int scope, int sia_value, uint32_t grpid,
   // set the group_address to the group address, since this field is used
   // to find the OSCORE context id
   group_mcast.group_address = group_address;
-  oc_send_s_mode(&group_mcast, "/.knx", sia_value, group_address, rp,
-                 value_data, value_size);
+
+  // new spec 1.1
+  oc_send_s_mode(&group_mcast, "/k", sia_value, group_address, rp, value_data,
+                 value_size);
 }
 
 static void
@@ -585,7 +584,7 @@ oc_send_s_mode(oc_endpoint_t *endpoint, char *path, uint32_t sia_value,
 }
 
 static int
-oc_s_mode_get_resource_value(char *resource_url, char *rp, uint8_t *buf,
+oc_s_mode_get_resource_value(const char *resource_url, char *rp, uint8_t *buf,
                              int buf_size)
 {
   (void)rp;
@@ -595,7 +594,7 @@ oc_s_mode_get_resource_value(char *resource_url, char *rp, uint8_t *buf,
     return 0;
   }
 
-  oc_resource_t *my_resource =
+  const oc_resource_t *my_resource =
     oc_ri_get_app_resource_by_uri(resource_url, strlen(resource_url), 0);
   if (my_resource == NULL) {
     PRINT(" oc_do_s_mode : error no URL found %s\n", resource_url);
@@ -637,7 +636,8 @@ oc_s_mode_get_resource_value(char *resource_url, char *rp, uint8_t *buf,
   // get the value...oc_request_t request_obj;
   oc_interface_mask_t iface_mask = OC_IF_NONE;
   // void *data;
-  my_resource->get_handler.cb(&request, iface_mask, NULL);
+  my_resource->get_handler.cb(&request, iface_mask,
+                              my_resource->get_handler.user_data);
 
   // get the data
   int value_size = oc_rep_get_encoded_payload_size();
@@ -683,7 +683,7 @@ oc_do_s_mode_read(int64_t group_address)
 // note: this function does not check the transmit flag
 // the caller of this function needs to check if the flag is set.
 void
-oc_do_s_mode_with_scope_and_check(int scope, char *resource_url, char *rp,
+oc_do_s_mode_with_scope_and_check(int scope, const char *resource_url, char *rp,
                                   bool check)
 {
   int value_size;
@@ -728,7 +728,7 @@ oc_do_s_mode_with_scope_and_check(int scope, char *resource_url, char *rp,
     return;
   }
 
-  oc_resource_t *my_resource =
+  const oc_resource_t *my_resource =
     oc_ri_get_app_resource_by_uri(resource_url, strlen(resource_url), 0);
   if (my_resource == NULL) {
     PRINT(" oc_do_s_mode_with_scope_internal : error no URL found %s\n",
@@ -815,14 +815,14 @@ oc_do_s_mode_with_scope_and_check(int scope, char *resource_url, char *rp,
 // note: this function does not check the transmit flag
 // the caller of this function needs to check if the flag is set.
 void
-oc_do_s_mode_with_scope_no_check(int scope, char *resource_url, char *rp)
+oc_do_s_mode_with_scope_no_check(int scope, const char *resource_url, char *rp)
 {
   oc_do_s_mode_with_scope_and_check(scope, resource_url, rp, false);
 }
 
 // note: this function does check the transmit flag
 void
-oc_do_s_mode_with_scope(int scope, char *resource_url, char *rp)
+oc_do_s_mode_with_scope(int scope, const char *resource_url, char *rp)
 {
   oc_do_s_mode_with_scope_and_check(scope, resource_url, rp, true);
 }

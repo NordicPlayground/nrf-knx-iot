@@ -1,5 +1,5 @@
 /*
-// Copyright (c) 2021-2022 Cascoda Ltd
+// Copyright (c) 2021-2023 Cascoda Ltd
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,45 +16,14 @@
 /**
   @brief knx application level security
   @file
-
-
-  ## Replay algorithm
-
-  The Replay window has 2 functions:
-
-  - avoid replay attacks on the server side.
-  - verify the oscore serial number if not yet known.
-
-  Description of the implemented replay window algorithm.
-
-  The KNX servers keep a list endpoints that they have received a
-  'synchronized' message from. Upon boot, this list endpoints is empty, so
-  servers will respond to requests from all new client endpoints with `4.01
-  UNAUTHORISED` message containing an Echo option. The echo option is
-  OSCORE-encrypted, and its actual value is the local time of the server. Upon
-  receiving such a response, the client retransmits the request and includes the
-  Echo value that the server sent. This verifies that:
-
-  a) the client is reachable at the source IP address, preventing attackers
-  from attempting to bypass the de-duplication code by changing the source IP
-  address of packets.
-
-  b) the request is fresh - the server drops request where the
-  time stamp contained in the Echo option is older than a given threshold,
-  configurable within engine.c.
-
-  The handling of the replay is transparent to the higher layers.
-  So the return code `4.01 UNAUTHORISED` does not
-  reach the client callback. The only observable side-effect is that the first
-  request sent to a 'new' server will have a slightly longer latency: twice the
-  round-trip time, as opposed to just once.
-
 */
 
 #ifndef OC_KNX_SEC_INTERNAL_H
 #define OC_KNX_SEC_INTERNAL_H
 
 #include <stddef.h>
+
+#include "oc_ri.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -65,9 +34,12 @@ extern "C" {
  * see section 3.5.4.2 Access Token Resource Object
  */
 typedef enum {
-  OC_PROFILE_UNKNOWN = 0, /**< unknown profile */
-  OC_PROFILE_COAP_DTLS,   /**< "coap_dtls" */
-  OC_PROFILE_COAP_OSCORE  /**< "coap_oscore" */
+  OC_PROFILE_UNKNOWN = 0,     /**< unknown profile */
+  OC_PROFILE_COAP_DTLS = 1,   /**< "coap_dtls" */
+  OC_PROFILE_COAP_OSCORE = 2, /**< "coap_oscore" */
+  OC_PROFILE_COAP_TLS =
+    254, /**< coap_tls" [OSCORE] for [X.509] certificates with TLS */
+  OC_PROFILE_COAP_PASE = 255 /**< "coap_pase" [OSCORE] with PASE credentials */
 } oc_at_profile_t;
 
 /**
@@ -129,7 +101,6 @@ char *oc_at_profile_to_string(oc_at_profile_t at_profile);
  *  | kid       | 2        | string     | optional   |
  *  | nbf       | 5        | integer    | optional   |
  *  | sub       | 2        | string     | conditional |
- *  | aud       | 3        | string     | conditional |
  *
  *
  * Specific oscore values (ACE):
@@ -145,7 +116,6 @@ char *oc_at_profile_to_string(oc_at_profile_t at_profile);
  * | alg       | 18:4:4 | integer     | AEAD Algorithm | AES-CCM-16-64-128 (10)|
  * | salt      | 18:4:5 | byte string | Master Salt    | Default empty byte
  *string | | contextId | 18:4:6 | byte string | OSCORE ID Context value | omit |
- * | osc_rid   | 18:4:7 | byte string | OSCORE RID     | -  |
  * | osc_id    | 18:4:0 | byte string | OSCORE SID     | -  |
  *
  * Example payload:
@@ -164,7 +134,7 @@ typedef struct oc_auth_at_t
   oc_interface_mask_t scope; /**< (9) the scope (interfaces) */
   oc_at_profile_t
     profile; /**< (38) "coap_oscore" or "coap_dtls", only oscore implemented*/
-  oc_string_t aud;         /**< (13) audience (for out going requests) */
+  oc_string_t aud;         /**< not used anymore, references  */
   oc_string_t sub;         /**< (2) DTLS (not used) 2 sub */
   oc_string_t kid;         /**< (8:2) DTLS (not used)  cnf:kid*/
   oc_string_t osc_version; /**< (18:4:1) OSCORE cnf:osc:version (optional) */
@@ -176,9 +146,10 @@ typedef struct oc_auth_at_t
   oc_string_t
     osc_salt; /**< (18:4:5) OSCORE cnf:osc:salt (optional) empty string */
   oc_string_t osc_contextid;
-  /**< (18:4:6) OSCORE cnf:osc:contextid (optional) (byte string) */
+  /**< (18:4:6) OSCORE cnf:osc:contextid used as "kid_context" (byte string, 6
+   * bytes) */
   oc_string_t osc_id; /**< (18:4:0) OSCORE cnf:osc:id  (used as SID & KID) (byte
-                         string) */
+                         string), max 7 bytes */
   oc_string_t
     osc_rid;   /**< (18:4:7) OSCORE cnf:osc:rid (recipient ID) (byte string) */
   int nbf;     /**< token not valid before (optional) */
@@ -188,9 +159,9 @@ typedef struct oc_auth_at_t
 } oc_auth_at_t;
 
 /**
- * @brief returns the size (amount of total entries) of the auth / at table
+ * @brief returns the size (amount of total entries) of the auth/at table
  *
- * @return the allocated amount of entries of the auth at table
+ * @return the allocated amount of entries of the auth/at table
  */
 int oc_core_get_at_table_size();
 
@@ -213,10 +184,22 @@ int oc_core_set_at_table(size_t device_index, int index, oc_auth_at_t entry,
  * @param device_index The device index
  * @param context_id the context id to search for
  * @return int -1 : no entry with that name
- * @return int >=0 : entry found
+ * @return int >=0 : index of found entry
  */
 int oc_core_find_at_entry_with_context_id(size_t device_index,
                                           char *context_id);
+
+/**
+ * @brief Find an entry with a given OSCORE ID
+ *
+ * @param device_index The device index
+ * @param osc_id the oscore ID to search for
+ * @param osc_id_len length of the context
+ * @return int -1 : no entry with that oscore id
+ * @return int >= index of found entry
+ */
+int oc_core_find_at_entry_with_osc_id(size_t device_index, uint8_t *osc_id,
+                                      size_t osc_id_len);
 
 /**
  * @brief find empty slot
@@ -231,18 +214,18 @@ int oc_core_find_at_entry_empty_slot(size_t device_index);
  * @brief set shared (SPAKE) key to the auth at table, on the Management Client
  * side
  *
- * @param serial_number the serial_number of the device that has been negotiated
- * with spake2plus. This will become the Receiver ID within the OSCORE context.
- * This value is an ASCII-encoded string representing the hexadecimal serial
- * number
- * @param serial_number_size the size of the serial number
+ * @param client_senderid the client_senderid of the device that has been
+ * negotiated with spake2plus. This will become the Receiver ID within the
+ * OSCORE context. This value is an ASCII-encoded string representing the
+ * hexadecimal serial number
+ * @param client_senderid_size the size of the serial number
  * @param clientrecipient_id the clientrecipient_id (delivered during the
  * handshake). This will become the Sender ID. This value is in HEX
  * @param clientrecipient_id_size the size of the clientrecipient_id
  * @param shared_key the master key after SPAKE2 handshake
  * @param shared_key_size the key size
  */
-void oc_oscore_set_auth_mac(char *serial_number, int serial_number_size,
+void oc_oscore_set_auth_mac(char *client_senderid, int client_senderid_size,
                             char *clientrecipient_id,
                             int clientrecipient_id_size, uint8_t *shared_key,
                             int shared_key_size);
@@ -250,24 +233,24 @@ void oc_oscore_set_auth_mac(char *serial_number, int serial_number_size,
 /**
  * @brief set shared (SPAKE) key to the auth at table, on the Device side
  *
- * @param serial_number the serial_number of the device that has been negotiated
- * with spake2plus. This will become the Sender ID within the OSCORE context.
- * This value is an ASCII-encoded string representing the hexadecimal serial
- * number
- * @param serial_number_size the size of the serial number
+ * @param client_senderid the client_senderid of the device that has been
+ * negotiated with spake2plus. This will become the Sender ID within the OSCORE
+ * context. This value is an ASCII-encoded string representing the hexadecimal
+ * serial number
+ * @param client_senderid_size the size of the serial number
  * @param clientrecipient_id the clientrecipient_id (delivered during the
  * handshake). This will become the Receiver ID. This value is in HEX
  * @param clientrecipient_id_size the size of the clientrecipient_id
  * @param shared_key the master key after SPAKE2 handshake
  * @param shared_key_size the key size
  */
-void oc_oscore_set_auth_device(char *serial_number, int serial_number_size,
+void oc_oscore_set_auth_device(char *client_senderid, int client_senderid_size,
                                char *clientrecipient_id,
                                int clientrecipient_id_size, uint8_t *shared_key,
                                int shared_key_size);
 
 /**
- * @brief retrieve auth at entry
+ * @brief retrieve auth/at entry
  *
  * @param device_index the device index
  * @param index the index in the table
@@ -276,7 +259,7 @@ void oc_oscore_set_auth_device(char *serial_number, int serial_number_size,
 oc_auth_at_t *oc_get_auth_at_entry(size_t device_index, int index);
 
 /**
- * @brief print the auth at entry
+ * @brief print the auth/at entry
  *
  * @param device_index the device index
  * @param index the index in the table to be printed
@@ -330,9 +313,9 @@ uint64_t oc_oscore_get_osndelay();
  *
  *
  * creates the following resources:
- * - /f/oscore
- * - /p/oscore/rplwdo
- * - /p/oscore/osndelay
+ * - /auth/o
+ * - /auth/o/rplwdo
+ * - /auth/o/osndelay
  * - /auth
  * optional:
  * - a/sen
@@ -389,7 +372,7 @@ bool oc_if_method_allowed_according_to_mask(oc_interface_mask_t iface_mask,
  * @return true has access
  * @return false does not have access
  */
-bool oc_knx_sec_check_acl(oc_method_t method, oc_resource_t *resource,
+bool oc_knx_sec_check_acl(oc_method_t method, const oc_resource_t *resource,
                           oc_endpoint_t *endpoint);
 
 #ifdef __cplusplus

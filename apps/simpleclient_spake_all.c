@@ -73,7 +73,7 @@
  *   - issues a PUT on /dev/pm
  *     Note that performing a POST is identical as PUT.
  * - issuing a multicast s-mode commands
- *   issued through all coap nodes/.knx
+ *   issued through all coap nodes/k
  *   typical command:
  *
  */
@@ -143,7 +143,7 @@ get_dev_pm(oc_client_response_t *data)
     PRINT("  get_dev_pm received : %d\n", rep->value.boolean);
   }
 
-  if (oc_init_put("/dev/pm", data->endpoint, NULL, &put_dev_pm, HIGH_QOS,
+  if (oc_init_put("/dev/pm", data->endpoint, NULL, &put_dev_pm, LOW_QOS,
                   NULL)) {
 
     cbor_encode_boolean(&g_encoder, true);
@@ -164,9 +164,14 @@ callback(oc_client_response_t *rsp)
 oc_event_callback_retval_t
 do_pm(void *ep)
 {
+  if (oc_endpoint_set_oscore_id(ep, "rcpids", strlen("rcpids")) != 0) {
+    // PRINT(
+    //   "  \n");
+    // return;
+  }
   oc_endpoint_t *endpoint = ep;
   endpoint->flags |= SECURED | OSCORE;
-  oc_do_get("/dev/pm", endpoint, NULL, callback, HIGH_QOS, NULL);
+  oc_do_get("/dev/pm", endpoint, NULL, callback, LOW_QOS, NULL);
   return OC_EVENT_CONTINUE;
 }
 
@@ -214,16 +219,11 @@ discovery(const char *payload, int len, oc_endpoint_t *endpoint,
   // memcpy(&the_endpoint.oscore_id, sernum, 6);
   // the_endpoint.oscore_id_len = 6;
 
-  if (oc_endpoint_set_oscore_id_from_str(&the_endpoint, "00fa10010701") != 0) {
-    // PRINT(
-    //   "  \n");
-    // return;
-  }
   // do parameter exchange
-  oc_initiate_spake_parameter_request(endpoint, "00FA10010701", "LETTUCE",
+  oc_initiate_spake_parameter_request(endpoint, "00fa10010701", "LETTUCE",
                                       "rcpids", strlen("rcpids"));
 
-  oc_set_delayed_callback(&the_endpoint, do_pm, 10);
+  oc_set_delayed_callback(&the_endpoint, do_pm, 5);
 
   PRINT(" DISCOVERY- END\n");
   return OC_STOP_DISCOVERY;

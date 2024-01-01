@@ -138,7 +138,7 @@ typedef struct oc_group_object_table_t
  *        "id": "1",
  *        "ia": 5,
  *        "ga":[2305, 2401],
- *        "path": ".knx",
+ *        "path": "k",
  *    },
  *    {
  *        "id": "2",
@@ -181,6 +181,8 @@ typedef struct oc_group_rp_table_t
   uint32_t grpid;   /**< the multicast group id */
   oc_string_t path; /**< contents of path, default path = ".knx"*/
   oc_string_t url;  /**< contents of url */
+  oc_string_t at;   /**< Access token id. Reference to the security credentials
+                       for unicast subscription encryption. */
   bool con;         /**< confirmed message, default = false*/
   uint32_t *ga;     /**< array of integers */
   int ga_len;       /**< length of the array of group addresses identifiers */
@@ -336,7 +338,7 @@ int oc_core_find_next_group_object_table_index(uint32_t group_address,
  * @param url The url to find
  * @return int The index in the table or -1
  */
-int oc_core_find_group_object_table_url(char *url);
+int oc_core_find_group_object_table_url(const char *url);
 
 /**
  * @brief find next index in the group address table via url
@@ -345,7 +347,7 @@ int oc_core_find_group_object_table_url(char *url);
  * @param cur_index  The current index to start from.
  * @return int The index in the table or -1
  */
-int oc_core_find_next_group_object_table_url(char *url, int cur_index);
+int oc_core_find_next_group_object_table_url(const char *url, int cur_index);
 
 /**
  * @brief retrieve the cflags from the entry table
