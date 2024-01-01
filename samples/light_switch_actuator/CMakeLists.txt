@@ -40,12 +40,15 @@ ${BASE_DIR}/api/oc_knx_swu.c
 ${BASE_DIR}/api/oc_knx_dev.c
 ${BASE_DIR}/api/oc_knx_fb.c
 ${BASE_DIR}/api/oc_knx_fp.c
+${BASE_DIR}/api/oc_knx_helpers.c
 ${BASE_DIR}/api/oc_knx_sec.c
+${BASE_DIR}/api/oc_knx_sub.c
 ${BASE_DIR}/api/oc_knx_p.c
 ${BASE_DIR}/api/oc_knx_gm.c
 ${BASE_DIR}/api/oc_main.c
 ${BASE_DIR}/api/oc_discovery.c
 ${BASE_DIR}/api/oc_network_events.c
+${BASE_DIR}/api/oc_replay.c
 ${BASE_DIR}/util/oc_list.c
 ${BASE_DIR}/util/oc_process.c
 ${BASE_DIR}/util/oc_memb.c

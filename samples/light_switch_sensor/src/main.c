@@ -520,7 +520,7 @@ main()
   /* start the stack */
   init = oc_main_init(&handler);
 
-  oc_knx_lsm_set_state(0, LSM_S_LOADED);
+  oc_a_lsm_set_state(0, LSM_S_LOADED);
 
   if (init < 0) {
     PRINT("oc_main_init failed %d, exiting.\n", init);

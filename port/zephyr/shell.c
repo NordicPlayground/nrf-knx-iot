@@ -17,8 +17,6 @@
 
 #define KNX_STORAGE_HOSTNAME "dev_knx_hostname"
 #define KNX_STORAGE_PM "dev_knx_pm"
-#define KNX_STORAGE_SA "dev_knx_sa"
-#define KNX_STORAGE_DA "dev_knx_da"
 #define KNX_STORAGE_PORT "dev_knx_port"
 
 #define MAX_GA_PER_ENTRY 8
@@ -52,7 +50,7 @@ static void print_help(const struct shell *shell, const char* arg)
         shell_print(shell, "  remove");
         shell_print(shell, " ");
         shell_print(shell, "command usage: knx got help <command>");
-    }    
+    }
 }
 
 static void knx_got_help(const struct shell *shell, size_t argc, char **argv)
@@ -234,12 +232,9 @@ static int knx_dev_sa(const struct shell *shell, size_t argc, char **argv)
 
     if (argc < 2)
     {
-        shell_print(shell, "%u", device->sa);
+        shell_print(shell, "%u", (uint8_t)((device->ia) >> 8));
         return 0;
     }
-
-    device->sa = atoi(argv[1]);
-    oc_storage_write(KNX_STORAGE_SA, (uint8_t *)&(device->sa), 1);
 
     return 0;
 }
@@ -250,12 +245,9 @@ static int knx_dev_da(const struct shell *shell, size_t argc, char **argv)
     
     if (argc < 2)
     {
-        shell_print(shell, "%u", device->da);
+        shell_print(shell, "%u", device->ia);
         return 0;
     }
-
-    device->da = atoi(argv[1]);
-    oc_storage_write(KNX_STORAGE_DA, (uint8_t *)&(device->da), 1);
 
     return 0;
 }
@@ -405,13 +397,13 @@ static int knx_got_remove(const struct shell *shell, size_t argc, char **argv)
         print_help(shell, "remove");
         return 0;
     }
-    
+
     id = atoi(argv[1]);
     index = find_empty_slot_in_group_object_table(id);
 
     if (index < 0)
     {
-        shell_print(shell, "entry with id: %u not found", argv[1]);
+        shell_print(shell, "entry with id: %u not found", id);
         return -EINVAL;
     }
 
