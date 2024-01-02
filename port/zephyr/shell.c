@@ -100,7 +100,7 @@ static int parse_group_addresses(const char *buf, int *ga, int max)
             temp = 0;
             res += 1;
             after_comma = true;
-         
+
             if (res == max)
             {
                 return res;
@@ -144,7 +144,7 @@ static int add_or_edit_got_entry(const struct shell *shell, bool add_only,
 
     id = atoi(argv[1]);
     index = find_empty_slot_in_group_object_table(id);
-    
+
     if (add_only &&
         oc_core_find_group_object_table_number_group_entries(index))
     {
@@ -183,7 +183,7 @@ static int knx_dev_sn(const struct shell *shell, size_t argc, char **argv)
     ARG_UNUSED(argv);
 
     oc_device_info_t *device = oc_core_get_device_info(0);
-    
+
     shell_print(shell, "%s", oc_string(device->serialnumber));
 
     return 0;
@@ -208,7 +208,7 @@ static int knx_dev_hwt(const struct shell *shell, size_t argc, char **argv)
     ARG_UNUSED(argv);
 
     oc_device_info_t *device = oc_core_get_device_info(0);
-    
+
     shell_print(shell, "%s", oc_string(device->hwt));
 
     return 0;
@@ -220,7 +220,7 @@ static int knx_dev_model(const struct shell *shell, size_t argc, char **argv)
     ARG_UNUSED(argv);
 
     oc_device_info_t *device = oc_core_get_device_info(0);
-    
+
     shell_print(shell, "%s", oc_string(device->model));
 
     return 0;
@@ -242,7 +242,7 @@ static int knx_dev_sa(const struct shell *shell, size_t argc, char **argv)
 static int knx_dev_da(const struct shell *shell, size_t argc, char **argv)
 {
     oc_device_info_t *device = oc_core_get_device_info(0);
-    
+
     if (argc < 2)
     {
         shell_print(shell, "%u", device->ia);
@@ -256,7 +256,7 @@ static int knx_dev_hname(const struct shell *shell, size_t argc, char **argv)
 {
     oc_device_info_t *device = oc_core_get_device_info(0);
     oc_hostname_t *hname_cb = oc_get_hostname_cb();
-    
+
     if (argc < 2)
     {
         shell_print(shell, "%s", oc_string(device->hostname));
@@ -267,7 +267,7 @@ static int knx_dev_hname(const struct shell *shell, size_t argc, char **argv)
     oc_storage_write(KNX_STORAGE_HOSTNAME,
                          (uint8_t *)oc_string(device->hostname),
                          oc_string_len(device->hostname));
-    
+
     if (hname_cb && hname_cb->cb) {
         hname_cb->cb(0, device->hostname, hname_cb->data);
     }

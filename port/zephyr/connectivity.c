@@ -35,7 +35,7 @@ static void handle_udp_received(void *aContext, otMessage *aMessage, const otMes
 
     PRINT("Incoming message of size %zd bytes from ", message->length);
     PRINTipaddr(message->endpoint);
-    PRINT("\n\n"); 
+    PRINT("\n\n");
 
     oc_network_event(message);
 }
@@ -48,13 +48,13 @@ int oc_connectivity_init(size_t device)
 
     memset(&socket, 0, sizeof(otUdpSocket));
     memset(&sockaddr, 0, sizeof(sockaddr));
-    
+
     sockaddr.mPort = 5683; // CoAP port
 
     if (!otUdpIsOpen(instance, &socket))
     {
         error = otUdpOpen(instance, &socket, handle_udp_received, NULL);
-        error = otUdpBind(instance, &socket, &sockaddr, OT_NETIF_THREAD);   
+        error = otUdpBind(instance, &socket, &sockaddr, OT_NETIF_THREAD);
     }
 }
 
@@ -66,7 +66,7 @@ oc_send_buffer(oc_message_t *message)
     otMessageInfo      msgInfo;
     otMessageSettings  msgSettings = {true, OT_MESSAGE_PRIORITY_NORMAL};
     struct otInstance *instance = openthread_get_default_instance();
-    
+
 
     memcpy(msgInfo.mPeerAddr.mFields.m8, message->endpoint.addr.ipv6.address, 16);
     memset(msgInfo.mSockAddr.mFields.m8, 0, 16);
@@ -115,7 +115,7 @@ oc_endpoint_t *oc_connectivity_get_endpoints(size_t device)
 void
 oc_connectivity_shutdown(size_t device)
 {
-    // Intentionally empty 
+    // Intentionally empty
 }
 
 void
