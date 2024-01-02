@@ -353,25 +353,24 @@ static int knx_got_print(const struct shell *shell, size_t argc, char **argv)
 {
     oc_group_object_table_t *entry_ptr;
     char ga_buf[64];
-    int index = 0;
+    bool got_any = false;
 
-    entry_ptr = oc_core_get_group_object_table_entry(index);
+    for (int i = 0; i < oc_core_get_group_object_table_total_size(); ++i) {
+        entry_ptr = oc_core_get_group_object_table_entry(i);
+        if (entry_ptr->ga_len > 0)
+        {
+            memset(ga_buf, 0, sizeof(ga_buf));
+            dump_group_addresses(ga_buf, entry_ptr->ga, entry_ptr->ga_len);
 
-    if (entry_ptr->ga_len == 0)
+            shell_print(shell, "[%2u]: %d %s %u %s", i, entry_ptr->id,
+                        oc_string(entry_ptr->href), entry_ptr->cflags, ga_buf);
+            got_any = true;
+        }
+    }
+
+    if (!got_any)
     {
         shell_print(shell, "no entries found");
-        return 0;
-    }
-    
-    while (entry_ptr->ga_len > 0)
-    {
-        memset(ga_buf, 0, sizeof(ga_buf));
-        dump_group_addresses(ga_buf, entry_ptr->ga, entry_ptr->ga_len);
-
-        shell_print(shell, "[%2u]: %d %s %u %s", index, entry_ptr->id,
-                    oc_string(entry_ptr->href), entry_ptr->cflags, ga_buf);
-        index++;
-        entry_ptr = oc_core_get_group_object_table_entry(index);
     }
 
     return 0;
