@@ -16,7 +16,7 @@ manifest:
     - name: nrf
       repo-path: sdk-nrf
       path: nrf
-      revision: v2.4.1
+      revision: v2.5.0
       import: true
     # Workaround as west does not support git submodules for 'self'
     - name: gtest
