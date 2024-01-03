@@ -31,6 +31,6 @@ This documentation provides instructions on how to correctly setup KNX Point API
    knxiot_known_issues.rst
    additional_resources.rst
 
-.. _nRF Connect SDK: https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/index.html
+.. _nRF Connect SDK: https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.5.0/nrf/index.html
 .. _KNX IoT: https://www.knx-iotech.org/
 .. _KNX: https://www.knx.org/knx-en/for-professionals/index.php
