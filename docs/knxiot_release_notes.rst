@@ -5,6 +5,15 @@ Release notes
 
 See the release notes for the information about specific KNX IoT Point API support on the top of nRF Connect SDK.
 
+[v0.3.0] - 01/04/2024
+---------------------
+
+Added:
+
+* Updated KNX IoT Point API stack to the 3c31795bd40b7fc0cb31a01822734e5fac0485fa.
+* Fixed an issue with accessing Group Object Tables through shell.
+* Added west.yml to track the supported version of nRF Connect SDK.
+
 [v0.2.0] - 06/01/2023
 ---------------------
 
