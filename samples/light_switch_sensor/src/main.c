@@ -62,6 +62,13 @@ static CRITICAL_SECTION cs;   /**< event loop variable */
 
 static bool current_states[] = {false, false, false, false};
 
+struct k_work button0_work;
+#if !CONFIG_LSSB_REDUCED_IO
+struct k_work button1_work;
+struct k_work button2_work;
+struct k_work button3_work;
+#endif
+
 static const struct gpio_dt_spec button0 = GPIO_DT_SPEC_GET_OR(SW0_NODE, gpios,
 							      {0});
 #if !CONFIG_LSSB_REDUCED_IO
@@ -80,8 +87,7 @@ static struct gpio_callback button2_cb_data;
 static struct gpio_callback button3_cb_data;
 #endif
 
-void button0_pressed(const struct device *dev, struct gpio_callback *cb,
-		    uint32_t pins)
+static void button0_worker(struct k_work *work)
 {
   current_states[0] = !current_states[0];
   oc_do_s_mode_with_scope_no_check(2, "/p/1", "w");
@@ -89,28 +95,59 @@ void button0_pressed(const struct device *dev, struct gpio_callback *cb,
 }
 
 #if !CONFIG_LSSB_REDUCED_IO
-void button1_pressed(const struct device *dev, struct gpio_callback *cb,
-		    uint32_t pins)
+static void button1_worker(struct k_work *work)
 {
   current_states[1] = !current_states[1];
   oc_do_s_mode_with_scope_no_check(2, "/p/2", "w");
   oc_do_s_mode_with_scope_no_check(5, "/p/2", "w");
 }
 
-void button2_pressed(const struct device *dev, struct gpio_callback *cb,
-		    uint32_t pins)
-{ 
+static void button2_worker(struct k_work *work)
+{
   current_states[2] = !current_states[2];
   oc_do_s_mode_with_scope_no_check(2, "/p/3", "w");
   oc_do_s_mode_with_scope_no_check(5, "/p/3", "w");
 }
 
-void button3_pressed(const struct device *dev, struct gpio_callback *cb,
-		    uint32_t pins)
+static void button3_worker(struct k_work *work)
 {
   current_states[3] = !current_states[3];
   oc_do_s_mode_with_scope_no_check(2, "/p/4", "w");
   oc_do_s_mode_with_scope_no_check(5, "/p/4", "w");
+}
+#endif
+
+void button0_pressed(const struct device *dev, struct gpio_callback *cb,
+		    uint32_t pins)
+{
+  if (!k_work_is_pending(&button0_work)) {
+    k_work_submit(&button0_work);
+  }
+}
+
+#if !CONFIG_LSSB_REDUCED_IO
+void button1_pressed(const struct device *dev, struct gpio_callback *cb,
+		    uint32_t pins)
+{
+  if (!k_work_is_pending(&button1_work)) {
+    k_work_submit(&button1_work);
+  }
+}
+
+void button2_pressed(const struct device *dev, struct gpio_callback *cb,
+		    uint32_t pins)
+{
+  if (!k_work_is_pending(&button2_work)) {
+    k_work_submit(&button2_work);
+  }
+}
+
+void button3_pressed(const struct device *dev, struct gpio_callback *cb,
+		    uint32_t pins)
+{
+  if (!k_work_is_pending(&button3_work)) {
+    k_work_submit(&button3_work);
+  }
 }
 #endif
 
@@ -482,6 +519,13 @@ main()
 	}
 #endif
 
+  k_work_init(&button0_work, button0_worker);
+#if !CONFIG_LSSB_REDUCED_IO
+  k_work_init(&button1_work, button1_worker);
+  k_work_init(&button2_work, button2_worker);
+  k_work_init(&button3_work, button3_worker);
+#endif
+
 	gpio_init_callback(&button0_cb_data, button0_pressed, BIT(button0.pin));
 #if !CONFIG_LSSB_REDUCED_IO
 	gpio_init_callback(&button1_cb_data, button1_pressed, BIT(button1.pin));
@@ -490,7 +534,7 @@ main()
 #endif
 
 	gpio_add_callback(button0.port, &button0_cb_data);
-#if !CONFIG_LSSB_REDUCED_IO 
+#if !CONFIG_LSSB_REDUCED_IO
   gpio_add_callback(button1.port, &button1_cb_data);
   gpio_add_callback(button2.port, &button2_cb_data);
   gpio_add_callback(button3.port, &button3_cb_data);
