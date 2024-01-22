@@ -6,7 +6,7 @@ Case 1 - one button mapped to four LEDs
 Having Thread network configured and operational, you can start KNX IoT device configuration and testing.
 One device must be configured as the Actuator and one as the Sensor.
 
-One button of KNX IoT Actuator `nRF52840 DK`_ device will control 4 LEDs built in to KNX IoT Sensor `nRF52840 DK`_ device.
+One button of KNX IoT Sensor `nRF52840 DK`_ device will control 4 LEDs built in to KNX IoT Actuator `nRF52840 DK`_ device.
 
 #. Configure the Actuator device by adding entries to Actuator's Group Object Table.
 

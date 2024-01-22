@@ -10,7 +10,7 @@ See the release notes for the information about specific KNX IoT Point API suppo
 
 Added:
 
-* Updated KNX IoT Point API stack to the 3c31795bd40b7fc0cb31a01822734e5fac0485fa.
+* Updated KNX IoT Point API stack to the `4b63f3e8e0dfd501b15007206bcff475619653ba`_.
 * Fixed an issue with accessing Group Object Tables through shell.
 * Added west.yml to track the supported version of nRF Connect SDK.
 
@@ -30,3 +30,5 @@ Added:
 * Initial support for current (April'2023) implementation of KNX IoT Point API stack on the top of nRF Connect SDK.
 * Light Switch Sensor and Light Switch Actuator demos.
 * Documentation preview for development needs.
+
+.. _4b63f3e8e0dfd501b15007206bcff475619653ba: https://github.com/KNX-IOT/KNX-IOT-STACK/commit/4b63f3e8e0dfd501b15007206bcff475619653ba

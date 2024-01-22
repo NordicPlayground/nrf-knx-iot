@@ -6,8 +6,6 @@ Light Switch Actuator
 This sample demonstrates KNX IoT Point API device with three or four Light Switch Actuator basic Functional Blocks.
 Each of them is built with a single Switch On/Off input Datapoint (Datapointype ID: 1.001, Name: DPT_Switch).
 
-Check the `KNX Interworking Datapoint Types`_ specification for details.
-
 Supported devices
 *****************
 
@@ -26,28 +24,8 @@ The sample supports the following development kit:
 Building and running
 ********************
 
-.. note::
-   Zephyr SDK is installed in NCS directory.
-
-1. Set additional environment variables as follows:
-
-   .. code-block:: bash
-
-      export ZEPHYR_TOOLCHAIN_VARIANT=zephyr
-      export ZEPHYR_SDK_INSTALL_DIR=<NCS_INSTALL_DIR>/toolchains/v2.3.0/opt/zephyr-sdk/
-
-#. Activate the Zephyr environment as follows:
-
-   .. code-block:: bash
-
-      source <NCS_INSTALL_DIR>/v2.3.0/zephyr/zephyr-env.sh
-
-   where :guilabel:`<NCS_INSTALL_DIR>` is an NCS directory path.
-
-#. Build the sample by following the steps in the `Building and programming an application`_ page.
-
-.. note::
-   This sample can be found in the :file:`samples/light_switch_actuator` directory.
+This sample can be found in the :file:`knx/samples/light_switch_actuator` directory.
+Build it by following the steps in the `Building and programming an application`_ page.
 
 Testing
 *******
@@ -113,6 +91,5 @@ A mesh network uses the following configuration:
 | Network key      | 00112233445566778899aabbccddeeff    |
 +------------------+-------------------------------------+
 
-.. _Building and programming an application: https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/getting_started/programming.html#gs-programming
-.. _Testing and debugging an application: https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.3.0/nrf/getting_started/testing.html#gs-testing
-.. _KNX Interworking Datapoint Types: https://www.knx.org/wAssets/docs/downloads/Certification/Interworking-Datapoint-types/03_07_02-Datapoint-Types-v02.02.01-AS.pdf
+.. _Building and programming an application: https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.5.0/nrf/getting_started/programming.html#gs-programming
+.. _Testing and debugging an application: https://developer.nordicsemi.com/nRF_Connect_SDK/doc/2.5.0/nrf/getting_started/testing.html#gs-testing
