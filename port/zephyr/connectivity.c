@@ -26,9 +26,14 @@ static void handle_udp_received(void *aContext, otMessage *aMessage, const otMes
 {
     oc_message_t *message = oc_allocate_message();
 
+    if (!message) {
+        return;
+    }
+
     message->endpoint.device = 0;
     message->endpoint.flags = IPV6;
-    message->length = otMessageRead(aMessage, otMessageGetOffset(aMessage), message->data, sizeof(message->data));
+    message->length = otMessageRead(aMessage, otMessageGetOffset(aMessage), message->data,
+                                    otMessageGetLength(aMessage));
     message->endpoint.addr.ipv6.port = aMessageInfo->mPeerPort;
 
     memcpy(message->endpoint.addr.ipv6.address, aMessageInfo->mPeerAddr.mFields.m8, 16);
