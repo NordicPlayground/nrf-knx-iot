@@ -1,6 +1,15 @@
 nRF Connect SDK: nrf-knx-iot
 ----------------------------
 
+.. warning::
+
+   This repository is **not recommended for use or evaluation** anymore.
+
+   Use the official **KNX IoT add-on for nRF Connect SDK** from Nordic Semiconductor instead:
+
+   * Repository: https://github.com/nrfconnect/ncs-knx-iot
+   * Documentation: https://nrfconnectdocs.nordicsemi.com/addons/ncs-knx-iot/latest/index.html
+
 This repository contains port of open source KNX IoT Point API stack (https://github.com/KNX-IOT/KNX-IOT-STACK) to the Nordic nRF Connect SDK.
 
 This is an experimental project that can be used for evaluation and development, but it is not recommended for production. It may be incomplete in functionality or verification and can be expected to change in future releases. The project is made available in its current state, but the design and interfaces can change.
